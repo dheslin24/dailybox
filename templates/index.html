@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Welcome to Daily Box
+        </p>
+    </h1>
+    
+    <table align = "center", cellpadding = "30">
+        <h3>
+        <tr>
+        {% for num in x %}
+            <td> {{ num }} </td>
+        {% endfor %}
+        </tr>
+        {% for row in grid %}
+        <tr>
+            <td> {{ y[loop.index0] }} </td>  
+            {% for box in row %}
+            <td>
+                {%- for num in box -%}
+                {{- num -}}
+                {% endfor %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </h3>
+    </table>
+
+
+
+
+{% endblock %}
+
+
+
