@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Game List
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Game List
+        </p>
+    </h1>
+
+    <h4>
+        <table align = "center", cellpadding = "10">
+        <tr>
+            <th> Game ID </th>
+            <th> Entry Fee </th>
+            <th> Available Entries </th>
+        </tr>
+            {% for row in game_list %}
+            <tr>
+                <form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
+                <td><input type="submit" value="{{ row[0] }}" name="boxid"></td>
+                {% for field in row[1:] %}
+                    <td>{{ field }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </h4>
+{% endblock %}
+

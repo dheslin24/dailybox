@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Admin
+{% endblock %}
+
+
+
+{% block main %}
+    <form action="{{ url_for('admin') }}" method="post">
+        <a href="{{ url_for('init_box_db') }}">Initialize BOX DB (danger)</a>
+    </form>
+    <form action="{{url_for('create_game') }}" method="POST">
+        <a href="{{ url_for('create_game') }}">Create New Game</a>
+        <input type="text" name="fee" size="5">
+        <input type="submit">
+    </form>
+    <form>
+        <a href="{{ url_for('display_box') }}">Display Test Box</a>
+    </form>
+{% endblock %}
