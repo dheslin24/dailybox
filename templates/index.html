@@ -14,13 +14,18 @@
     <table align = "center", cellpadding = "30">
         <h3>
         <tr>
-        {% for num in x %}
-            <td> {{ num }} </td>
+        {% for num in x[:1] %}
+            <td></td>
+        {% endfor %}
+        {% for num in x[1:] %}
+            <!-- <td> {{ num }} </td> -->
+            <td> X </td>
         {% endfor %}
         </tr>
         {% for row in grid %}
         <tr>
-            <td> {{ y[loop.index0] }} </td>  
+            <!-- <td> {{ y[loop.index0] }} </td>  -->
+            <td> Y </td>
             {% for box in row %}
             <td>
                 {%- for num in box -%}
@@ -32,6 +37,8 @@
         {% endfor %}
         </h3>
     </table>
+
+    <h2><p> Click on <a href="{{ url_for('game_list') }}">Game List</a> to Join </p></h2>
 
 
 

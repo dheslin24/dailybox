@@ -1,23 +1,23 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    My Games
+    Game List
 {% endblock %}
 
 {% block main %}
     <h1>
         <p>
-            My Games
+            Custom Box Game List
         </p>
     </h1>
+    <h5><p> Standard sporting event boxes </p></h5>
 
     <h4>
         <table align = "center", cellpadding = "10">
         <tr>
             <th> Game ID </th>
-            <th> Box Type </th>
             <th> Box Name </th>
-            <th> Entry Fee </th>    
+            <th> Entry Fee </th>
             <th> Available Entries </th>
         </tr>
             {% for row in game_list %}
@@ -27,7 +27,6 @@
                 {% for field in row[1:] %}
                     <td>{{ field }}</td>
                 {% endfor %}
-                <td> {{ available[row[0]] }}
             </tr>
             {% endfor %}
         </table>
