@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    User Details
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            User Details
+        </p>
+    </h1>
+
+    <h4>
+        <table align = "center", cellpadding = "10">
+            <tr><td> Username </td><td>{{ user_dict['username'] }}</td></tr>
+            <tr><td> First Name </td><td>{{ user_dict['first_name'] }}</td></tr>
+            <tr><td> Last Name </td><td>{{ user_dict['last_name'] }}</td></tr>
+            <tr><td> email </td><td>{{ user_dict['email'] }}</td></tr>
+            <tr><td> Mobile</td><td>{{ user_dict['mobile'] }}</td></tr>
+            <tr><td> Current Balance</td><td>{{ user_dict['balance'] }}</td></tr>
+        </table>
+    </h4>
+{% endblock %}
+
