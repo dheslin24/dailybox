@@ -17,7 +17,20 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
         <!-- app's own JavaScript -->
-        <script src="{{ url_for('static', filename='scripts.js') }}"></script>        <title>Daily BOX{% block title %}{% endblock %}</title>
+        <script src="{{ url_for('static', filename='scripts.js') }}"></script>  
+        <script type="text/javascript">
+        $(document).ready(function(){
+            $("#grid td.user_box:contains('{{ session['username'] }}')").css('background-color','#fcc');
+        });
+        </script>
+        <script type="text/javascript">
+        $(document).ready(function(){
+            $("#grid td.user_box:contains('Open')").css('background-color','#fff');
+        });
+        </script>
+
+
+        <title>Daily BOX{% block title %}{% endblock %}</title>
 
     </head>
 

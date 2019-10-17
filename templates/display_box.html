@@ -5,14 +5,20 @@
 {% endblock %}
 
 {% block main %}
+
     <h1>
         <p>
             Game Name: {{ box_name }} </br>
-            Entry: {{ fee }}
+            Entry Fee: {{ fee }}  Available: {{ avail }}
         </p>
     </h1>
-    
-    <table align = "center", cellpadding = "30">
+    <p> Randomize Selection </p> 
+    <form name="randform" id="randform" action="{{ url_for("select_box") }}",  method="POST">
+        <input type="text" name="rand" id="rand" size="5" placeholder="# boxes">
+        <input type="hidden" name="boxid" value="{{ boxid }}">
+        <input type="submit" onClick="return empty()">
+    </form>
+    <table id="grid" align = "center", cellpadding = "30">
         <h3>
         <tr>
         {% for num in x %}
@@ -23,7 +29,7 @@
         <tr>
             <td> {{ y[loop.index0] }} </td>  
             {% for box in row %}
-                <td>    
+                <td class="user_box">    
                     <form action="{{ url_for("select_box") }}", method="POST">
                     <input type="submit" value="{{- box[0] -}}" name="box_num"><br> </br>{{- box[1] -}}
                     <input type="hidden" name="boxid", value="{{ boxid }}">
@@ -34,9 +40,6 @@
         {% endfor %}
         </h3>
     </table>
-
-
-
 
 {% endblock %}
 

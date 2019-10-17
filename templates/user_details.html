@@ -20,6 +20,7 @@
             <tr><td> Mobile</td><td>{{ user_dict['mobile'] }}</td></tr>
             <tr><td> Current Balance</td><td>{{ user_dict['balance'] }}</td></tr>
         </table>
+    <a href="{{ url_for('reset_password') }}">Click here to reset password</a>
     </h4>
 {% endblock %}
 

@@ -10,6 +10,13 @@
     <form action="{{ url_for('admin') }}" method="post">
         <a href="{{ url_for('init_box_db') }}">Initialize BOX DB (danger)</a>
     </form>
+    <form action="{{ url_for('add_money') }}" method="POST">
+        <a href="{{ url_for('add_money') }}">Add Money for User</a>
+        <input type="text" name="username" size="10">
+        <input type="text" name="amount" size="10">
+        <input type="submit">
+    </form>
+    <a href="{{ url_for('admin_summary') }}">Admin Summary for all Users</a>
     <form action="{{url_for('create_game') }}" method="POST">
         <a href="{{ url_for('create_game') }}">Create New Game</a>
         <input type="text" name="fee" size="5">

@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Admin Summary
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Admin Summary of all Users
+        </p>
+    </h1>
+
+    <h4>
+        <table align = "center", cellpadding = "10">
+            <tr>
+            <th> userid </th>
+            <th> username </th>
+            <th> first name </th>
+            <th> last name </th>
+            <th> email </th>
+            <th> mobile </th>
+            <th> balance </th>
+            <th> active user? </th>
+            <th> is admin? </th>
+            <th> # active boxes </th>
+            </tr>
+            {% for user in users %}
+            <tr>
+                {% for field in user %}
+                <td>{{ field }}</td>
+                {% endfor %}
+                <td>{{ d[user[0]] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </h4>
+{% endblock %}
+

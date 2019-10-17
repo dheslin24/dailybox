@@ -52,6 +52,7 @@ main td
     border: 1px solid navy;
     font-size: 12px;
     padding: 3px 3px 3px 3px;
+    background-color: #ccc;
 }
 
 main table
