@@ -6,12 +6,19 @@
 
 {% block main %}
 
+<script type="text/javascript">
+
+$(document).ready(function(){
+    $("#grid td.y_n:contains('N')").css('background-color','#fcc');
+});
+
+</script>
+
+
     <h1>
         <p>
             Game Name: {{ box_name }} </br>
-            Entry Fee: {{ fee }}  
-            Boxes Available: {{ avail }} </br>
-            Payout: {{ payout }}
+            Entry Fee: {{ fee }}  Available: {{ avail }}
         </p>
     </h1>
     <p> Randomize Selection </p> 
@@ -23,18 +30,17 @@
     <table id="grid" align = "center", cellpadding = "30">
         <h3>
         <tr>
-        <td></td>
         {% for num in x %}
-            <td> {{ x[loop.index0|string] }} </td>
+            <td> {{ num }} </td>
         {% endfor %}
         </tr>
         {% for row in grid %}
         <tr>
-            <td> {{ y[loop.index0|string] }} </td>  
+            <td> {{ y[loop.index0] }} </td>  
             {% for box in row %}
-                <td class="user_box">    
+                <td>    
                     <form action="{{ url_for("select_box") }}", method="POST">
-                    <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}}
+                    <input type="submit" value="{{- box[0] -}}" name="box_num"><br> </br>{{- box[1] -}}
                     <input type="hidden" name="boxid", value="{{ boxid }}">
                     </form>
                 </td>

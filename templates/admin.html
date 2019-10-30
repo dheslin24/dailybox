@@ -10,21 +10,44 @@
     <form action="{{ url_for('admin') }}" method="post">
         <a href="{{ url_for('init_box_db') }}">Initialize BOX DB (danger)</a>
     </form>
+    <a href="{{ url_for('admin_summary') }}">Admin Summary for all Users</a>
+    </br>
+    <a href="{{ url_for('enter_custom_scores') }}">Enter Custom Game Scores</a>
     <form action="{{ url_for('add_money') }}" method="POST">
-        <a href="{{ url_for('add_money') }}">Add Money for User</a>
+        <label for="username">Add Money:  Username</label>
         <input type="text" name="username" size="10">
+        <label for="amount">Amount</label>
         <input type="text" name="amount" size="10">
         <input type="submit">
     </form>
-    <a href="{{ url_for('admin_summary') }}">Admin Summary for all Users</a>
     <form action="{{url_for('create_game') }}" method="POST">
-        <a href="{{ url_for('create_game') }}">Create New Game</a>
+        <label for="fee">Create New Game: FEE</label>
         <input type="text" name="fee" size="5">
+        <label for="box_name">Box Name</label>
         <input type="text" name="box_name" size="10">
         <select name="box_type">
             <option value=1>New Daily Box</option>
             <option value=2>New Custom Box</option>
         </select>
+        <select name="pay_type">
+            {% for type in payout_type %}
+                <option value="{{ type[0] }}">{{ type[1] }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit">
+    </form>
+    <form action="{{ url_for('start_game') }}" method="POST">
+        <label for="boxid">Start Game:  BOX ID</label>
+        <input type="text" name="boxid" size"5">
+        <input type="submit">
+    </form>
+    <form action="{{ url_for('user_reset') }}" method="POST">
+        <label for="username">Reset User Password: Username</label>
+        <input type="text" name="username" size="10">
+        <label for="password">Password</label>
+        <input type="text" name="password" size="10">
+        <label for="password_confirm">Password Confirm</label>
+        <input type="text" name="password_confirm" size="10">
         <input type="submit">
     </form>
 {% endblock %}
