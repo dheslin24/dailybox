@@ -477,6 +477,19 @@ def select_box():
             for i in rand_indexes:
                 box_list.append(rand_list[i])
 
+    # select all 10 boxes in a column
+    elif request.form.get('column') != None:
+        column = request.form.get('column') # will be 0-9
+        for n in range((0 + int(column)), 100, 10):
+            if n in rand_list:
+                box_list.append(n)
+
+    elif request.form.get('row') != None:
+        row = request.form.get('row')  # will be 0-9
+        for n in range((int(row) * 10), (int(row) * 10) + 10):
+            if n in rand_list:
+                box_list.append(n)
+
     # else just the one the user picked
     else:
         box_num = int(request.form.get('box_num'))

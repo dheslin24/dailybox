@@ -24,12 +24,30 @@
         <h3>
         <tr>
         <td></td>
+        <td></td>
+        {% for n in range(0,10) %}
+            <td>
+                <form action="{{ url_for("select_box") }}", method="POST">
+                <button type="submit" value="{{ loop.index0 }}" name="column">Select Column</button>
+                <input type="hidden" name="boxid" value="{{ boxid }}">
+                </form>
+            </td>
+        {% endfor %}
+        </tr>
+        <tr>
+        <td></td>
         {% for num in x %}
             <td> {{ x[loop.index0|string] }} </td>
         {% endfor %}
         </tr>
         {% for row in grid %}
         <tr>
+            <td> 
+                <form action="{{ url_for("select_box") }}", method="POST">
+                <button type="submit" value="{{ loop.index0 }}" name="row">Select Row</button>
+                <input type="hidden" value="{{ boxid }}" name="boxid">
+                </form>
+            </td>
             <td> {{ y[loop.index0|string] }} </td>  
             {% for box in row %}
                 <td class="user_box">    
