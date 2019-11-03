@@ -6,14 +6,16 @@
 
 {% block main %}
 
-    <h1>
+    <h2>
         <p>
             Game Name: {{ box_name }} </br>
-            Entry Fee: {{ fee }}  
+            Entry Fee: {{ fee }}  </br>
             Boxes Available: {{ avail }} </br>
             Payout: {{ payout }}
         </p>
-    </h1>
+    </h2>
+    <h4><p>Row/Column numbers will be randomly generated once the last box is selected</p></h4>
+    </br>
     <p> Randomize Selection </p> 
     <form name="randform" id="randform" action="{{ url_for("select_box") }}",  method="POST">
         <input type="text" name="rand" id="rand" size="5" placeholder="# boxes">

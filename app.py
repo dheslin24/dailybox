@@ -59,7 +59,7 @@ print(db_config)
 def db(s, db_config=db_config):
     try:
         cnx = mysql.connector.connect(**db_config)
-        print("try succeeded")
+        #print("try succeeded")
 
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -73,7 +73,7 @@ def db(s, db_config=db_config):
         #cnx.close()
 
     cursor = cnx.cursor()
-    print(s)
+    #print(s)
     cursor.execute(s)
     rv = ()
     if s[:6] == "SELECT":
@@ -208,26 +208,32 @@ def calc_winner(boxid):
     return winner_list
         
 
-@app.route("/start_game", methods=["POST", "GET"])
-def start_game():
-    boxid = request.form.get("boxid")
+#@app.route("/start_game", methods=["POST", "GET"])
+def start_game(boxid):
     avail = count_avail(boxid)
+    s = "SELECT box_type from boxes WHERE boxid = {};".format(boxid)
+    box_type = db(s)[0][0]
+    print("boxtype in start game {}".format(box_type))
     if avail == 0:
-        assign_numbers(boxid)
-        return redirect(url_for("display_box", boxid=boxid))
+        assign_numbers(boxid) # this assigns the row/col numbers
+        if box_type == 1:  # this is a dailybox, so generate the winning numbers as well
+            print("got here dailybox start game")
+            winning_col = random.randint(0,9)
+            winning_row = random.randint(0,9)
+            scores = "INSERT INTO scores(boxid, x4, y4) VALUES('{}', '{}', '{}');".format(boxid, winning_col, winning_row)
+            db(scores)
     else:
-        return apology("Cannot start game - still boxes avail")
+        print("tried to start game, but boxes still available")
+        return apology("Cannot start game - still boxes available")
     
 
 def get_games(box_type):
     s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = 1 and b.box_type = {};".format(box_type)
     games = db(s)
     game_list = [list(game) for game in games]
-    print("XOXOOXOXOXXOXO")
     print(game_list)
     a = "SELECT * FROM boxes WHERE active = 1;"
     avail = db(a)
-    print(a)
 
     available = {}
     for game in avail:
@@ -236,7 +242,6 @@ def get_games(box_type):
             if x == 1 or x == 0:
                 count += 1
         available[game[0]] = count
-    print(available)
 
     # add the avail spots to the list that is passed to display game list
     for game in game_list:
@@ -518,6 +523,10 @@ def select_box():
         new_bal = balance - (fee * len(box_list))
         bal = "UPDATE users SET balance = {} WHERE userid = {};".format(new_bal, session['userid'])
         db(bal)
+
+        # are these the last available boxes?  start the game.
+        if len(box_list) == len(rand_list):
+            start_game(boxid)
 
         return redirect(url_for("display_box", boxid=boxid))
 

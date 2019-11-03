@@ -8,11 +8,15 @@
 
 {% block main %}
     <form action="{{ url_for('admin') }}" method="post">
-        <a href="{{ url_for('init_box_db') }}">Initialize BOX DB (danger)</a>
+        <a href="{{ url_for('init_box_db') }}">Initialize BOX DB (danger)</a></br>
     </form>
+    </br>
     <a href="{{ url_for('admin_summary') }}">Admin Summary for all Users</a>
     </br>
+    </br>
     <a href="{{ url_for('enter_custom_scores') }}">Enter Custom Game Scores</a>
+    </br>
+    </br>
     <form action="{{ url_for('add_money') }}" method="POST">
         <label for="username">Add Money:  Username</label>
         <input type="text" name="username" size="10">
@@ -20,6 +24,7 @@
         <input type="text" name="amount" size="10">
         <input type="submit">
     </form>
+    </br>
     <form action="{{url_for('create_game') }}" method="POST">
         <label for="fee">Create New Game: FEE</label>
         <input type="text" name="fee" size="5">
@@ -36,11 +41,7 @@
         </select>
         <input type="submit">
     </form>
-    <form action="{{ url_for('start_game') }}" method="POST">
-        <label for="boxid">Start Game:  BOX ID</label>
-        <input type="text" name="boxid" size"5">
-        <input type="submit">
-    </form>
+    </br>
     <form action="{{ url_for('user_reset') }}" method="POST">
         <label for="username">Reset User Password: Username</label>
         <input type="text" name="username" size="10">
