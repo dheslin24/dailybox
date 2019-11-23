@@ -1,34 +1,24 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    My Games
+    Completed Games
 {% endblock %}
 
 {% block main %}
     <h1>
         <p>
-            My Games
+            Completed Games
         </p>
     </h1>
-
-    <form action="{{ url_for("my_games") }}", method="POST", name="active" value="0">
-    <input type="radio" id="Active" name="active" value=True checked>
-    <label for="Active">Active</label>
-    <input type="radio" id="Complete" name="active" value=False onclick="this.form.submit()">
-    <label for="Complete">Complete</label>
-    </form>
-    </br>
 
     <h4>
         <table align = "center", cellpadding = "10">
         <tr>
             <th> Game ID </th>
-            <th> Box Type </th>
             <th> Box Name </th>
-            <th> Box Number </th>
-            <th> Entry Fee </th>    
+            <th> Entry Fee </th>
             <th> Payout Type </th>
-            <th> Available Entries </th>
+            <th> Winner </th>
         </tr>
             {% for row in game_list %}
             <tr>
@@ -37,7 +27,6 @@
                 {% for field in row[1:] %}
                     <td>{{ field }}</td>
                 {% endfor %}
-                <td> {{ available[row[0]] }}
             </tr>
             {% endfor %}
         </table>

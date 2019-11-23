@@ -43,11 +43,16 @@ test python usage of mysql below
 '''
 
 # s = "SELECT * from boxnums where boxid = 5;"
-s = "SELECT box_type from boxes where boxid = 1;"
+# s = "SELECT username from users where userid = 11;"
+# s = "SELECT * from scores where boxid = 13 order by score_id desc limit 1;"
+# s = "SELECT pay_type from boxes where boxid = 11;"
+s = "SELECT boxid, winner from scores order by score_id desc;"
 test = db(s)
 print(test)
 print(type(test))
 print(type(test[0][0]))
+print(test[0])
+print(test[0][0])
 
 
 

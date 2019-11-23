@@ -29,18 +29,6 @@ Session(app)
 
 def apology(message, code=400):
     """Renders message as an apology to user."""
-    '''
-    def escape(s):
-        """
-        Escape special characters.
-
-        https://github.com/jacebrowning/memegen#special-characters
-        """
-        for old, new in [("-", "--"), (" ", "-"), ("_", "__"), ("?", "~q"),
-                         ("%", "~p"), ("#", "~h"), ("/", "~s"), ("\"", "''")]:
-            s = s.replace(old, new)
-        return s
-    '''
     return render_template("apology.html", top=code, bottom=message, code=code)
 
 
@@ -206,7 +194,76 @@ def calc_winner(boxid):
                     winner_list.append(str(score))
     print(winner_list)
     return winner_list
-        
+
+def find_winning_user(boxid):
+    s = "SELECT * FROM scores WHERE boxid = {} ORDER BY score_id DESC LIMIT 1;".format(boxid)
+    print(s)
+    scores = db(s)[0]
+    score_list = []
+    for score in scores[3:]:
+        if score != None:
+            score_list.append(str(score)[-1:])
+        else:
+            score_list.append(None)
+    print(score_list)
+
+    xy = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
+    xy_list = db(xy)
+    x = json.loads(xy_list[0][0])
+    y = json.loads(xy_list[0][1])
+
+    box_x = []
+    box_y = []
+    # TODO - go thru each score, find in grid
+    for score in score_list[::2]: # only look at the x's
+        if score != None:
+            # box_x = [n for n in x if x[n] == int(score)]
+            for n in x:
+                if x[n] == int(score):
+                    box_x.append(n)
+
+    for score in score_list[1::2]: # look at y's
+        if score != None:
+            #box_y = [n for n in y if y[n] == int(score)]
+            for n in y:
+                if y[n] == int(score):
+                    box_y.append(n)
+    print(box_x, box_y)
+
+    winner_list = []
+    for n in range(len(box_x)):
+        boxnum = "box"
+        if box_y[n] != '0':
+            boxnum += box_y[n]
+        boxnum += box_x[n]
+        w = "SELECT {} FROM boxes WHERE boxid = {};".format(boxnum, boxid)
+        winner = db(w)[0][0]
+        winner_list.append(winner)
+        print(winner)
+
+    print(winner_list)
+    return(winner_list)
+
+
+def create_new_game(box_type, pay_type, fee, box_name=None):
+    if box_name == None:
+        s = "SELECT max(boxid) from boxes;"
+        max_box = db(s)[0][0]
+        box_name = "db" + str(max_box + 1)
+
+    c = ''
+    for x in range(100):
+        c += 'box' + str(x) + ", "
+    c = c[:-2]  # chop last space and ,
+
+    # create string of v = values to add
+    v = "{}, 1, {}, '{}', '{}', ".format(fee, box_type, box_name, pay_type) # sets column active to Y
+    for x in range(100):
+        v += str(1) + ", "  # 1 is place holder value for box entry
+    v = v[:-2] # chop last space and ,
+
+    s = "INSERT INTO boxes(fee, active, box_type, box_name, pay_type, {}) VALUES({});".format(c,v)
+    db(s)
 
 #@app.route("/start_game", methods=["POST", "GET"])
 def start_game(boxid):
@@ -217,22 +274,28 @@ def start_game(boxid):
     if avail == 0:
         assign_numbers(boxid) # this assigns the row/col numbers
         if box_type == 1:  # this is a dailybox, so generate the winning numbers as well
-            print("got here dailybox start game")
             winning_col = random.randint(0,9)
             winning_row = random.randint(0,9)
             scores = "INSERT INTO scores(boxid, x4, y4) VALUES('{}', '{}', '{}');".format(boxid, winning_col, winning_row)
             db(scores)
+            # and... mark the game inactive in database
+            inactivate = "UPDATE boxes SET active = 0 WHERE boxid = {};".format(boxid)
+            db(inactivate)
+            # and... update the db with winner - in scores
+            w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_score(boxid)[0], boxid)
+            db(w)
+
     else:
         print("tried to start game, but boxes still available")
         return apology("Cannot start game - still boxes available")
     
 
-def get_games(box_type):
-    s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = 1 and b.box_type = {};".format(box_type)
+def get_games(box_type, active = 1):
+    s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type = {};".format(active, box_type)
     games = db(s)
     game_list = [list(game) for game in games]
     print(game_list)
-    a = "SELECT * FROM boxes WHERE active = 1;"
+    a = "SELECT * FROM boxes WHERE active = {};".format(active)
     avail = db(a)
 
     available = {}
@@ -244,9 +307,21 @@ def get_games(box_type):
         available[game[0]] = count
 
     # add the avail spots to the list that is passed to display game list
-    for game in game_list:
-        game.append(available[game[0]])
-    print(game_list)
+    if active == 1:
+        for game in game_list:
+            game.append(available[game[0]])
+        print(game_list)
+    
+    # TODO - add the winner if the game is over
+    '''
+    if active == 0:
+        w = "SELECT boxid, winner FROM boxes;"
+        wl = db(w)
+        for game in game_list:
+            if game[3] == "Single Payout":
+            winner_list = calc_winner(game[0])
+            game.append(winner_list)
+    '''
 
     return game_list
 
@@ -268,16 +343,15 @@ def create_game():
     if not request.form.get('box_name'):
         s = "SELECT max(boxid) from boxes;"
         max_box = db(s)[0][0]
-        print("yoyoyoyyo")
-        print(max_box)
         box_name = "db" + str(max_box + 1)
-        print("boxnameboxname {}".format(box_name))
     else:
         box_name = request.form.get('box_name')
     
     box_type = request.form.get('box_type')
     pay_type = request.form.get('pay_type')
     # create string of c = columns to update
+    create_new_game(box_type, pay_type, fee, box_name)
+    '''
     c = ''
     for x in range(100):
         c += 'box' + str(x) + ", "
@@ -291,10 +365,14 @@ def create_game():
 
     s = "INSERT INTO boxes(fee, active, box_type, box_name, pay_type, {}) VALUES({});".format(c,v)
     db(s)
+    '''
     return redirect(url_for("index"))
 
-@app.route("/my_games")
+@app.route("/my_games", methods=["POST", "GET"])
 def my_games():
+    show_active = request.form.get("active")
+    print("activeactive")
+    print(show_active)
     s = "SELECT * FROM boxes;"
     games = db(s)
     g_list = [list(game) for game in games]
@@ -302,6 +380,7 @@ def my_games():
     payout_types = dict(db(pt))
     
     game_list = []
+    completed_game_list = []
     available = {}
     for game in g_list:
         count = 0
@@ -319,16 +398,35 @@ def my_games():
         fee = game[4]
         pay_type = payout_types[game[5]]
         box_index = 0
+        if active == 0:
+            # find who won
+            w = "SELECT username FROM users WHERE userid = {};".format(find_winning_user(gameid)[0])
+            winner = db(w)[0][0]
         for box in game[6:]:
             if box == session['userid'] and active == 1:
                 game_list.append((gameid,box_type,box_name,box_index,fee,pay_type))
+            elif box == session['userid'] and active == 0:
+                completed_game_list.append((gameid,box_type,box_name,box_index,fee,pay_type,winner))
             if box == 1 or box == 0:
                 count += 1
             box_index += 1
         available[game[0]] = count
     
-    return render_template("my_games.html", game_list = game_list, available = available)
+    print(type(show_active))
+    if show_active == 'True' or show_active == None:
+        return render_template("my_games.html", game_list = game_list, available = available)
+    else:
+        print("got to my completed list")
+        return render_template("my_completed_games.html", game_list = completed_game_list)
+
+
+@app.route("/completed_games")
+def completed_games():
+    game_list_d = get_games(1, 0)
+    game_list_c = get_games(2, 0)
+    game_list = game_list_d + game_list_c
     
+    return render_template("completed_games.html", game_list = game_list)
 
 @app.route("/game_list")
 def game_list():
@@ -505,9 +603,11 @@ def select_box():
 
 
     # check balance of user first - then subtract fee
-    f = "SELECT fee FROM boxes WHERE boxid = {};".format(boxid)
+    f = "SELECT fee, box_type FROM boxes WHERE boxid = {};".format(boxid)
     b = "SELECT balance FROM users WHERE userid = {};".format(session['userid'])
-    fee = db(f)[0][0]
+    check = db(f)
+    fee = check[0][0]
+    box_type = check[0][1]
     balance = db(b)[0][0]
     print(fee, balance)
 
@@ -527,6 +627,9 @@ def select_box():
         # are these the last available boxes?  start the game.
         if len(box_list) == len(rand_list):
             start_game(boxid)
+            # also, if it's a DB, create a new one
+            if box_type == 1:
+                create_new_game(box_type, 2, fee)
 
         return redirect(url_for("display_box", boxid=boxid))
 
@@ -582,6 +685,30 @@ def enter_custom_scores():
             
             s = "INSERT INTO scores({}) VALUES({});".format(c, v)
             db(s)
+            # and... make game inactive in db
+            inactivate = "UPDATE boxes SET active = 0 WHERE boxid = {};".format(boxid)
+            db(inactivate)
+            # and... update the winner in db
+            p = "SELECT pay_type FROM boxes WHERE boxid = {};".format(boxid)
+            pay_type = db(p)[0][0]
+            if pay_type == 2:
+                w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid), boxid)
+                db(w)
+            elif pay_type == 1:
+                # will save in db as json string of quarter:winner
+                wl = find_winning_user(boxid)
+                print("wl {}".format(wl))
+                j = '{'
+                qtr = 1
+                for q in wl:
+                    j += '"q{}":{}, '.format(qtr,q)
+                    qtr += 1
+                j = j[:-2] # chop last ", "
+                j += '}'
+                print(j)
+                w = "UPDATE scores SET winner = '{}' WHERE boxid = {};".format(j, boxid)
+                db(w)
+
             return redirect(url_for("admin_summary"))
 
     else:
@@ -666,6 +793,18 @@ def register():
         elif not request.form.get("email"):
             return apology("must enter email")
 
+        # ensure email was submitted
+        elif not request.form.get("first_name"):
+            return apology("must enter first name")
+
+        # ensure email was submitted
+        elif not request.form.get("last_name"):
+            return apology("must enter last name")
+
+        # ensure email was submitted
+        elif not request.form.get("mobile"):
+            return apology("must enter mobile number")
+
         # encrypt password
         if request.form.get("password") == request.form.get("password_confirm"):
             hash = pwd_context.hash(request.form.get("password"))
@@ -674,13 +813,18 @@ def register():
         print("got here insert user")
 
         #insert username & hash into table
-        s = "INSERT INTO users(username, password, email) VALUES('{}', '{}', '{}');".format(request.form.get("username"), hash, request.form.get("email"))
+        s = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES('{}', '{}', '{}', 1, 0, '{}', '{}', '{}');".format(request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
         db(s)
 
         # query database for username
         uid_string = "SELECT userid FROM users WHERE username = '{}'".format(request.form.get("username"))
         #rows = db.execute("SELECT * FROM users WHERE username = :username", username=request.form.get("username"))
         uid = db(uid_string)[0][0]
+
+        # temporary - add money to new user for testing
+        bal_update = "UPDATE users SET balance = 10000 WHERE userid = {};".format(uid)
+        db(bal_update)
+        
 
         # remember which user has logged in
         session["userid"] = uid
@@ -737,6 +881,8 @@ def add_money():
     # find out current balance
     b = "SELECT balance FROM users WHERE username = '{}';".format(username)
     balance = db(b)[0][0]
+    if balance == None:
+        balance = 0
     print(balance, type(balance))
     balance += int(amount)
     s = "UPDATE users SET balance = {} WHERE username = '{}';".format(balance, username)
