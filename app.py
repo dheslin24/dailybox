@@ -282,7 +282,7 @@ def start_game(boxid):
             inactivate = "UPDATE boxes SET active = 0 WHERE boxid = {};".format(boxid)
             db(inactivate)
             # and... update the db with winner - in scores
-            w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_score(boxid)[0], boxid)
+            w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid)[0], boxid)
             db(w)
 
     else:
