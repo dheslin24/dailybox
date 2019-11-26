@@ -14,7 +14,8 @@
             Payout: {{ payout }}
         </p>
     </h2>
-    <h4><p>Row/Column numbers will be randomly generated once the last box is selected</p></h4>
+    <h4><p>Row/Column numbers will be randomly generated once the last box is selected</p>
+        <p>Home Team across the top.  Away team down the side.</p></h4>
     </br>
     <p> Randomize Selection </p> 
     <form name="randform" id="randform" action="{{ url_for("select_box") }}",  method="POST">
@@ -22,8 +23,10 @@
         <input type="hidden" name="boxid" value="{{ boxid }}">
         <input type="submit" onClick="return empty()">
     </form>
+
+<div style="float: right">
     <h3><p>{{ home }}</p></h3>
-    <table id="grid" align = "center", cellpadding = "30">
+    <table class="floater" id="grid" cellpadding = "30">
         <h3>
         <tr>
         <td></td>
@@ -65,8 +68,12 @@
         {% endfor %}
         </h3>
     </table>
-
+    <h3><p align="left">
+    {{ away }}
+    </p></h3>
+    </div>
 {% endblock %}
+
 
 
 
