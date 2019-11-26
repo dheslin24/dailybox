@@ -44,7 +44,7 @@
         <td></td>
         <td></td>
         {% for num in x %}
-            <td> {{ x[loop.index0|string] }} </td>
+            <h3><td><strong> {{ x[loop.index0|string] }} </strong></td></h3>
         {% endfor %}
         </tr>
         {% for row in grid %}
@@ -55,7 +55,7 @@
                 <input type="hidden" value="{{ boxid }}" name="boxid">
                 </form>
             </td>
-            <td> {{ y[loop.index0|string] }} </td>  
+            <h3><td><strong> {{ y[loop.index0|string] }} </strong></td></h3>
             {% for box in row %}
                 <td class="user_box">    
                     <form action="{{ url_for("select_box") }}", method="POST">
