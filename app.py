@@ -626,7 +626,7 @@ def select_box():
     balance = db(b)[0][0]
     print(fee, balance)
 
-    if balance < fee * len(box_list):
+    if balance < fee * len(box_list) and box_type != 3:
         return apology("Insufficient Funds")
 
     elif user_box_count + len(box_list) > 10 and box_type == 3:
