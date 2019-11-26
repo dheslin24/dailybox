@@ -641,10 +641,11 @@ def select_box():
 
         # are these the last available boxes?  start the game.
         if len(box_list) == len(rand_list):
-            start_game(boxid)
-            # also, if it's a DB, create a new one
-            if box_type == 1:
-                create_new_game(box_type, 2, fee)
+            gobs = "SELECT boxid FROM boxes WHERE gobbler_id = {};".format(gobbler_id)
+            boxids = db(gobs)
+            boxid_list = []
+            for box in boxids:
+                start_game(box[0])
 
         return redirect(url_for("display_box", boxid=boxid))
 
