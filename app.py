@@ -167,7 +167,7 @@ def calc_winner(boxid):
     print(pay_type)
 
     winner_list = []
-    if pay_type == 2:  # final only
+    if pay_type == 2 or pay_type == 5:  # final only
         s = "SELECT x4, y4 FROM scores WHERE boxid = {};".format(boxid)
         scores = db(s)# [-1:][0]  # always take the last in list
         if len(scores) == 0:
@@ -293,23 +293,36 @@ def start_game(boxid):
     
 
 def get_games(box_type, active = 1):
-    s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type = {};".format(active, box_type)
-    games = db(s)
-    game_list = [list(game) for game in games]
+    if active == 0:
+        s = "SELECT b.boxid, b.box_name, b.fee, pt.description, s.winner FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id LEFT JOIN scores s ON s.boxid = b.boxid WHERE b.active = {} and b.box_type = {} limit 1;".format(active, box_type)
+        games = db(s)
+        game_list = [list(game) for game in games]
+        for game in game_list:
+            w = "SELECT username FROM users WHERE userid = {};".format(game[4])
+            username = db(w)[0][0]
+            game[4] = username
+            
+            
+    else:
+        s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type = {};".format(active, box_type)
+        games = db(s)
+        game_list = [list(game) for game in games]
+
     print(game_list)
-    a = "SELECT * FROM boxes WHERE active = {};".format(active)
-    avail = db(a)
-
-    available = {}
-    for game in avail:
-        count = 0
-        for x in game[:len(game)-101:-1]:
-            if x == 1 or x == 0:
-                count += 1
-        available[game[0]] = count
-
-    # add the avail spots to the list that is passed to display game list
     if active == 1:
+        a = "SELECT * FROM boxes WHERE active = {};".format(active)
+        avail = db(a)
+
+        available = {}
+        for game in avail:
+            count = 0
+            for x in game[:len(game)-101:-1]:
+                if x == 1 or x == 0:
+                    count += 1
+            available[game[0]] = count
+
+        # add the avail spots to the list that is passed to display game list
+        #if active == 1:
         for game in game_list:
             game.append(available[game[0]])
         print(game_list)
@@ -425,9 +438,10 @@ def my_games():
 
 @app.route("/completed_games")
 def completed_games():
-    game_list_d = get_games(1, 0)
-    game_list_c = get_games(2, 0)
-    game_list = game_list_d + game_list_c
+    #game_list_d = get_games(1, 0)
+    game_list_c = get_games(3, 0)
+    #game_list = game_list_d + game_list_c
+    game_list = game_list_c
     
     return render_template("completed_games.html", game_list = game_list)
 
@@ -452,11 +466,18 @@ def display_box():
         
     s = "SELECT * FROM boxes where boxid = {};".format(boxid)
     box = list(db(s))[0]
+    box_type = box[2]
     box_name = box[3]
     fee = box[4]
     ptype = box[5]
     gobbler_id = box[6]
     payout = payout_calc(ptype, fee)
+
+    if box_type != 1:
+        t = "SELECT home, away FROM teams WHERE boxid = {};".format(boxid)
+        teams = db(t)
+        home = teams[0][0]
+        away = teams[0][1]
 
     grid = []
     box_num = 0
@@ -498,9 +519,9 @@ def display_box():
             
         winners = calc_winner(boxid)
         if len(winners) == 0:
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
-        if ptype == 2 and len(winners) == 2:
+        if (ptype == 2 or ptype == 5) and len(winners) == 2:
             for item in x:
                 if x[item] == int(winners[0]):
                     x_winner = int(item)
@@ -557,7 +578,11 @@ def display_box():
         elif ptype == 1 and len(winners) != 8:
             return apology("something went wrong with winner calculations")
 
-    return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y)
+    if box_type == 1:
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y)
+    else:
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
+
 
 @app.route("/select_box", methods=["GET", "POST"])
 def select_box():
@@ -728,8 +753,8 @@ def enter_custom_scores():
             # and... update the winner in db
             p = "SELECT pay_type FROM boxes WHERE boxid = {};".format(boxid)
             pay_type = db(p)[0][0]
-            if pay_type == 2:
-                w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid), boxid)
+            if pay_type == 2 or pay_type == 5:
+                w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid)[0], boxid)
                 db(w)
             elif pay_type == 1:
                 # will save in db as json string of quarter:winner
