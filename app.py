@@ -153,6 +153,8 @@ def payout_calc(pay_type, fee):
         s = '1st {} / 2nd {} / 3rd {} / Final {}'.format(a, b, a, c)
     elif pay_type == 2:
         s = 'Single Winner - {}'.format(fee * 100)
+    elif pay_type == 5:
+        s = 'Single Winner 10 Man - {}'.format(fee * 10)
     else:
         s = 'Payouts for Game Type not yet supported' # will add later date
 
@@ -397,12 +399,13 @@ def my_games():
         box_name = game[3]
         fee = game[4]
         pay_type = payout_types[game[5]]
+        gobbler_id = game[6]
         box_index = 0
         if active == 0:
             # find who won
             w = "SELECT username FROM users WHERE userid = {};".format(find_winning_user(gameid)[0])
             winner = db(w)[0][0]
-        for box in game[6:]:
+        for box in game[7:]:
             if box == session['userid'] and active == 1:
                 game_list.append((gameid,box_type,box_name,box_index,fee,pay_type))
             elif box == session['userid'] and active == 0:
@@ -436,7 +439,7 @@ def game_list():
 
 @app.route("/custom_game_list")
 def custom_game_list():
-    game_list = get_games(2)
+    game_list = get_games(3)
 
     return render_template("custom_game_list.html", game_list = game_list)
 
@@ -452,6 +455,7 @@ def display_box():
     box_name = box[3]
     fee = box[4]
     ptype = box[5]
+    gobbler_id = box[6]
     payout = payout_calc(ptype, fee)
 
     grid = []
@@ -460,7 +464,7 @@ def display_box():
     # create a list (grid) of 10 lists (rows) of 10 tuples (boxes)
     for _ in range(10):
         l = []
-        for x in box[6 + row : 16 + row]:
+        for x in box[7 + row : 17 + row]:
             if x == 1 or x == 0:
                 x = 'Open'
             else:
@@ -558,16 +562,21 @@ def display_box():
 @app.route("/select_box", methods=["GET", "POST"])
 def select_box():
     boxid = request.form.get('boxid')
+    bt = "SELECT box_type FROM boxes WHERE boxid = {};".format(boxid)
+    box_type = db(bt)[0][0]
     box_list = []
     a = "SELECT {} FROM boxes WHERE boxid = {};".format(box_string(), boxid)
     boxes = db(a)[0]
     rand_list = []
     index = 0
+    user_box_count = 0
 
     # create a list of available boxes by index
     for box in boxes:
         if box == 0 or box == 1:
             rand_list.append(index)
+        if box_type == 3 and box == session['userid']:
+            user_box_count += 1
         index += 1
 
     # randomly pick n boxes from available list above
@@ -575,6 +584,8 @@ def select_box():
         rand = request.form.get('rand')
         if int(rand) > len(rand_list):
             return apology("You have requested {} boxes, but only {} available.".format(int(rand), len(rand_list)))
+        elif box_type == 3 and int(rand) > 10:  # 10 man validation
+            return apology("This is a 10-man.  10 boxes max")
         else:
             rand_indexes = random.sample(range(len(rand_list)), int(rand))
             for i in rand_indexes:
@@ -597,7 +608,11 @@ def select_box():
     else:
         box_num = int(request.form.get('box_num'))
         if box_num in rand_list:
-            box_list.append(box_num)
+            # 10-man validation
+            if box_type == 3 and user_box_count >= 10:
+                return apology("This is a 10-man.  10 boxes max.")
+            else:
+                box_list.append(box_num)
         else:
             return apology("Umm.. box already taken")
 
@@ -607,12 +622,33 @@ def select_box():
     b = "SELECT balance FROM users WHERE userid = {};".format(session['userid'])
     check = db(f)
     fee = check[0][0]
-    box_type = check[0][1]
+    # box_type = check[0][1]
     balance = db(b)[0][0]
     print(fee, balance)
 
     if balance < fee * len(box_list):
         return apology("Insufficient Funds")
+
+    elif user_box_count + len(box_list) > 10 and box_type == 3:
+        return apology("This is a 10-man.  10 boxes max.")
+    
+    elif box_type == 3:
+        g = "SELECT gobbler_id FROM boxes WHERE boxid = {};".format(boxid)
+        gobbler_id = db(g)[0][0]
+        for b in box_list:
+            s = "UPDATE boxes SET box{}={} WHERE gobbler_id = {};".format(b, session['userid'], gobbler_id)
+            db(s)
+
+        # are these the last available boxes?  start the game.
+        if len(box_list) == len(rand_list):
+            start_game(boxid)
+            # also, if it's a DB, create a new one
+            if box_type == 1:
+                create_new_game(box_type, 2, fee)
+
+        return redirect(url_for("display_box", boxid=boxid))
+
+
     else:
         for b in box_list:
             # assign box to user
@@ -822,7 +858,7 @@ def register():
         uid = db(uid_string)[0][0]
 
         # temporary - add money to new user for testing
-        bal_update = "UPDATE users SET balance = 10000 WHERE userid = {};".format(uid)
+        bal_update = "UPDATE users SET balance = 100000 WHERE userid = {};".format(uid)
         db(bal_update)
         
 
