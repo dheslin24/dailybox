@@ -294,7 +294,7 @@ def start_game(boxid):
 
 def get_games(box_type, active = 1):
     if active == 0:
-        s = "SELECT b.boxid, b.box_name, b.fee, pt.description, s.winner FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id LEFT JOIN scores s ON s.boxid = b.boxid WHERE b.active = {} and b.box_type = {} limit 1;".format(active, box_type)
+        s = "SELECT b.boxid, b.box_name, b.fee, pt.description, s.winner FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id LEFT JOIN scores s ON s.boxid = b.boxid WHERE b.active = {} and b.box_type = {};".format(active, box_type)
         games = db(s)
         game_list = [list(game) for game in games]
         for game in game_list:
