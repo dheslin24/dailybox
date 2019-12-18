@@ -24,6 +24,11 @@
     color: #2e944b;
 }
 
+.floater {
+    margin: 5px;
+    float: right;
+}
+
 main .form-control
 {
     /* center form controls */

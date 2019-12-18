@@ -366,22 +366,22 @@ def create_game():
     pay_type = request.form.get('pay_type')
     # create string of c = columns to update
     create_new_game(box_type, pay_type, fee, box_name)
-    '''
-    c = ''
-    for x in range(100):
-        c += 'box' + str(x) + ", "
-    c = c[:-2]  # chop last space and ,
-    
-    # create string of v = values to add
-    v = "{}, 1, {}, '{}', '{}', ".format(fee, box_type, box_name, pay_type) # sets column active to Y
-    for x in range(100):
-        v += str(1) + ", "  # 1 is place holder value for box entry
-    v = v[:-2] # chop last space and ,
 
-    s = "INSERT INTO boxes(fee, active, box_type, box_name, pay_type, {}) VALUES({});".format(c,v)
-    db(s)
-    '''
     return redirect(url_for("index"))
+
+@app.route("/gobble_games", methods=["POST", "GET"])
+def gobble_games():
+    boxid_1 = request.form.get('boxid_1')
+    boxid_2 = request.form.get('boxid_2')
+    boxid_3 = request.form.get('boxid_3')
+    print(boxid_1, boxid_2, boxid_3)
+    g = "SELECT max(gobbler_id) from boxes;"
+    max_g = db(g)[0][0]
+    g_id = max_g + 1
+    s = "UPDATE boxes SET gobbler_id = {} WHERE boxid IN ({}, {}, {});".format(g_id, int(boxid_1), int(boxid_2), int(boxid_3))
+    db(s)
+
+    return redirect(url_for("admin_summary"))
 
 @app.route("/my_games", methods=["POST", "GET"])
 def my_games():

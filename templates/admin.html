@@ -25,7 +25,7 @@
         <input type="submit">
     </form>
     </br>
-    <form action="{{url_for('create_game') }}" method="POST">
+    <form action="{{ url_for('create_game') }}" method="POST">
         <label for="fee">Create New Game: FEE</label>
         <input type="text" name="fee" size="5">
         <label for="box_name">Box Name</label>
@@ -33,12 +33,22 @@
         <select name="box_type">
             <option value=1>New Daily Box</option>
             <option value=2>New Custom Box</option>
+            <option value=3>New Gobbler</option>
         </select>
         <select name="pay_type">
             {% for type in payout_type %}
                 <option value="{{ type[0] }}">{{ type[1] }}</option>
             {% endfor %}
         </select>
+        <input type="submit">
+    </form>
+    <form action="{{ url_for('gobble_games') }}" method="POST">
+        <label for="boxid_1">Gobble Games:  boxid 1</label>
+        <input type="text" name="boxid_1" size="5">
+        <label for="boxid_2">boxid 2</label>
+        <input type="text" name="boxid_2" size="5">
+        <label for="boxid_3">boxid 3</label>
+        <input type="text" name="boxid_3" size="5">
         <input type="submit">
     </form>
     </br>
