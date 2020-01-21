@@ -155,6 +155,8 @@ def payout_calc(pay_type, fee):
         s = 'Single Winner - {}'.format(fee * 100)
     elif pay_type == 5:
         s = 'Single Winner 10 Man - {}'.format(fee * 10)
+    elif pay_type == 3:
+        s = 'Every Score Wins {}.  \nReverse Final Wins {}.  \nFinal gets the remainder.'.format(fee * 3, fee * 10)
     else:
         s = 'Payouts for Game Type not yet supported' # will add later date
 
@@ -194,6 +196,9 @@ def calc_winner(boxid):
                     winner_list.append(str(score)[-1:])
                 else:
                     winner_list.append(str(score))
+    elif pay_type == 3:  # every score
+        pass # EVERY SCORE CALC'S GO HERE!!!!
+
     print(winner_list)
     return winner_list
 
@@ -397,6 +402,7 @@ def my_games():
     game_list = []
     completed_game_list = []
     available = {}
+    user_nums = []
     for game in g_list:
         count = 0
         gameid = game[0]
@@ -407,6 +413,8 @@ def my_games():
             box_type = 'Daily Box'
         elif b_type == 2:
             box_type = 'Custom Box'
+        elif b_type == 3:
+            box_type = 'Nutcracker'
         elif b_type == None:
             box_type = 'Daily Box'
         box_name = game[3]
@@ -421,8 +429,43 @@ def my_games():
         for box in game[7:]:
             if box == session['userid'] and active == 1:
                 game_list.append((gameid,box_type,box_name,box_index,fee,pay_type))
+                '''
+                n = "SELECT x, y FROM boxnums WHERE boxid = {};".format(gameid)
+                nums = db(n)[0]
+                if len(nums) != 0:
+                    if box_index < 10:
+                        col_index = '0'
+                    else:
+                        col_index = str(box_index)[-1:]
+                    row_index = str(box_index)[:1]
+                    x = json.loads(nums[0])
+                    y = json.loads(nums[1])
+                    h = x[col_index]  # if box 25, you want the value for column 5
+                    a = y[row_index]  # if box 25, you want the value for row 2
+                    game_list.append((gameid,box_type,box_name,box_index,fee,pay_type,(h,a)))
+                else:
+                    game_list.append((gameid,box_type,box_name,box_index,fee,pay_type))
+                '''
             elif box == session['userid'] and active == 0:
                 completed_game_list.append((gameid,box_type,box_name,box_index,fee,pay_type,winner))
+                '''
+                n = "SELECT x, y FROM boxnums WHERE boxid = {};".format(gameid)
+                nums = db(n)[0]
+                if len(nums) != 0:
+                    if box_index < 10:
+                        col_index = '0'                   
+                    else:
+                        col_index = str(box_index)[-1:]
+                    row_index = str(box_index)[:1]
+                    x = json.loads(nums[0])
+                    y = json.loads(nums[1])
+                    print(x,y)
+                    h = x[col_index]
+                    a = y[row_index]
+                    completed_game_list.append((gameid,box_type,box_name,box_index,fee,pay_type,winner,(h,a)))
+                else:
+                    completed_game_list.append((gameid,box_type,box_name,box_index,fee,pay_type,winner))
+                '''
             if box == 1 or box == 0:
                 count += 1
             box_index += 1
@@ -439,7 +482,7 @@ def my_games():
 @app.route("/completed_games")
 def completed_games():
     #game_list_d = get_games(1, 0)
-    game_list_c = get_games(3, 0)
+    game_list_c = get_games(2, 0)
     #game_list = game_list_d + game_list_c
     game_list = game_list_c
     
@@ -453,7 +496,7 @@ def game_list():
 
 @app.route("/custom_game_list")
 def custom_game_list():
-    game_list = get_games(3)
+    game_list = get_games(2)
 
     return render_template("custom_game_list.html", game_list = game_list)
 
@@ -609,8 +652,6 @@ def select_box():
         rand = request.form.get('rand')
         if int(rand) > len(rand_list):
             return apology("You have requested {} boxes, but only {} available.".format(int(rand), len(rand_list)))
-        elif box_type == 3 and int(rand) > 10:  # 10 man validation
-            return apology("This is a 10-man.  10 boxes max")
         else:
             rand_indexes = random.sample(range(len(rand_list)), int(rand))
             for i in rand_indexes:
@@ -775,6 +816,11 @@ def enter_custom_scores():
 
     else:
         return render_template("enter_custom_scores.html")
+
+# 'threes' dice game
+@app.route("/threes", methods=["GET", "POST"])
+def threes():
+    return render_template("threes.html")
     
 
 # LOGIN routine
