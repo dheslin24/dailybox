@@ -17,12 +17,14 @@
     <h4><p>Row/Column numbers will be randomly generated once the last box is selected</p>
         <p>Home Team across the top.  Away team down the side.</p></h4>
     </br>
+    <!--
     <p> Randomize Selection </p> 
     <form name="randform" id="randform" action="{{ url_for("select_box") }}",  method="POST">
         <input type="text" name="rand" id="rand" size="5" placeholder="# boxes">
         <input type="hidden" name="boxid" value="{{ boxid }}">
         <input type="submit" onClick="return empty()">
     </form>
+    -->
 
 <div style="float: right">
     <h3><p>{{ home }}</p></h3>
