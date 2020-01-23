@@ -502,6 +502,7 @@ def custom_game_list():
 
 @app.route("/display_box", methods=["GET", "POST"])
 def display_box():
+    sf = {'0':'', '1':'S', '2':'A', '3':'N', '4':'', '5':'F', '6':'R', '7':'A', '8':'N', '9':''}
     if request.method == "POST":
         boxid = request.form.get('boxid')
     else:
@@ -551,7 +552,7 @@ def display_box():
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
         x = ['x' for x in range(10)]
-        x.insert(0,' ')
+        #x.insert(0,' ')
         y = ['y' for y in range(10)]
 
     # gets row/column numbers and finds winner
@@ -562,7 +563,7 @@ def display_box():
             
         winners = calc_winner(boxid)
         if len(winners) == 0:
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, sf=sf)
 
         if (ptype == 2 or ptype == 5) and len(winners) == 2:
             for item in x:
@@ -624,7 +625,7 @@ def display_box():
     if box_type == 1:
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y)
     else:
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, sf=sf)
 
 
 @app.route("/select_box", methods=["GET", "POST"])

@@ -15,7 +15,6 @@
         </p>
     </h2>
     <h4><p>Row/Column numbers will be randomly generated once the last box is selected</p>
-        <p>Home Team across the top.  Away team down the side.</p></h4>
     </br>
     <!--
     <p> Randomize Selection </p> 
@@ -26,10 +25,10 @@
     </form>
     -->
 
-<div style="float: right">
-    <h3><p>{{ home }}</p></h3>
+<div>
     <table id="grid" align="center", cellpadding = "30">
         <h3>
+        <!--
         <tr>
         <td></td>
         <td></td>
@@ -42,6 +41,8 @@
             </td>
         {% endfor %}
         </tr>
+        -->
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td><strong>K</strong></td><td><strong>C</strong></td><td></td><td></td><td></td><td></td></tr>
         <tr>
         <td></td>
         <td></td>
@@ -51,12 +52,15 @@
         </tr>
         {% for row in grid %}
         <tr>
+            <!--
             <td> 
                 <form action="{{ url_for("select_box") }}", method="POST">
                 <button type="submit" value="{{ loop.index0 }}" name="row">Select Row</button>
                 <input type="hidden" value="{{ boxid }}" name="boxid">
                 </form>
             </td>
+            -->
+            <h3><td><strong> {{ sf[loop.index0|string] }} </strong></td></h3>
             <h3><td><strong> {{ y[loop.index0|string] }} </strong></td></h3>
             {% for box in row %}
                 <td class="user_box">    
@@ -70,9 +74,6 @@
         {% endfor %}
         </h3>
     </table>
-    <h3><p align="left">
-    {{ away }}
-    </p></h3>
     </div>
 {% endblock %}
 
