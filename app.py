@@ -162,7 +162,7 @@ def payout_calc(pay_type, fee):
 
     return s
 
-def calc_winner(boxid):
+def calc_winner(boxid):  # all this does is strip all beginning digits from the scores
     # find pay_type
     pt = "SELECT pay_type FROM boxes WHERE boxid = {};".format(boxid)
     pay_type = db(pt)[0][0]
@@ -196,8 +196,8 @@ def calc_winner(boxid):
                     winner_list.append(str(score)[-1:])
                 else:
                     winner_list.append(str(score))
-    elif pay_type == 3:  # every score
-        pass # EVERY SCORE CALC'S GO HERE!!!!
+
+    # pay_type == 3:  #  will do this elsewhere
 
     print(winner_list)
     return winner_list
@@ -562,7 +562,7 @@ def display_box():
         y = json.loads(xy[1])
             
         winners = calc_winner(boxid)
-        if len(winners) == 0:
+        if len(winners) == 0 and ptype != 3:
             return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, sf=sf)
 
         if (ptype == 2 or ptype == 5) and len(winners) == 2:
@@ -622,6 +622,30 @@ def display_box():
         elif ptype == 1 and len(winners) != 8:
             return apology("something went wrong with winner calculations")
 
+        if ptype == 3:
+            s = "SELECT winning_box FROM everyscore where boxid = {};".format(boxid) ## finish
+            winners = db(s)
+            
+            if len(winners) != 0:
+                winner_dict = {}
+                for winning_box in winners:
+                    if winning_box[0] in winner_dict:
+                        winner_dict[winning_box[0]] += 1
+                    else:
+                        winner_dict[winning_box[0]] = 1
+
+            for winning_box in winner_dict:
+                cash = str(fee * 3 * winner_dict[winning_box])
+                if int(winning_box) > 9:
+                    y_win = str(winning_box)[:1]
+                else:
+                    y_win = '0'
+                x_win = str(winning_box)[-1:]
+                
+                winner_username = grid[int(y_win)][int(x_win)][1]
+                winner_markup = Markup('</br>WINNER</br>{}'.format(cash))
+                grid[int(y_win)][int(x_win)] = (winning_box, winner_username + winner_markup)
+                
     if box_type == 1:
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y)
     else:
@@ -736,6 +760,61 @@ def select_box():
                 create_new_game(box_type, 2, fee)
 
         return redirect(url_for("display_box", boxid=boxid))
+
+@app.route("/enter_every_score", methods=["GET", "POST"])
+def enter_every_score():
+    if request.method == "POST":
+        if not request.form.get("boxid"):
+            return apology("boxid required")
+        if not request.form.get("home") or not request.form.get("away"):
+            return apology("need 2 scores")
+        boxid = int(request.form.get("boxid"))
+        score_num = int(request.form.get("score_num"))
+        home_score = int(request.form.get("home"))
+        away_score = int(request.form.get("away"))
+
+        ### build query to figure out winner here ###
+
+        if home_score > 9:
+            h = str(home_score)[-1:]
+        else:
+            h = str(home_score)
+        if away_score > 9:
+            a = str(away_score)[-1:]
+        else:
+            a = str(away_score)
+
+        xy = "SELECT x, y from boxnums WHERE boxid = {};".format(boxid)
+        xy_list = db(xy)
+        x = json.loads(xy_list[0][0])
+        y = json.loads(xy_list[0][1])
+        print(h,a)
+        print(x,y)
+
+        boxnum = ''
+        for item in y:
+            if y[item] == int(a):
+                if item != 0:
+                    boxnum += item
+        for item in x:
+            if x[item] == int(h):
+                boxnum += item
+        print("boxnum for ES is {}".format(boxnum))
+
+        
+        w = "SELECT {} FROM boxes WHERE boxid = {};".format(boxnum, boxid)
+        winner = db(w)[0][0]
+        
+
+        s = "INSERT INTO everyscore(boxid, score_num, x_score, y_score, winner, winning_box) VALUES('{}', '{}', '{}', '{}', '{}', '{}');".format(str(boxid), str(score_num), str(home_score), str(away_score), str(winner), str(boxnum))
+        db(s)
+
+        return render_template("enter_every_score.html")
+
+    else:
+        return render_template("enter_every_score.html")
+
+        
 
 @app.route("/enter_custom_scores", methods=["GET", "POST"])
 def enter_custom_scores():
