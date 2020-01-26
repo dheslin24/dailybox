@@ -910,10 +910,13 @@ def delete_score():
 
 @app.route("/current_winners/<boxid>", methods=["POST", "GET"])
 def current_winners(boxid):
-    s = "SELECT e.score_type, e.x_score, e.y_score, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid WHERE boxid = {} order by e.score_num;".format(boxid)
-    scores = db(s)
+    if request.method == "POST":
+        return redirect(url_for("display_box", boxid))
+    else:
+        s = "SELECT e.score_type, e.x_score, e.y_score, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid WHERE boxid = {} order by e.score_num;".format(boxid)
+        scores = db(s)
 
-    return render_template("current_winners.html", scores=scores)
+        return render_template("current_winners.html", scores=scores, boxid=boxid)
 
 @app.route("/end_game", methods=["POST", "GET"])
 def end_game():
