@@ -851,6 +851,53 @@ def find_winning_box(boxid, home_score, away_score):
     print("winner {}".format(winner))
     return (boxnum, winner)
 
+def sanity_checks(boxid_list):
+    ### sanity checks ###
+    check_result_list = []
+    # 1. if multiple games for everyscore, do they all have the same max score_num?
+    if len(boxid_list) > 1:  # if equal to 1, don't bother checking or alerting on this
+        for item in boxid_list:
+            max_list = []
+            m = "SELECT max(score_num) FROM everyscore WHERE boxid = {};".format(item)
+            max_list.append(db(m)[0][0])
+        if len(set(max_list)) == 1:
+            check_result_list.append('SUCCESS - all games have equal max score')
+        else:
+            check_result_list.append('WARNING - not all games have equal max score')
+
+    # 2. check there are no gaps in max scores
+    m = "SELECT e.boxid, e.score_num FROM everyscore e INNER JOIN boxes b ON e.boxid = b.boxid WHERE b.active = 1 ORDER BY boxid, score_num;"
+    max_check = db(m)
+    d = {}
+    for x in max_check:
+        if x[0] not in d:
+            d[x[0]] = [x[1]]
+        else:
+            d[x[0]].append(x[1])
+    print(d)
+    seq_list = []
+    for key in d:
+        if max(d[key]) != len(d[key]) and max(d[key]) != 200:  # don't check if game over.  200 means final.
+            check_result_list.append('WARNING - check score numbers for boxid {}, it may not be sequential'.format(key))
+        if d[key][0] != 1:
+            print("first score check {}".format(d[key][0]))
+            check_result_list.append('WARNING - your first score number should be 1.  it is not for boxid {}'.format(key))
+        else:
+            last = 1
+            good = True
+            for sn in d[key][1:]:
+                if sn - last != 1 and (sn != 100 and sn != 200):
+                    good = False
+                    check_result_list.append('WARNING - score numbers are not sequential.  check boxid {} between {} and {}'.format(key, last, sn))
+                last = sn 
+            if good == True:
+                seq_list.append(str(key))
+    print("seq list")
+    print(len(seq_list), len(d))
+    if len(seq_list) == len(d):
+        check_result_list.append('SUCCESS - score nums are sequential for boxid(s) {}.'.format(", ".join(seq_list)))
+    return check_result_list
+    ### END sanity checks ###
 
 @app.route("/enter_every_score", methods=["GET", "POST"])
 def enter_every_score():
@@ -864,6 +911,7 @@ def enter_every_score():
         boxid_list = db(b)
         if len(boxid_list) == 0:
             return apology("there are no active every score games")
+
         score_num = int(request.form.get("score_num"))
         home_score = int(request.form.get("home"))
         away_score = int(request.form.get("away"))
@@ -881,25 +929,31 @@ def enter_every_score():
             s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '{}', 'Score Change {}', '{}', '{}', '{}', '{}');".format(str(boxid), str(score_num), (fee * 3), str(home_score), str(away_score), str(winner), str(boxnum))
             db(s)
 
-        s = "SELECT e.score_id, e.score_num, e.score_type, e.x_score, e.y_score, e.winner, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid LEFT JOIN boxes b ON b.boxid = e.boxid where b.active = 1 order by e.score_num;".format(boxid)
+        ### run sanity checks ###
+        check_result_list = sanity_checks(box_list)
+
+        s = "SELECT e.boxid, e.score_id, e.score_num, e.x_score, e.y_score, e.score_type, e.winning_box, u.username, u.first_name, u.last_name FROM everyscore e LEFT JOIN users u ON e.winner = u.userid INNER JOIN boxes b ON b.boxid = e.boxid where b.active = 1 and b.pay_type = 3 order by e.boxid, e.score_num, e.score_id;".format(boxid)
         scores = db(s)
         print(scores)
 
-        return render_template("enter_every_score.html", scores=scores, box_list=box_list)
+        return render_template("enter_every_score.html", scores=scores, box_list=box_list, check_result_list=check_result_list)
 
+    
     else:
-        s = "SELECT e.score_id, e.score_num, e.score_type, e.x_score, e.y_score, e.winner, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid LEFT JOIN boxes b ON b.boxid = e.boxid where b.active = 1 order by e.score_num;"
+        s = "SELECT e.boxid, e.score_id, e.score_num, e.x_score, e.y_score, e.score_type, e.winning_box, u.username, u.first_name, u.last_name FROM everyscore e LEFT JOIN users u ON e.winner = u.userid INNER JOIN boxes b ON b.boxid = e.boxid where b.active = 1 and b.pay_type = 3 order by e.boxid, e.score_num, e.score_id;"
         scores = db(s)
         print(scores)
         b = "SELECT boxid FROM boxes WHERE pay_type = 3 and active = 1;"
         boxid_list = db(b)
+        print("boxid list {}".format(boxid_list))
         if len(boxid_list) == 0:
             return apology("there are no active every score games")
         box_list = []
         for boxid in boxid_list:
             box_list.append(boxid[0])
+        check_result_list = sanity_checks(box_list)
 
-        return render_template("enter_every_score.html", scores=scores, box_list=box_list)
+        return render_template("enter_every_score.html", scores=scores, box_list=box_list, check_result_list=check_result_list)
 
 @app.route("/delete_score", methods=["POST", "GET"])
 def delete_score():
@@ -913,7 +967,7 @@ def current_winners(boxid):
     if request.method == "POST":
         return redirect(url_for("display_box", boxid))
     else:
-        s = "SELECT e.score_type, e.x_score, e.y_score, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid WHERE boxid = {} order by e.score_num;".format(boxid)
+        s = "SELECT e.score_type, e.x_score, e.y_score, e.winning_box, u.username, u.first_name, u.last_name FROM everyscore e LEFT JOIN users u ON e.winner = u.userid WHERE boxid = {} order by e.score_num;".format(boxid)
         scores = db(s)
 
         return render_template("current_winners.html", scores=scores, boxid=boxid)

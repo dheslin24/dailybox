@@ -6,6 +6,10 @@
 
 {% block main %}
     <p> Enter Scores for BOXID(s) {% for box in box_list %} {{ box }} {% endfor %} </p>
+    <p> Sanity Checks </p>
+    {% for message in check_result_list %}
+        <p> {{ message }} </p>
+    {% endfor %}
     <form action="{{ url_for('enter_every_score') }}" method="post">
         <fieldset>
             <div class="form-group">
@@ -32,14 +36,16 @@
     <h4>
         <table align = "center", cellpadding = "10">
             <tr>
+            <th> BoxID </th>
             <th> Score ID </th>
-            <th> Score Number </th>
-            <th> Score Type </th>
+            <th> Score Num </th>
             <th> KC </th>
             <th> SF </th>
-            <th> Userid </th>
+            <th> Desc </th>
             <th> Box </th>
-            <th> Username </th>
+            <th> Winner </th>
+            <th> First </th>
+            <th> Last </th>
             </tr>
             {% for score in scores %}
             <tr>

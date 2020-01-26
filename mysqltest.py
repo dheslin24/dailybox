@@ -55,7 +55,9 @@ test python usage of mysql below
 # s = "SELECT score_num, winning_box FROM everyscore where boxid = 31;"
 # s = "SELECT username FROM users WHERE userid = 11;"
 # s = "SELECT boxid from boxes where pay_type = 3 and active = 1;"
-s = "SELECT box_type, pay_type from boxes where boxid = 35;"
+# s = "SELECT box_type, pay_type from boxes where boxid = 35;"
+# s = "SELECT userid, username from users;"
+s = "SELECT boxid, score_num from everyscore order by boxid, score_num;"
 test = db(s)
 print("test")
 print(test)
