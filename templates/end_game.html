@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    End Game
+{% endblock %}
+
+{% block main %}
+    <p>This will end the game.  Are you sure you want to do this?  It will add reverse and final scores to grid and be done</p>
+    <form action="{{ url_for('end_game') }}" method="post">
+        <fieldset>
+            <div class="form-group">
+                <input autocomplete="off" autofocus class="form-control" name="boxid" placeholder="boxid" type="text" size="5"/>
+                </br>
+                <input autocomplete="Off" class="form-control" name="home" placeholder="KC Final" type="text" size="10"/>
+                <input autocomplete="Off" class="form-control" name="away" placeholder="SF Final" type="text" size="10"/>
+                </br>
+                <button class="btn btn-default" type="submit">End Game</button>
+            </div>
+        </fieldset>
+    </form>
+
+{% endblock %}

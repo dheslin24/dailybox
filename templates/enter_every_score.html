@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Enter Every Score
+{% endblock %}
+
+{% block main %}
+    <p> Enter Scores for BOXID(s) {% for box in box_list %} {{ box }} {% endfor %} </p>
+    <form action="{{ url_for('enter_every_score') }}" method="post">
+        <fieldset>
+            <div class="form-group">
+                <!--<input autocomplete="off" autofocus class="form-control" name="boxid" placeholder="boxid" type="text" size="5"/>-->
+                <input autocomplete="off" class="form-control" name="score_num" placeholder="score number" type="text" size="5"/>
+                </br>
+                <input class="form-control" name="home" placeholder="home" type="text" size="5"/>
+                <input class="form-control" name="away" placeholder="away" type="text" size="5"/>
+                </br>
+                <button type="submit">Submit</button>
+                </br>
+            </div>
+        </fieldset>
+    </form>
+
+    <p> Delete a specific score ID </p>
+    <form action="{{ url_for('delete_score') }}" method="POST">
+        <input autocomplete="off" class="form-control" name="score_id" placeholder="score id" type="text" size="5"/>
+        <button type="submit">Delete</button>
+    </form>
+        
+
+
+    <h4>
+        <table align = "center", cellpadding = "10">
+            <tr>
+            <th> Score ID </th>
+            <th> Score Number </th>
+            <th> Score Type </th>
+            <th> KC </th>
+            <th> SF </th>
+            <th> Userid </th>
+            <th> Box </th>
+            <th> Username </th>
+            </tr>
+            {% for score in scores %}
+            <tr>
+                {% for field in score %}
+                <td>{{ field }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </h4>
+
+    <a href="{{ url_for('end_game') }}">Click here to end game and calculate final/reverse final</a>
+
+{% endblock %}

@@ -252,7 +252,7 @@ def find_winning_user(boxid):
     return(winner_list)
 
 
-def create_new_game(box_type, pay_type, fee, box_name=None):
+def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None):
     if box_name == None:
         s = "SELECT max(boxid) from boxes;"
         max_box = db(s)[0][0]
@@ -271,12 +271,21 @@ def create_new_game(box_type, pay_type, fee, box_name=None):
 
     s = "INSERT INTO boxes(fee, active, box_type, box_name, pay_type, {}) VALUES({});".format(c,v)
     db(s)
+    
+    b = "SELECT max(boxid) FROM boxes;"
+    boxid = db(b)[0][0]
+
+    t = "INSERT INTO teams(boxid, home, away) VALUES('{}', '{}', '{}');".format(boxid, home, away)
+    db(t)
 
 #@app.route("/start_game", methods=["POST", "GET"])
 def start_game(boxid):
     avail = count_avail(boxid)
-    s = "SELECT box_type from boxes WHERE boxid = {};".format(boxid)
-    box_type = db(s)[0][0]
+    s = "SELECT box_type, pay_type from boxes WHERE boxid = {};".format(boxid)
+    box = db(s)        
+    box_type = box[0][0]
+    pay_type = box[0][1]
+    
     print("boxtype in start game {}".format(box_type))
     if avail == 0:
         assign_numbers(boxid) # this assigns the row/col numbers
@@ -291,6 +300,13 @@ def start_game(boxid):
             # and... update the db with winner - in scores
             w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid)[0], boxid)
             db(w)
+        if pay_type == 3:  # this is everyscore pool, so set 0, 0 as initial winning score
+            winner = find_winning_box(boxid, 0, 0)
+            win_box = winner[0]
+            win_uid = winner[1]
+            
+            s = "INSERT INTO everyscore(score_num, score_type, boxid, x_score, y_score, winner, winning_box) VALUES('1', '0/0 Start Game', {}, '0', '0', '{}', '{}');".format(boxid, win_uid, win_box)
+            db(s)
 
     else:
         print("tried to start game, but boxes still available")
@@ -306,7 +322,6 @@ def get_games(box_type, active = 1):
             w = "SELECT username FROM users WHERE userid = {};".format(game[4])
             username = db(w)[0][0]
             game[4] = username
-            
             
     else:
         s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type = {};".format(active, box_type)
@@ -332,17 +347,6 @@ def get_games(box_type, active = 1):
             game.append(available[game[0]])
         print(game_list)
     
-    # TODO - add the winner if the game is over
-    '''
-    if active == 0:
-        w = "SELECT boxid, winner FROM boxes;"
-        wl = db(w)
-        for game in game_list:
-            if game[3] == "Single Payout":
-            winner_list = calc_winner(game[0])
-            game.append(winner_list)
-    '''
-
     return game_list
 
 @app.route("/init_box_db")
@@ -370,7 +374,9 @@ def create_game():
     box_type = request.form.get('box_type')
     pay_type = request.form.get('pay_type')
     # create string of c = columns to update
-    create_new_game(box_type, pay_type, fee, box_name)
+    home = request.form.get('home')
+    away = request.form.get('away')
+    create_new_game(box_type, pay_type, fee, box_name, home, away)
 
     return redirect(url_for("index"))
 
@@ -502,7 +508,7 @@ def custom_game_list():
 
 @app.route("/display_box", methods=["GET", "POST"])
 def display_box():
-    sf = {'0':'', '1':'S', '2':'A', '3':'N', '4':'', '5':'F', '6':'R', '7':'A', '8':'N', '9':''}
+    sf = {'0':'', '1':'', '2':'', '3':'', '4':'S', '5':'F', '6':'', '7':'', '8':'', '9':''}
     if request.method == "POST":
         boxid = request.form.get('boxid')
     else:
@@ -516,6 +522,12 @@ def display_box():
     ptype = box[5]
     gobbler_id = box[6]
     payout = payout_calc(ptype, fee)
+    if ptype != 2 or ptype != 5:
+        final_payout = fee * 100
+    elif ptype == 5:
+        final_payout = fee * 10
+    else:
+        final_payment = None
 
     if box_type != 1:
         t = "SELECT home, away FROM teams WHERE boxid = {};".format(boxid)
@@ -551,12 +563,14 @@ def display_box():
     
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
+        num_selection = "Row/Column numbers will be randomly generated once the last box is selected"
         x = ['x' for x in range(10)]
         #x.insert(0,' ')
         y = ['y' for y in range(10)]
 
     # gets row/column numbers and finds winner
     else:
+        num_selection = ''
         xy = db(xy_string)[0]
         x = json.loads(xy[0])
         y = json.loads(xy[1])
@@ -566,6 +580,10 @@ def display_box():
             return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, sf=sf)
 
         if (ptype == 2 or ptype == 5) and len(winners) == 2:
+            if ptype == 2:
+                final_payment = fee * 100
+            else:
+                final_payment = fee * 10
             for item in x:
                 if x[item] == int(winners[0]):
                     x_winner = int(item)
@@ -581,7 +599,8 @@ def display_box():
             return apology("something went wrong with winner calculations")
 
         if ptype == 1 and len(winners) == 8:
-            for item in x:
+            final_payment = '' +  str(fee * 10) + ' / ' + str(fee * 30) + ' / ' + str(fee * 10) + ' / ' + str(fee * 50)
+            for item in x: 
                 if x[item] == int(winners[0]):
                     q1_x_winner = int(item)
                 if x[item] == int(winners[2]):
@@ -623,33 +642,60 @@ def display_box():
             return apology("something went wrong with winner calculations")
 
         if ptype == 3:
-            s = "SELECT winning_box FROM everyscore where boxid = {};".format(boxid) ## finish
+            s = "SELECT score_num, winning_box FROM everyscore where boxid = {};".format(boxid) ## finish
             winners = db(s)
+            max_score_num = 1
+            final_payout = (int(fee) * 100) - (max_score_num * (fee * 3)) - (fee * 10)
             
             if len(winners) != 0:
                 winner_dict = {}
+                
+                for w in winners:
+                    if w[0] >= max_score_num and w[0] < 100:
+                        max_score_num = w[0]
+                final_payout = (int(fee) * 100) - (max_score_num * (fee * 3)) - (fee * 10)
+    
                 for winning_box in winners:
-                    if winning_box[0] in winner_dict:
-                        winner_dict[winning_box[0]] += 1
-                    else:
-                        winner_dict[winning_box[0]] = 1
+                    print(winning_box)
+                    if winning_box[0] < 100:  # regular winners
+                        if winning_box[1] in winner_dict:
+                            winner_dict[winning_box[1]] += (fee * 3)
+                        else:
+                            winner_dict[winning_box[1]] = (fee * 3)
+                    elif winning_box[0] == 100:  # reverse final winner
+                        if winning_box[1] in winner_dict:
+                            winner_dict[winning_box[1]] += (fee * 10)
+                        else:
+                            winner_dict[winning_box[1]] = (fee * 10)
+                    elif winning_box[0] == 200:  # final winner
+                        if winning_box[1] in winner_dict:
+                            winner_dict[winning_box[1]] += final_payout
+                        else:
+                            winner_dict[winning_box[1]] = final_payout
+                    
 
-            for winning_box in winner_dict:
-                cash = str(fee * 3 * winner_dict[winning_box])
-                if int(winning_box) > 9:
-                    y_win = str(winning_box)[:1]
-                else:
-                    y_win = '0'
-                x_win = str(winning_box)[-1:]
-                
-                winner_username = grid[int(y_win)][int(x_win)][1]
-                winner_markup = Markup('</br>WINNER</br>{}'.format(cash))
-                grid[int(y_win)][int(x_win)] = (winning_box, winner_username + winner_markup)
-                
+                for winning_box in winner_dict:
+                    cash = winner_dict[winning_box]
+                    if int(winning_box) > 9:
+                        x_win = str(winning_box)[-1:]
+                        y_win = str(winning_box)[:1]
+                    elif int(winning_box) < 10:
+                        x_win = str(winning_box)[-1:]
+                        y_win = '0'
+    
+                    winner_username = grid[int(y_win)][int(x_win)][1]
+                    winner_markup = Markup('</br>WINNER</br>{}'.format(cash))
+                    grid[int(y_win)][int(x_win)] = (winning_box, winner_username + winner_markup)
+            else:
+                final_payout = (fee * 100) - (fee * 10) - (fee * 3)  # total pool - reverse - 0/0 
+
     if box_type == 1:
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y)
+        sf = ['' for x in range(10)]
+        final_payout = ''
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, sf=sf)
     else:
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, sf=sf)
+        final_payout = 'Current Final Payout: ' + str(final_payout)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, sf=sf, num_selection=num_selection)
 
 
 @app.route("/select_box", methods=["GET", "POST"])
@@ -717,10 +763,10 @@ def select_box():
     balance = db(b)[0][0]
     print(fee, balance)
 
-    if balance < fee * len(box_list) and box_type != 3:
-        return apology("Insufficient Funds")
+    #if balance < fee * len(box_list) and box_type != 3:
+        #return apology("Insufficient Funds")
 
-    elif user_box_count + len(box_list) > 10 and box_type == 3:
+    if user_box_count + len(box_list) > 10 and box_type == 3:
         return apology("This is a 10-man.  10 boxes max.")
     
     elif box_type == 3:
@@ -748,9 +794,9 @@ def select_box():
             db(s)
 
         # update balance
-        new_bal = balance - (fee * len(box_list))
-        bal = "UPDATE users SET balance = {} WHERE userid = {};".format(new_bal, session['userid'])
-        db(bal)
+        # new_bal = balance - (fee * len(box_list))
+        # bal = "UPDATE users SET balance = {} WHERE userid = {};".format(new_bal, session['userid'])
+        # db(bal)
 
         # are these the last available boxes?  start the game.
         if len(box_list) == len(rand_list):
@@ -761,59 +807,131 @@ def select_box():
 
         return redirect(url_for("display_box", boxid=boxid))
 
+def find_winning_box(boxid, home_score, away_score):
+    # returns tuple of boxnumber in grid, and the winning UID who owns that box
+
+    if int(home_score) > 9:
+        h = str(home_score)[-1:]
+    else:
+        h = str(home_score)
+    if int(away_score) > 9:
+        a = str(away_score)[-1:]
+    else:
+        a = str(away_score)
+
+    xy = "SELECT x, y from boxnums WHERE boxid = {};".format(boxid)
+    xy_list = db(xy)
+    x = json.loads(xy_list[0][0])
+    y = json.loads(xy_list[0][1])
+    print(h,a)
+    print(x,y)
+
+    boxnum = ''
+    for item in y:
+        if y[item] == int(a):
+            if item != '0':
+                boxnum += item
+    for item in x:
+        if x[item] == int(h):
+            boxnum += item
+    print("boxnum for ES is {}".format(boxnum))
+
+
+    w = "SELECT box{} FROM boxes WHERE boxid = {};".format(boxnum, boxid)
+    winner = db(w)[0][0]
+    print("winner {}".format(winner))
+    return (boxnum, winner)
+
+
 @app.route("/enter_every_score", methods=["GET", "POST"])
 def enter_every_score():
     if request.method == "POST":
-        if not request.form.get("boxid"):
-            return apology("boxid required")
+        #if not request.form.get("boxid"):
+            #return apology("boxid required")
         if not request.form.get("home") or not request.form.get("away"):
             return apology("need 2 scores")
-        boxid = int(request.form.get("boxid"))
+        #boxid = int(request.form.get("boxid"))
+        b = "SELECT boxid FROM boxes WHERE pay_type = 3 and active = 1;"
+        boxid_list = db(b)
+        if len(boxid_list) == 0:
+            return apology("there are no active every score games")
         score_num = int(request.form.get("score_num"))
         home_score = int(request.form.get("home"))
         away_score = int(request.form.get("away"))
 
-        ### build query to figure out winner here ###
+        box_list = []
+        for entry in boxid_list:
+            boxid = entry[0] 
+            box_list.append(boxid)
+            win_box = find_winning_box(boxid, home_score, away_score)
+            boxnum = win_box[0]
+            winner = win_box[1]
+            f = "SELECT fee FROM boxes WHERE boxid = {};".format(boxid)
+            fee = db(f)[0][0]
 
-        if home_score > 9:
-            h = str(home_score)[-1:]
-        else:
-            h = str(home_score)
-        if away_score > 9:
-            a = str(away_score)[-1:]
-        else:
-            a = str(away_score)
+            s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '{}', 'Score Change {}', '{}', '{}', '{}', '{}');".format(str(boxid), str(score_num), (fee * 3), str(home_score), str(away_score), str(winner), str(boxnum))
+            db(s)
 
-        xy = "SELECT x, y from boxnums WHERE boxid = {};".format(boxid)
-        xy_list = db(xy)
-        x = json.loads(xy_list[0][0])
-        y = json.loads(xy_list[0][1])
-        print(h,a)
-        print(x,y)
+        s = "SELECT e.score_id, e.score_num, e.score_type, e.x_score, e.y_score, e.winner, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid LEFT JOIN boxes b ON b.boxid = e.boxid where b.active = 1 order by e.score_num;".format(boxid)
+        scores = db(s)
+        print(scores)
 
-        boxnum = ''
-        for item in y:
-            if y[item] == int(a):
-                if item != 0:
-                    boxnum += item
-        for item in x:
-            if x[item] == int(h):
-                boxnum += item
-        print("boxnum for ES is {}".format(boxnum))
-
-        
-        w = "SELECT {} FROM boxes WHERE boxid = {};".format(boxnum, boxid)
-        winner = db(w)[0][0]
-        
-
-        s = "INSERT INTO everyscore(boxid, score_num, x_score, y_score, winner, winning_box) VALUES('{}', '{}', '{}', '{}', '{}', '{}');".format(str(boxid), str(score_num), str(home_score), str(away_score), str(winner), str(boxnum))
-        db(s)
-
-        return render_template("enter_every_score.html")
+        return render_template("enter_every_score.html", scores=scores, box_list=box_list)
 
     else:
-        return render_template("enter_every_score.html")
+        s = "SELECT e.score_id, e.score_num, e.score_type, e.x_score, e.y_score, e.winner, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid LEFT JOIN boxes b ON b.boxid = e.boxid where b.active = 1 order by e.score_num;"
+        scores = db(s)
+        print(scores)
+        b = "SELECT boxid FROM boxes WHERE pay_type = 3 and active = 1;"
+        boxid_list = db(b)
+        if len(boxid_list) == 0:
+            return apology("there are no active every score games")
+        box_list = []
+        for boxid in boxid_list:
+            box_list.append(boxid[0])
 
+        return render_template("enter_every_score.html", scores=scores, box_list=box_list)
+
+@app.route("/delete_score", methods=["POST", "GET"])
+def delete_score():
+    score_id = request.form.get('score_id')
+    d = "DELETE FROM everyscore WHERE score_id = {};".format(score_id)
+    db(d)
+    return redirect(url_for('enter_every_score'))
+
+@app.route("/current_winners/<boxid>", methods=["POST", "GET"])
+def current_winners(boxid):
+    s = "SELECT e.score_type, e.x_score, e.y_score, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid WHERE boxid = {} order by e.score_num;".format(boxid)
+    scores = db(s)
+
+    return render_template("current_winners.html", scores=scores)
+
+@app.route("/end_game", methods=["POST", "GET"])
+def end_game():
+    if request.method == "POST":
+        boxid = request.form.get('boxid')
+        home_score = request.form.get('home')
+        away_score = request.form.get('away')
+        
+        # find the reverse winner - running function with home/away backward
+        rev_box = find_winning_box(boxid, away_score, home_score)
+        rev_boxnum = rev_box[0]
+        rev_winner = rev_box[1]
+        # all reverse score_num are 100
+        s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '100', 'Reverse Final', '{}', '{}', '{}', '{}');".format(str(boxid), str(away_score), str(home_score), str(rev_winner), str(rev_boxnum))
+        db(s)
+
+        # find final winner
+        final_box = find_winning_box(boxid, home_score, away_score)
+        final_boxnum = final_box[0]
+        final_winner = final_box[1]
+        # all final score_num are 200
+        s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '200', 'Final Score', '{}', '{}', '{}', '{}');".format(str(boxid), str(home_score), str(away_score), str(final_winner), str(final_boxnum)) 
+        db(s)
+
+        return redirect(url_for("enter_every_score"))
+    else:
+        return render_template("end_game.html")
         
 
 @app.route("/enter_custom_scores", methods=["GET", "POST"])

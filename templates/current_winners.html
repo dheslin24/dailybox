@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Current Winners
+{% endblock %}
+
+{% block main %}
+    <h4>
+        <table align = "center", cellpadding = "10">
+            <tr>
+            <th> Score Type </th>
+            <th> KC </th>
+            <th> SF </th>
+            <th> Box </th>
+            <th> Winner </th>
+            </tr>
+            {% for score in scores %}
+            <tr>
+                {% for field in score %}
+                <td>{{ field }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </h4>
+{% endblock %}

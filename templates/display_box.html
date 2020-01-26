@@ -9,13 +9,24 @@
     <h2>
         <p>
             {{ box_name }} </br>
-            Entry Fee: {{ fee }}  </br>
-            Boxes Available: {{ avail }} </br>
-            Payout: {{ payout }}
-        </p>
+        <p>
     </h2>
-    <h4><p>Row/Column numbers will be randomly generated once the last box is selected</p>
+    <h3>
+        <p>
+            Entry Fee: {{ fee }}
+            Boxes Available: {{ avail }} </br>
+        </p>
+    </h3>
+    <h4>
+        <p>
+            {{ payout }} </br>
+            {{ final_payout }}
+        </p>
+    </h4>
+    <h4><p>{{ num_selection }}</p>
     </br>
+    <a href="{{ url_for("current_winners", boxid=boxid) }}">Click here for list of current winners</a>
+    
     <!--
     <p> Randomize Selection </p> 
     <form name="randform" id="randform" action="{{ url_for("select_box") }}",  method="POST">
@@ -42,14 +53,18 @@
         {% endfor %}
         </tr>
         -->
-        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td><strong>K</strong></td><td><strong>C</strong></td><td></td><td></td><td></td><td></td></tr>
+        </h3>
+        <h1>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td><strong style="font-size: 30px">K</strong></td><td><strong style="font-size: 30px">C</strong></td><td></td><td></td><td></td><td></td></tr>
         <tr>
         <td></td>
         <td></td>
         {% for num in x %}
-            <h3><td><strong> {{ x[loop.index0|string] }} </strong></td></h3>
+            <h1><td><strong style="font-size: 30px"> {{ x[loop.index0|string] }} </strong></td></h1>
         {% endfor %}
         </tr>
+        </h1>
+        <h3>
         {% for row in grid %}
         <tr>
             <!--
@@ -60,8 +75,8 @@
                 </form>
             </td>
             -->
-            <h3><td><strong> {{ sf[loop.index0|string] }} </strong></td></h3>
-            <h3><td><strong> {{ y[loop.index0|string] }} </strong></td></h3>
+            <h1><td><strong style="font-size: 30px"> {{ sf[loop.index0|string] }} </strong></td></h1>
+            <h1><td><strong style="font-size: 30px"> {{ y[loop.index0|string] }} </strong></td></h1>
             {% for box in row %}
                 <td class="user_box">    
                     <form action="{{ url_for("select_box") }}", method="POST">
