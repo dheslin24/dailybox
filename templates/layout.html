@@ -15,12 +15,18 @@
 
         <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    
+        <!--
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css">
+        -->
 
         <!-- app's own JavaScript -->
         <script src="{{ url_for('static', filename='scripts.js') }}"></script>  
         <script type="text/javascript">
         $(document).ready(function(){
-            $("#grid td.user_box:contains('{{ session['username'] }}')").css('background-color','#fcc');
+            $("#grid td.user_box:contains('{{ session['username'] }}')").css('background-color','#5DADE2');
         });
         </script>
         <script type="text/javascript">
