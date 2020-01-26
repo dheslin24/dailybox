@@ -535,18 +535,25 @@ def display_box():
         home = teams[0][0]
         away = teams[0][1]
 
+    # create a dict of userid:username
+    u = "SELECT userid, username FROM users;"
+    user_dict = dict(db(u))
+
     grid = []
     box_num = 0
     row = 0 
+    avail = 0
     # create a list (grid) of 10 lists (rows) of 10 tuples (boxes)
     for _ in range(10):
         l = []
         for x in box[7 + row : 17 + row]:
             if x == 1 or x == 0:
                 x = 'Open'
+                avail += 1
             else:
-                s = "SELECT username FROM users where userid = {};".format(x)
-                x = db(s)[0][0]
+                #s = "SELECT username FROM users where userid = {};".format(x)
+                #x = db(s)[0][0]
+                x = user_dict[x]
             l.append((box_num, x))
             box_num += 1
         grid.append(l)
@@ -555,11 +562,13 @@ def display_box():
     print(grid)
 
     # get num boxes avail and create list for randomizer
+    '''
     avail = 0
     for row in grid:
         for box in row:
             if box[1] == 'Open':
                 avail += 1
+    '''
     
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
