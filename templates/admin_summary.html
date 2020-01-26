@@ -10,6 +10,14 @@
             Admin Summary of all Users
         </p>
     </h1>
+    
+    <p> Update a user's paid amount</p>
+    <form action="{{ url_for('admin_summary') }}" method="POST">
+        <input autocomplete="off" class="form-control" name="userid" placeholder="userid" type="text" size="5"/>
+        <input autocomplete="off" class="form-control" name="amt_paid" placeholder="$amt" type="text" size="5"/>
+        <button type="submit">Update</button>
+    </form>
+
 
     <h4>
         <table align = "center", cellpadding = "10">
@@ -20,10 +28,10 @@
             <th> last name </th>
             <th> email </th>
             <th> mobile </th>
-            <th> balance </th>
-            <th> active user? </th>
             <th> is admin? </th>
             <th> # active boxes </th>
+            <th> total fees </th>
+            <th> amt paid </th>
             </tr>
             {% for user in users %}
             <tr>
@@ -31,6 +39,8 @@
                 <td>{{ field }}</td>
                 {% endfor %}
                 <td>{{ d[user[0]] }}</td>
+                <td>{{ fees[user[0]] }}</td>
+                <td>{{ paid[user[0]] }} </td>
             </tr>
             {% endfor %}
         </table>

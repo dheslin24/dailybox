@@ -1264,27 +1264,46 @@ def add_money():
 
 @app.route("/admin_summary", methods=["GET", "POST"])
 def admin_summary():
-    s = "SELECT userid, username, first_name, last_name, email, mobile, balance, active, is_admin FROM users;"
+    if request.method == "POST":
+        amt = request.form.get('amt_paid')
+        userid = request.form.get('userid')
+        s = "UPDATE users SET amt_paid = {} WHERE userid = {};".format(amt, userid)
+        db(s)
+
+    s = "SELECT userid, username, first_name, last_name, email, mobile, is_admin FROM users where active = 1;"
     users = db(s)
+
+    p = "SELECT userid, amt_paid FROM users;"
+    paid = dict(db(p))
+    for item in paid:
+        if paid[item] == None:
+            paid[item] = 0
+    print(paid)
 
     box_list = ['box' + str(x) + ' ,' for x in range(100)]
     box_string = ''
     for _ in box_list:
         box_string += _
     box_string = box_string[:-2]
-    box = "SELECT {} FROM boxes WHERE active = 1;".format(box_string)
+    box = "SELECT fee, {} FROM boxes WHERE active = 1;".format(box_string)
     all_boxes = db(box)
-    d = {}
+    print(all_boxes)
+    user_box_count = {}
+    user_fees = {}
     for game in all_boxes:
-        for box in game:
+        fee = game[0]
+        for box in game[1:]:
             if box != 0 and box != 1:
-                if box in d.keys():
-                    d[box] += 1
+                if box in user_box_count.keys():
+                    user_box_count[box] += 1
+                    user_fees[box] += fee
                 else:
-                    d[box] = 1
-    print(d)
+                    user_box_count[box] = 1
+                    user_fees[box] = fee
+    print(user_box_count)
+    print(user_fees)
               
-    return render_template("admin_summary.html", users=users, d=d)
+    return render_template("admin_summary.html", users=users, d=user_box_count, fees=user_fees, paid=paid)
     
 
 @app.route("/user_details", methods=["GET", "POST"])
