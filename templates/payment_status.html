@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Payment Status
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Payment Status for all Users (public shaming)
+        </p>
+    </h1>
+    
+    <h4>
+        <table align = "center", cellpadding = "10">
+            <tr>
+            <th> userid </th>
+            <th> username </th>
+            <th> first name </th>
+            <th> last name </th>
+            <th> # active boxes </th>
+            <th> total fees </th>
+            <th> amt paid </th>
+            </tr>
+            {% for user in users %}
+            <tr>
+                {% for field in user %}
+                <td>{{ field }}</td>
+                {% endfor %}
+                <td>{{ d[user[0]] }}</td>
+                <td>{{ fees[user[0]] }}</td>
+                <td>{{ paid[user[0]] }} </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </h4>
+{% endblock %}
+
