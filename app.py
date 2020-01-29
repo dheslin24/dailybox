@@ -1270,7 +1270,7 @@ def add_money():
 @app.route("/payment_status", methods=["GET", "POST"])
 def payment_status():
     s = "SELECT userid, username FROM users WHERE active = 1;"
-    users = db(s)
+    users_list = db(s)
 
     p = "SELECT userid, amt_paid FROM users;"
     paid = dict(db(p))
@@ -1298,9 +1298,15 @@ def payment_status():
                 else:
                     user_box_count[box] = 1
                     user_fees[box] = fee
-    print(user_box_count)
-    print(user_fees)
-    print(paid)
+
+    users = []
+    print("before {}".format(users_list))
+    for user in users_list:
+        if user[0] in user_fees:
+            users.append(user)
+            
+    print("after {}".format(users))
+
 
     return render_template("payment_status.html", users=users, d=user_box_count, fees=user_fees, paid=paid)
 
