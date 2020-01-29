@@ -12,12 +12,10 @@
     </h1>
     
     <h4>
-        <table align = "center", cellpadding = "10">
+        <table align = "center", name="user_table", class="user_table", cellpadding = "10">
             <tr>
             <th> userid </th>
             <th> username </th>
-            <th> first name </th>
-            <th> last name </th>
             <th> # active boxes </th>
             <th> total fees </th>
             <th> amt paid </th>
@@ -28,11 +26,38 @@
                 <td>{{ field }}</td>
                 {% endfor %}
                 <td>{{ d[user[0]] }}</td>
-                <td>{{ fees[user[0]] }}</td>
-                <td>{{ paid[user[0]] }} </td>
+                <td class="f">{{ fees[user[0]] }}</td>
+                <td id="p">{{ paid[user[0]] }} </td>
             </tr>
             {% endfor %}
         </table>
     </h4>
+
+<script>
+var allTableCells = document.getElementsByTagName("td");
+
+for(var i = 0, max = allTableCells.length; i < max; i++) {
+    var node = allTableCells[i];
+
+    //get the value of fee and paid column
+    var fee = node.childNodes[5].nodeValue; 
+    var paid = node.childNodes[6].nodeValue;
+
+    //check for 'one' and assign this table cell's background color accordingly 
+    if (fee != paid)
+        node.style.backgroundColor = "red";
+}
+</script>
+
+<script>
+$('.user_table .f').each(function() {
+    var val = parseInt( $(this).text(), 10),
+        dd = parseInt( $('#'d).text(), 10);
+    if (val != dd) {
+        $(this).css('background-color', 'red');
+    }
+});
+</script>
+
 {% endblock %}
 

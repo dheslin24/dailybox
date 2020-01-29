@@ -574,9 +574,12 @@ def display_box():
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
         num_selection = "Row/Column numbers will be randomly generated once the last box is selected"
-        x = ['x' for x in range(10)]
-        #x.insert(0,' ')
-        y = ['y' for y in range(10)]
+        x = {}
+        for n in range(10):
+            x[str(n)] = '?'
+        y = {}
+        for n in range(10):
+            y[str(n)] = '?'
 
     # gets row/column numbers and finds winner
     else:
@@ -704,6 +707,7 @@ def display_box():
         final_payout = ''
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, sf=sf)
     else:
+        print("xy {} {}".format(x,y))
         final_payout = 'Current Final Payout: ' + str(final_payout)
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, sf=sf, num_selection=num_selection)
 
@@ -1265,7 +1269,7 @@ def add_money():
 
 @app.route("/payment_status", methods=["GET", "POST"])
 def payment_status():
-    s = "SELECT userid, username, first_name, last_name FROM users WHERE active = 1;"
+    s = "SELECT userid, username, FROM users WHERE active = 1;"
     users = db(s)
 
     p = "SELECT userid, amt_paid FROM users;"
