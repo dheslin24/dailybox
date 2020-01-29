@@ -1269,7 +1269,7 @@ def add_money():
 
 @app.route("/payment_status", methods=["GET", "POST"])
 def payment_status():
-    s = "SELECT userid, username, FROM users WHERE active = 1;"
+    s = "SELECT userid, username FROM users WHERE active = 1;"
     users = db(s)
 
     p = "SELECT userid, amt_paid FROM users;"
