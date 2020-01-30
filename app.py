@@ -972,7 +972,7 @@ def current_winners(boxid):
     if request.method == "POST":
         return redirect(url_for("display_box", boxid))
     else:
-        s = "SELECT e.score_type, e.x_score, e.y_score, e.winning_box, u.username, u.first_name, u.last_name FROM everyscore e LEFT JOIN users u ON e.winner = u.userid WHERE boxid = {} order by e.score_num;".format(boxid)
+        s = "SELECT e.score_type, e.x_score, e.y_score, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid WHERE boxid = {} order by e.score_num;".format(boxid)
         scores = db(s)
 
         return render_template("current_winners.html", scores=scores, boxid=boxid)
