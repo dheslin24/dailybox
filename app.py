@@ -715,8 +715,10 @@ def display_box():
 @app.route("/select_box", methods=["GET", "POST"])
 def select_box():
     boxid = request.form.get('boxid')
-    bt = "SELECT box_type FROM boxes WHERE boxid = {};".format(boxid)
-    box_type = db(bt)[0][0]
+    bt = "SELECT box_type, pay_type FROM boxes WHERE boxid = {};".format(boxid)
+    box_attr = db(bt)[0]
+    box_type = box_attr[0]
+    pay_type = box_attr[1]
     box_list = []
     a = "SELECT {} FROM boxes WHERE boxid = {};".format(box_string(), boxid)
     boxes = db(a)[0]
@@ -728,7 +730,7 @@ def select_box():
     for box in boxes:
         if box == 0 or box == 1:
             rand_list.append(index)
-        if box_type == 3 and box == session['userid']:
+        if (box_type == 3 or pay_type == 5) and box == session['userid']:
             user_box_count += 1
         index += 1
 
@@ -760,7 +762,7 @@ def select_box():
         box_num = int(request.form.get('box_num'))
         if box_num in rand_list:
             # 10-man validation
-            if box_type == 3 and user_box_count >= 10:
+            if (box_type == 3 or pay_type == 5) and user_box_count >= 10:
                 return apology("This is a 10-man.  10 boxes max.")
             else:
                 box_list.append(box_num)
@@ -780,7 +782,7 @@ def select_box():
     #if balance < fee * len(box_list) and box_type != 3:
         #return apology("Insufficient Funds")
 
-    if user_box_count + len(box_list) > 10 and box_type == 3:
+    if user_box_count + len(box_list) > 10 and (box_type == 3 or pay_type == 5):
         return apology("This is a 10-man.  10 boxes max.")
     
     elif box_type == 3:
