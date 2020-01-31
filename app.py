@@ -907,19 +907,38 @@ def sanity_checks(boxid_list):
 @app.route("/enter_every_score", methods=["GET", "POST"])
 def enter_every_score():
     if request.method == "POST":
-        #if not request.form.get("boxid"):
-            #return apology("boxid required")
-        if not request.form.get("home") or not request.form.get("away"):
-            return apology("need 2 scores")
-        #boxid = int(request.form.get("boxid"))
+        # first check if used buttons, most common
+        if request.form.get("HOME_BUTTON"):
+            home_button = int(request.form.get("HOME_BUTTON"))
+            s = "SELECT score_num, x_score, y_score FROM everyscore ORDER BY score_id DESC limit 1;"
+            score_list = db(s)[0]
+            score_num = score_list[0] + 1
+            home_score = home_button + score_list[1]
+            away_score = score_list[2]
+        elif request.form.get("AWAY_BUTTON"):
+            away_button = int(request.form.get("AWAY_BUTTON"))
+            s = "SELECT score_num, x_score, y_score FROM everyscore ORDER BY score_id DESC limit 1;"
+            score_list = db(s)[0]
+            score_num = score_list[0] + 1
+            home_score = score_list[1]
+            away_score = away_button + score_list[2]
+        else:
+            if not request.form.get("home") or not request.form.get("away"):
+                return apology("need 2 scores")
+            score_num = int(request.form.get("score_num"))
+            home_score = int(request.form.get("home"))
+            away_score = int(request.form.get("away"))
+
         b = "SELECT boxid FROM boxes WHERE pay_type = 3 and active = 1;"
         boxid_list = db(b)
         if len(boxid_list) == 0:
             return apology("there are no active every score games")
 
+        '''
         score_num = int(request.form.get("score_num"))
         home_score = int(request.form.get("home"))
         away_score = int(request.form.get("away"))
+        '''
 
         box_list = []
         for entry in boxid_list:

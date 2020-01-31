@@ -25,6 +25,24 @@
         </fieldset>
     </form>
 
+    <form action="{{ url_for('enter_every_score') }}" method="POST">
+        <fieldset>
+        <div class="form-group">
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="1">KC 1</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="2">KC 2</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="3">KC 3</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="6">KC 6</button>
+            </br>
+            </br>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="1">SF 1</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="2">SF 2</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="3">SF 3</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="6">SF 6</button>
+        </div>
+        </fieldset>
+    </form>
+
+
     <p> Delete a specific score ID </p>
     <form action="{{ url_for('delete_score') }}" method="POST">
         <input autocomplete="off" class="form-control" name="score_id" placeholder="score id" type="text" size="5"/>
