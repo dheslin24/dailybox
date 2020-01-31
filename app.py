@@ -152,9 +152,9 @@ def payout_calc(pay_type, fee):
         c = fee * 50
         s = '1st {} / 2nd {} / 3rd {} / Final {}'.format(a, b, a, c)
     elif pay_type == 2:
-        s = 'Single Winner - {}'.format(fee * 100)
+        s = 'Single Winner: {}'.format(fee * 100)
     elif pay_type == 5:
-        s = 'Single Winner 10 Man - {}'.format(fee * 10)
+        s = 'Single Winner 10 Man: {}'.format(fee * 10)
     elif pay_type == 3:
         s = 'Every Score Wins {}.  \nReverse Final Wins {}.  \nFinal gets the remainder.'.format(fee * 3, fee * 10)
     else:
