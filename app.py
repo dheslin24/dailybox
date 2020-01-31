@@ -523,7 +523,7 @@ def display_box():
     gobbler_id = box[6]
     payout = payout_calc(ptype, fee)
     #current_user = Session['userid']
-    if ptype != 2 or ptype != 5:
+    if ptype != 2 and ptype != 5:
         final_payout = fee * 100
     elif ptype == 5:
         final_payout = fee * 10
@@ -580,6 +580,9 @@ def display_box():
         y = {}
         for n in range(10):
             y[str(n)] = '?'
+
+        if ptype == 5:
+            final_payout == fee * 10
 
     # gets row/column numbers and finds winner
     else:
