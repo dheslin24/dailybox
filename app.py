@@ -350,6 +350,7 @@ def get_games(box_type, active = 1):
     return game_list
 
 @app.route("/init_box_db")
+@login_required
 def init_box_db():
     b = ['box' + str(x) + " INT," for x in range(100)]
     s = "CREATE TABLE IF NOT EXISTS boxes(boxid INT AUTO_INCREMENT PRIMARY KEY, active, box_type, box_name, fee int, "
@@ -486,6 +487,7 @@ def my_games():
 
 
 @app.route("/completed_games")
+@login_required
 def completed_games():
     #game_list_d = get_games(1, 0)
     game_list_c = get_games(2, 0)
@@ -501,12 +503,14 @@ def game_list():
     return render_template("game_list.html", game_list = game_list)
 
 @app.route("/custom_game_list")
+@login_required
 def custom_game_list():
     game_list = get_games(2)
 
     return render_template("custom_game_list.html", game_list = game_list)
 
 @app.route("/display_box", methods=["GET", "POST"])
+@login_required
 def display_box():
     sf = {'0':'', '1':'', '2':'', '3':'', '4':'S', '5':'F', '6':'', '7':'', '8':'', '9':''}
     if request.method == "POST":
@@ -716,6 +720,7 @@ def display_box():
 
 
 @app.route("/select_box", methods=["GET", "POST"])
+@login_required
 def select_box():
     boxid = request.form.get('boxid')
     bt = "SELECT box_type, pay_type FROM boxes WHERE boxid = {};".format(boxid)
@@ -910,6 +915,7 @@ def sanity_checks(boxid_list):
     ### END sanity checks ###
 
 @app.route("/enter_every_score", methods=["GET", "POST"])
+@login_required
 def enter_every_score():
     if request.method == "POST":
         # first check if used buttons, most common
@@ -985,6 +991,7 @@ def enter_every_score():
         return render_template("enter_every_score.html", scores=scores, box_list=box_list, check_result_list=check_result_list)
 
 @app.route("/delete_score", methods=["POST", "GET"])
+@login_required
 def delete_score():
     score_id = request.form.get('score_id')
     d = "DELETE FROM everyscore WHERE score_id = {};".format(score_id)
@@ -992,6 +999,7 @@ def delete_score():
     return redirect(url_for('enter_every_score'))
 
 @app.route("/current_winners/<boxid>", methods=["POST", "GET"])
+@login_required
 def current_winners(boxid):
     if request.method == "POST":
         return redirect(url_for("display_box", boxid))
@@ -1002,6 +1010,7 @@ def current_winners(boxid):
         return render_template("current_winners.html", scores=scores, boxid=boxid)
 
 @app.route("/end_game", methods=["POST", "GET"])
+@login_required
 def end_game():
     if request.method == "POST":
         boxid = request.form.get('boxid')
@@ -1030,6 +1039,7 @@ def end_game():
         
 
 @app.route("/enter_custom_scores", methods=["GET", "POST"])
+@login_required
 def enter_custom_scores():
     if request.method == "POST":
         if not request.form.get("boxid"):
