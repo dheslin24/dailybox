@@ -1317,13 +1317,16 @@ def payment_status():
     for _ in box_list:
         box_string += _
     box_string = box_string[:-2]
-    box = "SELECT fee, {} FROM boxes WHERE active = 1;".format(box_string)
+    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1;".format(box_string)
     all_boxes = db(box)
     #print(all_boxes)
     user_box_count = {}
     user_fees = {}
     for game in all_boxes:
         fee = game[0]
+        pay_type = game[1]
+        if pay_type == 5:
+            fee = fee // 10
         for box in game[1:]:
             if box != 0 and box != 1:
                 if box in user_box_count.keys():
@@ -1367,14 +1370,18 @@ def admin_summary():
     for _ in box_list:
         box_string += _
     box_string = box_string[:-2]
-    box = "SELECT fee, {} FROM boxes WHERE active = 1;".format(box_string)
+    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1;".format(box_string)
     all_boxes = db(box)
     print(all_boxes)
     user_box_count = {}
     user_fees = {}
     for game in all_boxes:
         fee = game[0]
-        for box in game[1:]:
+        pay_type = game[1]
+        if pay_type == 5:
+            fee = fee // 10
+            print("fee {}".format(fee))
+        for box in game[2:]:
             if box != 0 and box != 1:
                 if box in user_box_count.keys():
                     user_box_count[box] += 1
