@@ -20,11 +20,15 @@
     <h4>
         <p>
             {{ payout }} </br>
+            <!--
             {{ final_payout }}
+            -->
         </p>
     </h4>
     <h4><p>{{ num_selection }}</p>
+    <!--
     <a href="{{ url_for("current_winners", boxid=boxid) }}">Click here for list of current winners</a>
+    -->
     <!--
     </br>
     </br>
@@ -59,7 +63,7 @@
         -->
         </h3>
         <h1>
-        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td><strong style="font-size: 30px">K</strong></td><td><strong style="font-size: 30px">C</strong></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td><strong style="font-size:  30px">{{ home[0] }}</td><td><strong style="font-size: 30px">{{ home[1] }}</strong></td><td><strong style="font-size: 30px">{{ home[2] }}</strong></td><td></td><td></td><td></td><td></td></tr>
         <tr>
         <td></td>
         <td></td>
@@ -79,7 +83,7 @@
                 </form>
             </td>
             -->
-            <h1><td><strong style="font-size: 30px"> {{ sf[loop.index0|string] }} </strong></td></h1>
+            <h1><td><strong style="font-size: 30px"> {{ away_team[loop.index0|string] }} </strong></td></h1>
             <h1><td><strong style="font-size: 30px"> {{ y[loop.index0|string] }} </strong></td></h1>
             {% for box in row %}
                 <td class="user_box">    

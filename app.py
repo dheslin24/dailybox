@@ -490,7 +490,7 @@ def my_games():
 @login_required
 def completed_games():
     #game_list_d = get_games(1, 0)
-    game_list_c = get_games(2, 0)
+    game_list_c = get_games(3, 0)
     #game_list = game_list_d + game_list_c
     game_list = game_list_c
     
@@ -505,14 +505,14 @@ def game_list():
 @app.route("/custom_game_list")
 @login_required
 def custom_game_list():
-    game_list = get_games(2)
+    game_list = get_games(3)
 
     return render_template("custom_game_list.html", game_list = game_list)
 
 @app.route("/display_box", methods=["GET", "POST"])
 @login_required
 def display_box():
-    sf = {'0':'', '1':'', '2':'', '3':'', '4':'S', '5':'F', '6':'', '7':'', '8':'', '9':''}
+    #sf = {'0':'', '1':'', '2':'', '3':'', '4':'S', '5':'F', '6':'', '7':'', '8':'', '9':''}
     if request.method == "POST":
         boxid = request.form.get('boxid')
     else:
@@ -539,6 +539,14 @@ def display_box():
         teams = db(t)
         home = teams[0][0]
         away = teams[0][1]
+
+    away_team = {}
+    for i in range(10):
+        away_team[str(i)] = ''
+    away_team['3'] = away[0]
+    away_team['4'] = away[1]
+    away_team['5'] = away[2]
+
 
     # create a dict of userid:username
     u = "SELECT userid, username FROM users;"
@@ -716,7 +724,7 @@ def display_box():
     else:
         print("xy {} {}".format(x,y))
         final_payout = 'Current Final Payout: ' + str(final_payout)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, sf=sf, num_selection=num_selection)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection)
 
 
 @app.route("/select_box", methods=["GET", "POST"])

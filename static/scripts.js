@@ -27,7 +27,8 @@ function empty()
     var textShadowSupport = true;
     var xv = 0;
     // var snowflakes = ["\u2744", "\u2745", "\u2746"];
-    var snowflakes = ["$", "\u2744", "\u2745", "\u2746"];
+    // var snowflakes = ["$", "\u2744", "\u2745", "\u2746"];
+    var snowflakes = ["$"]
     var prevTime;
     var absMax = 200;
     var flakeCount = 0;
