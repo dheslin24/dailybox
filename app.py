@@ -754,7 +754,7 @@ def select_box():
     if request.form.get('rand') != None:
         rand = request.form.get('rand')
         if int(rand) > len(rand_list):
-            return apology("You have requested {} boxes, but only {} available.".format(int(rand), len(rand_list)))
+            return apology("Really??  You have requested {} boxes, but only {} available.".format(int(rand), len(rand_list)))
         else:
             rand_indexes = random.sample(range(len(rand_list)), int(rand))
             for i in rand_indexes:
@@ -779,11 +779,18 @@ def select_box():
         if box_num in rand_list:
             # 10-man validation
             if (box_type == 3 or pay_type == 5) and user_box_count >= 10:
-                return apology("This is a 10-man.  10 boxes max.")
+                return apology("Really??  This is a 10-man.  10 boxes max.  100/10 = 10")
             else:
                 box_list.append(box_num)
+        elif boxes[box_num] == session['userid']:
+            # add code to undo pick
+            s = "UPDATE boxes SET box{}= 1 WHERE boxid = {};".format(box_num, boxid)
+            db(s)
+
         else:
-            return apology("Umm.. box already taken")
+            s = "SELECT username FROM users WHERE userid = {};".format(boxes[box_num])
+            box_owner = db(s)[0][0]
+            return apology("Really??  Did you not see {} already has this box?".format(box_owner))
 
 
     # check balance of user first - then subtract fee
