@@ -735,7 +735,7 @@ def select_box():
     box_attr = db(bt)[0]
     box_type = box_attr[0]
     pay_type = box_attr[1]
-    box_list = []
+    box_list = [] # the list of eventual boxes to get this user id
     a = "SELECT {} FROM boxes WHERE boxid = {};".format(box_string(), boxid)
     boxes = db(a)[0]
     rand_list = []
@@ -784,8 +784,10 @@ def select_box():
                 box_list.append(box_num)
         elif boxes[box_num] == session['userid']:
             # add code to undo pick
-            s = "UPDATE boxes SET box{}= 1 WHERE boxid = {};".format(box_num, boxid)
-            db(s)
+            # latest update - will pass here and revert later for gobbler
+            #s = "UPDATE boxes SET box{}= 1 WHERE boxid = {};".format(box_num, boxid)
+            #db(s)
+            box_list.append(box_num) #still append, to eventually set back to 1
 
         else:
             s = "SELECT username FROM users WHERE userid = {};".format(boxes[box_num])
@@ -795,24 +797,29 @@ def select_box():
 
     # check balance of user first - then subtract fee
     f = "SELECT fee, box_type FROM boxes WHERE boxid = {};".format(boxid)
-    b = "SELECT balance FROM users WHERE userid = {};".format(session['userid'])
+    bal = "SELECT balance FROM users WHERE userid = {};".format(session['userid'])
     check = db(f)
     fee = check[0][0]
     # box_type = check[0][1]
-    balance = db(b)[0][0]
+    balance = db(bal)[0][0]
     print(fee, balance)
 
     #if balance < fee * len(box_list) and box_type != 3:
         #return apology("Insufficient Funds")
 
     if user_box_count + len(box_list) > 10 and (box_type == 3 or pay_type == 5):
-        return apology("This is a 10-man.  10 boxes max.")
+        return apology("Really?  This is a 10-man.  10 boxes max.  100/10=10")
     
     elif box_type == 3:
         g = "SELECT gobbler_id FROM boxes WHERE boxid = {};".format(boxid)
         gobbler_id = db(g)[0][0]
         for b in box_list:
-            s = "UPDATE boxes SET box{}={} WHERE gobbler_id = {};".format(b, session['userid'], gobbler_id)
+            print("boxlist:")
+            print(box_list)
+            if boxes[b] == session['userid']:
+                s = "UPDATE boxes SET box{}={} WHERE gobbler_id = {};".format(b, 1, gobbler_id)
+            else:
+                s = "UPDATE boxes SET box{}={} WHERE gobbler_id = {};".format(b, session['userid'], gobbler_id)
             db(s)
 
         # are these the last available boxes?  start the game.
