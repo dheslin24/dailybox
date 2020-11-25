@@ -1,3 +1,18 @@
+//function myMove() {
+//  var elem = document.getElementById("myAnimation");
+//  var pos = 0;
+//  var id = setInterval(frame, 10);
+//  function frame() {
+//    if (pos == 350) {
+//      clearInterval(id);
+//    } else {
+//      pos++;
+//      elem.style.top = pos + 'px';
+//      elem.style.left = pos + 'px';
+//    }
+//  }
+//}
+
 function empty()
 {
     var empt = document.getElementById("rand").value;
@@ -19,18 +34,34 @@ function empty()
     // December 2009
     //
     
+    // DHDHDH
+    // add back all references to text shadow support to get snowflakes back to white
     var ww = 0;
     var wh = 0;
     var maxw = 0;
     var minw = 0;
     var maxh = 0;
-    var textShadowSupport = true;
+    //var textShadowSupport = true;
     var xv = 0;
+    //var image = document.createElement('img');
+    //var image = document.getElementById("x");
+    var image = new Image()
+    //var imagestring = "<img src=\"" + image.getAttribute("src") + "\">";
+    //var imagestring2 = "<img src='https://www.kindpng.com/picc/m/31-311472_turkey-leg-clipart-transparent-hd-png-download.png'/>";
+    image.src = 'https://www.kindpng.com/picc/m/31-311472_turkey-leg-clipart-transparent-hd-png-download.png';
+    //image.height = 200
+    //image.width = 200
+    // var src = document.getElementById("x");
+    // document.appendChild(img);
+    // var drum = document.getElementById(image).appendChild(image)
+ 
     // var snowflakes = ["\u2744", "\u2745", "\u2746"];
     // var snowflakes = ["$", "\u2744", "\u2745", "\u2746"];
-    var snowflakes = ["$"]
+    // var myanimation = document.getElementById("myImg");
+    // var snowflakes = ["$",  $(image).attr('src')];
+    var snowflakes = ["\uD83C\uDF57"];
     var prevTime;
-    var absMax = 200;
+    var absMax = 20;
     var flakeCount = 0;
     
     $(init);
@@ -56,17 +87,7 @@ function empty()
             textShadowSupport = false;
         }
         
-        /* Should work in Windows 7 /*
-        if (/windows/i.test(navigator.userAgent))
-        {
-            snowflakes = ['*']; // Windows sucks and doesn't have Unicode chars installed
-            //snowflakes = ['T']; //No FF support for Wingdings
-        }
-        */
-        
-        // FF seems to just be able to handle like 50... 25 with rotation
-        // Safari seems fine with 150+... 75 with rotation
-        var i = 50;
+        var i = 20;
         while (i--)
         {
             addFlake(true);
@@ -85,7 +106,7 @@ function empty()
                 r: 1.0,
                 css: {
                     fontSize: 15 + Math.floor(Math.random() * 20) + 'px',
-                    textShadow: '9999px 0 0 rgba(238, 238, 238, 0.5)'
+                    //textShadow: '9999px 0 0 rgba(238, 238, 238, 0.5)'
                 },
                 v: 2
             },
@@ -93,7 +114,7 @@ function empty()
                 r: 0.6,
                 css: {
                     fontSize: 50 + Math.floor(Math.random() * 20) + 'px',
-                    textShadow: '9999px 0 2px #eee'
+                    //textShadow: '9999px 0 2px #eee'
                 },
                 v: 6
             },
@@ -101,7 +122,7 @@ function empty()
                 r: 0.2,
                 css: {
                     fontSize: 90 + Math.floor(Math.random() * 30) + 'px',
-                    textShadow: '9999px 0 6px #eee'
+                    //textShadow: '9999px 0 6px #eee'
                 },
                 v: 12
             },
@@ -109,7 +130,7 @@ function empty()
                 r: 0.1,
                 css: {
                     fontSize: 150 + Math.floor(Math.random() * 50) + 'px',
-                    textShadow: '9999px 0 24px #eee'
+                    //textShadow: '9999px 0 24px #eee'
                 },
                 v: 20
             }
@@ -117,24 +138,26 @@ function empty()
     
         var $nowflake = $('<span class="winternetz">' + snowflakes[Math.floor(Math.random() * snowflakes.length)] + '</span>').css(
             {
-                /*fontFamily: 'Wingdings',*/
+                /*fontFamily: 'Wingdings',
                 color: '#eee',
-                display: 'block',
+                display: 'block',*/
                 position: 'fixed',
                 background: 'transparent',
                 width: 'auto',
                 height: 'auto',
                 margin: '0',
-                padding: '0',
-                textAlign: 'left',
-                zIndex: 9999
+                padding: '0'
+                //textAlign: 'left',
+                //zIndex: 9999
             }
         );
         
+        /*
         if (textShadowSupport)
         {
             $nowflake.css('textIndent', '-9999px');
         }
+        */
         
         var r = Math.random();
     
@@ -176,8 +199,9 @@ function empty()
         $nowflake.data('v', v);
         $nowflake.data('half_v', Math.round(v * 0.5));
         
-        $('body').append($nowflake);
+        $('body').append($nowflake);  // DH messed with here
     }
+
     
     function move()
     {
@@ -203,6 +227,7 @@ function empty()
         else if (diffTime > 150)
         {
             $('span.winternetz:first').remove();
+            //$('span.winternetz2:first').remove();
             flakeCount--;
         }
         
