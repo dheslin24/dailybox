@@ -605,7 +605,8 @@ def display_box():
             
         winners = calc_winner(boxid)
         if len(winners) == 0 and ptype != 3:
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection)
+            # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
         if (ptype == 2 or ptype == 5) and len(winners) == 2:
             if ptype == 2:
