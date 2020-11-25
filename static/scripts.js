@@ -61,7 +61,7 @@ function empty()
     // var snowflakes = ["$",  $(image).attr('src')];
     var snowflakes = ["\uD83C\uDF57"];
     var prevTime;
-    var absMax = 20;
+    var absMax = 200;
     var flakeCount = 0;
     
     $(init);
@@ -87,7 +87,7 @@ function empty()
             textShadowSupport = false;
         }
         
-        var i = 20;
+        var i = 5;
         while (i--)
         {
             addFlake(true);
