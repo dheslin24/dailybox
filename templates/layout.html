@@ -14,6 +14,7 @@
         <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet"/>
 
         <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="test.js?1234567"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     
         <!--
@@ -23,7 +24,7 @@
         -->
 
         <!-- app's own JavaScript -->
-        <script src="{{ url_for('static', filename='scripts.js') }}"></script>  
+        <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>  
         <script type="text/javascript">
         $(document).ready(function(){
             $("#grid td.user_box:contains('{{ session['username'] }}')").css('background-color','#5DADE2');
@@ -39,6 +40,11 @@
             $("#grid td.user_box:contains('WINNER')").css('background-color','#28B463');
         });
         </script>
+        <!--
+        <script type="text/javascript">
+        $(document).ready(myMove());
+        </script>
+        -->
 
         <title>Daily BOX{% block title %}{% endblock %}</title>
 
@@ -46,7 +52,7 @@
 
     <body>
 
-        <div class="container">
+        <div id="x" class="container">
 
             <nav class="navbar navbar-default">
                 <div class="container-fluid">
@@ -93,6 +99,12 @@
             {% endif %}
 
             <main>
+            <!--
+            <div id="x">
+                <img src="https://www.kindpng.com/picc/m/31-311472_turkey-leg-clipart-transparent-hd-png-download.png">; 
+            </div>
+            -->
+            <div id="x"></div>
                 {% block main %}{% endblock %}
             </main>
 
