@@ -45,7 +45,7 @@
     -->
 
 <div>
-    <table id="grid" align="center" cellpadding = "30">
+    <table id="grid" align="center">
         <h3>
         <!--
         <tr>
@@ -63,10 +63,9 @@
         -->
         </h3>
         <h1>
-        <tr><td></td><td></td><td></td><td></td><td></td><td><strong style="font-size:  30px">{{ home[0] }}</td><td><strong style="font-size: 30px">{{ home[1] }}</strong></td><td><strong style="font-size: 30px">{{ home[2] }}</strong></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td style="background-color: #aaa" colspan="12"><strong style="font-size:  30px; letter-spacing: 5px">{{ home[0:3] }}</td></tr>
         <tr>
-        <td></td>
-        <td></td>
+        <td style="background-color: #aaa; font-size: 20px" colspan="2">Box: {{ boxid }} </td>
         {% for num in x %}
             <h1><td><strong style="font-size: 30px"> {{ x[loop.index0|string] }} </strong></td></h1>
         {% endfor %}
@@ -83,7 +82,7 @@
                 </form>
             </td>
             -->
-            <h1><td><strong style="font-size: 30px"> {{ away_team[loop.index0|string] }} </strong></td></h1>
+            <h1><td class="bordercell"><strong style="font-size: 30px"> {{ away_team[loop.index0|string] }} </strong></td></h1>
             <h1><td><strong style="font-size: 30px"> {{ y[loop.index0|string] }} </strong></td></h1>
             {% for box in row %}
                 <td class="user_box">    

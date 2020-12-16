@@ -48,22 +48,33 @@ main th
 {
     padding: 5px;
     border-spacing: 5px;
+    text-align: center;
+    background-color: #aaa;
+    border: 3px solid black;
 }
 
 main td
 {
     /* left-align tables' cells */
     text-align: center;
-    border: 1px solid navy;
+    border: 2px solid black;
     font-size: 12px;
-    padding: 3px 3px 3px 3px;
+    padding: 5px 5px 5px 5px;
     background-color: #ccc;
+}
+
+.bordercell {
+    background-color: #aaa;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #ccc;
+    border-top: #ccc;
 }
 
 main table
 {
     border-spacing: 1px;
-    border-collapse: separate;
-    border: 1px solid navy;
+    border-collapse: collapse;
+    border: 8px solid black;
 }
 
