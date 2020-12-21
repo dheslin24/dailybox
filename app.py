@@ -1250,6 +1250,15 @@ def index():
     
     grid = init_grid()
 
+    print("*******************")
+    print("***")
+    print("***")
+    print("***    {}".format(session["username"]))
+    print("***  just logged in")
+    print("***")
+    print("***")
+    print("*******************")
+
     return render_template("index.html", grid=grid, x=x_nums, y=y_nums)
 
 # REGISTER new user
@@ -1311,8 +1320,10 @@ def register():
 
         # remember which user has logged in
         session["userid"] = uid
+        session["username"] = request.form.get("username")
         print("************")
         print(session["userid"])
+        print(session["username"])
 
         # redirect user to home page
         return redirect(url_for("index"))
