@@ -33,7 +33,7 @@
             {% for row in game_list %}
             <tr>
                 <form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
-                <td><input type="submit" value="{{ row[0] }}" name="boxid"></td>
+                <td>{{ row[0] }}</td>
                 {% for field in row[1:] %}
                     <td>{{ field }}</td>
                 {% endfor %}
