@@ -1245,15 +1245,8 @@ def login():
 @app.route('/')
 @login_required
 def index():
+    
     grid = init_grid()
-    print("******************")
-    print("******************")
-    print("**                ")
-    print("**   {}           ".format(session["username"]))
-    print("** logged in      ")
-    print("**                ")
-    print("******************")
-    print("******************")
 
     return render_template("index.html", grid=grid, x=x_nums, y=y_nums)
 
