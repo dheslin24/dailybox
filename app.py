@@ -268,9 +268,12 @@ def check_box_limit(userid):
             if box == session['userid']:
                 count += 1
     s = "SELECT max_boxes FROM max_boxes WHERE userid = {};".format(session['userid'])
-    mb = db(s)[0][0]
+    mb = db(s)
+    
+    if len(mb) == 0:
+        return True
 
-    if count < mb:
+    elif count < mb[0][0]:
         return False
     else:
         return True
