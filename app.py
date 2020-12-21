@@ -1493,8 +1493,11 @@ def admin_summary():
     mbd = dict(db(s))
     print("mbd")
     print(mbd)
+    total_max = 0
+    for u in mbd:
+        total_max += mbd[u]
               
-    return render_template("admin_summary.html", users=users, d=user_box_count, fees=user_fees, paid=paid, mbd=mbd)
+    return render_template("admin_summary.html", users=users, d=user_box_count, fees=user_fees, paid=paid, mbd=mbd, total_max=total_max)
     
 
 @app.route("/user_details", methods=["GET", "POST"])
