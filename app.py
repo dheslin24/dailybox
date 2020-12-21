@@ -510,8 +510,10 @@ def my_games():
         available[game[0]] = count
     
     print(type(show_active))
+    total = len(game_list)
+    print("total total {}".format(total))
     if show_active == 'True' or show_active == None:
-        return render_template("my_games.html", game_list = game_list, available = available)
+        return render_template("my_games.html", game_list = game_list, available = available, total=total)
     else:
         print("got to my completed list")
         return render_template("my_completed_games.html", game_list = completed_game_list)
