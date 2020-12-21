@@ -55,6 +55,12 @@ function empty()
     // document.appendChild(img);
     // var drum = document.getElementById(image).appendChild(image)
  
+    //  -`-`-`-`-`-`-`-`-``-`-`-`-`-`-`-`-`-`            //
+    //  Use this great site to convert to surrogate pair //
+    //  For emojis to work
+    //  http://www.russellcottrell.com/greek/utilities/surrogatepaircalculator.htm
+    //  -`-`-`-`-`-`-`-`-`-`-`--`-`-`-`-`-`-``-`         //
+
     // var snowflakes = ["\u2744", "\u2745", "\u2746"];
     // var snowflakes = ["$", "\u2744", "\u2745", "\u2746"];
     // var myanimation = document.getElementById("myImg");

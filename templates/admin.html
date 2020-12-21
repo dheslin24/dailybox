@@ -68,4 +68,12 @@
         <input type="text" name="password_confirm" size="10">
         <input type="submit">
     </form>
+    <form action="{{ url_for('add_boxes_for_user') }}" method="POST">
+        <label for="username">Add Boxes for Username</label>
+        <input type="text" name="username" size="10">
+        <label for="boxes"># of Boxes</label>
+        <input type="text" name="boxes">
+        <input type="submit">
+    </form>
+
 {% endblock %}

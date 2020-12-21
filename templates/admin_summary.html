@@ -15,9 +15,13 @@
     <form action="{{ url_for('admin_summary') }}" method="POST">
         <input autocomplete="off" class="form-control" name="userid" placeholder="userid" type="text" size="5"/>
         <input autocomplete="off" class="form-control" name="amt_paid" placeholder="$amt" type="text" size="5"/>
-        <button type="submit">Update</button>
+        <button type="submit">Update Amt Paid</button>
     </form>
-
+    <form action="{{ url_for('add_boxes_for_user') }}" method="POST">
+        <input autocomplete="off" class="form-control" name="userid" placeholder="userid" type="text" size="5"/>
+        <input autocomplete="off" class="form-control" name="boxes" placeholder="boxes" type="text" size="5"/>
+        <button type="submit">Update Max Boxes</button>
+    </form>
 
     <h4>
         <table align = "center", cellpadding = "10">
@@ -30,6 +34,7 @@
             <th> mobile </th>
             <th> is admin? </th>
             <th> # active boxes </th>
+            <th> max boxes </th>
             <th> total fees </th>
             <th> amt paid </th>
             </tr>
@@ -39,6 +44,7 @@
                 <td>{{ field }}</td>
                 {% endfor %}
                 <td>{{ d[user[0]] }}</td>
+                <td>{{ mbd[user[0]] }}</td>
                 <td>{{ fees[user[0]] }}</td>
                 <td>{{ paid[user[0]] }} </td>
             </tr>
