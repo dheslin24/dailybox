@@ -25,10 +25,19 @@
             <th> Payout Type </th>
             <th> Available Entries </th>
         </tr>
-            {% for row in game_list %}
+            {% for row in game_list[:-1] %}
             <tr>
                 <form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
                 <td><input type="submit" value="{{ row[0] }}" name="boxid"></td>
+                {% for field in row[1:] %}
+                    <td>{{ field }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+            {% for row in game_list[-1:] %}
+            <tr>
+                <!--<form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}"> -->
+                <td>LOCKED</td>
                 {% for field in row[1:] %}
                     <td>{{ field }}</td>
                 {% endfor %}

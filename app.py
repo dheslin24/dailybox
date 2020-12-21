@@ -7,6 +7,7 @@ import sys
 import random
 import json
 import config
+from operator import itemgetter
 import mysql.connector
 from mysql.connector import errorcode
 from functools import wraps
@@ -536,6 +537,9 @@ def game_list():
 @login_required
 def custom_game_list():
     game_list = get_games(2)
+
+    # sorted(game_list, key=itemgetter(0))
+    game_list.sort(key=lambda x: x[0])
 
     return render_template("custom_game_list.html", game_list = game_list)
 
