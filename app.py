@@ -146,6 +146,7 @@ def payout_calc(pay_type, fee):
     |           4 | Touch Box                |
     |           5 | 10-Man                   |
     |           6 | Satellite
+    |           7 | 10-Man Final/Reverse 75/25
     +-------------+--------------------------+
     '''
     if pay_type == 1:
@@ -159,6 +160,8 @@ def payout_calc(pay_type, fee):
         s = 'Single Winner 10 Man: {}'.format(fee * 10)
     elif pay_type == 6:
         s = 'Satellite'
+    elif pay_type == 7:
+        s = 'Final: {}  /  Reverse Final: {}'.format(int((fee * 10) *.75), int((fee * 10) *.25))
     elif pay_type == 3:
         s = 'Every Score Wins {}.  \nReverse Final Wins {}.  \nFinal gets the remainder.'.format(fee * 3, fee * 10)
     else:
@@ -173,7 +176,7 @@ def calc_winner(boxid):  # all this does is strip all beginning digits from the 
     print(pay_type)
 
     winner_list = []
-    if pay_type == 2 or pay_type == 5 or pay_type == 6:  # final only
+    if pay_type == 2 or pay_type == 5 or pay_type == 6 or pay_type == 7:  # final only
         s = "SELECT x4, y4 FROM scores WHERE boxid = {};".format(boxid)
         scores = db(s)# [-1:][0]  # always take the last in list
         if len(scores) == 0:
@@ -206,7 +209,11 @@ def calc_winner(boxid):  # all this does is strip all beginning digits from the 
     print(winner_list)
     return winner_list
 
-def find_winning_user(boxid):
+# returns a list of winning userids for a given boxid. 
+# if each quarter has winner, will be [q1, q2, q3, f]
+# if single winner, [f]
+# if final/reverse final [TODO NUTX]
+def find_winning_user(boxid):  
     s = "SELECT * FROM scores WHERE boxid = {} ORDER BY score_id DESC LIMIT 1;".format(boxid)
     print(s)
     scores = db(s)[0]
@@ -225,7 +232,7 @@ def find_winning_user(boxid):
 
     box_x = []
     box_y = []
-    # TODO - go thru each score, find in grid
+    # go thru each score, find in grid
     for score in score_list[::2]: # only look at the x's
         if score != None:
             # box_x = [n for n in x if x[n] == int(score)]
@@ -341,8 +348,13 @@ def start_game(boxid):
     
 
 def get_games(box_type, active = 1):
+    box_string = ''
+    for b in box_type:
+        box_string += str(b) + ', '
+    box_string = box_string[:-2] # chop last ', '
+
     if active == 0:
-        s = "SELECT b.boxid, b.box_name, b.fee, pt.description, s.winner FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id LEFT JOIN scores s ON s.boxid = b.boxid WHERE b.active = {} and b.box_type = {};".format(active, box_type)
+        s = "SELECT b.boxid, b.box_name, b.fee, pt.description, s.winner FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id LEFT JOIN scores s ON s.boxid = b.boxid WHERE b.active = {} and b.box_type in ({});".format(active, box_string)
         games = db(s)
         game_list = [list(game) for game in games]
         for game in game_list:
@@ -354,7 +366,7 @@ def get_games(box_type, active = 1):
                 game[4] = "Cancelled"
             
     else:
-        s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type = {};".format(active, box_type)
+        s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type in ({});".format(active, box_string)
         games = db(s)
         game_list = [list(game) for game in games]
 
@@ -450,7 +462,6 @@ def my_games():
     boxnums = db(bn)
     #print(boxnums)
 
-    # NUTX TODO
     # create dict of boxid:{x:{json}, y:{json}}
     boxnum_x = {}
     boxnum_y = {}
@@ -523,22 +534,35 @@ def my_games():
 @login_required
 def completed_games():
     #game_list_d = get_games(1, 0)
-    game_list_c = get_games(3, 0)
+    game_list_c = get_games([2,3], 0)
     #game_list = game_list_d + game_list_c
-    game_list = game_list_c
+    game_list_pre = game_list_c
+    game_list_pre.sort(key=lambda x: x[0])
     
+    # dedupe - if corrections were made in score entry a game can have multiple
+    game_list = []
+    seen = set()
+    for game in game_list_pre:
+        if game[0] not in seen:  # unique game, mark as seen and add to gl
+            game_list.append(game)
+            seen.add(game[0])
+        else:  # seen this one already.. replace it with a new one
+            del game_list[-1]
+            game_list.append(game)
+        
+        
     return render_template("completed_games.html", game_list = game_list)
 
 @app.route("/game_list")
 def game_list():
-    game_list = get_games(1)
+    game_list = get_games([1])
 
     return render_template("game_list.html", game_list = game_list)
 
 @app.route("/custom_game_list")
 @login_required
 def custom_game_list():
-    game_list = get_games(2)
+    game_list = get_games([2,3])
 
     # sorted(game_list, key=itemgetter(0))
     game_list.sort(key=lambda x: x[0])
@@ -649,7 +673,7 @@ def display_box():
             return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection)
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
-        if (ptype == 2 or ptype == 5) and len(winners) == 2:
+        if (ptype == 2 or ptype == 5 or ptype == 6 or ptype == 7) and len(winners) == 2:
             if ptype == 2:
                 final_payment = fee * 100
             elif ptype == 6:
@@ -667,8 +691,21 @@ def display_box():
             winner = Markup('WINNER</br>')
             grid[y_winner][x_winner] = (winning_boxnum, winner + winning_username)
         
-        elif ptype == 2 and len(winners) != 2:
+        elif (ptype == 2 or ptype == 5 or ptype == 6) and len(winners) != 2:
             return apology("something went wrong with winner calculations")
+
+        if ptype == 7:
+            pass # TODO NUTX - add reverse final here
+            for item in x:
+                if x[item] == int(winners[0]):  # x column == y winner
+                    x_winner = int(item)
+            for item in y:
+                if y[item] == int(winners[1]):
+                    y_winner = int(item)
+            rev_winning_username = grid[x_winner][y_winner][1]
+            rev_winning_boxnum = int(str(x_winner) + str(y_winner))
+            rev_winner = Markup('REVERSE</br>WINNER</br>')
+            grid[x_winner][y_winner] = (rev_winning_boxnum, rev_winner + rev_winning_username)
 
         if ptype == 1 and len(winners) == 8:
             final_payment = '' +  str(fee * 10) + ' / ' + str(fee * 30) + ' / ' + str(fee * 10) + ' / ' + str(fee * 50)
@@ -827,16 +864,21 @@ def select_box():
             elif pay_type == 6 and check_box_limit(session['userid']):
                 return apology("Really??  You lost count - you're out of boxes.  Double check with TW to make sure he set you up correctly.")
 
+            elif pay_type == 7 and check_box_limit(session['userid']):
+                return apology("Really??  Clearly you lost count.  You didn't win that many satellite boxes.")
+
             else:
                 box_list.append(box_num)
         elif boxes[box_num] == session['userid']:
             # code to undo pick
-            # latest update - will pass here and revert later for gobbler
+            # first - if rand_list len == 0, game has started, can't undo
+            if len(rand_list) == 0:
+                return apology("Really??  numbers were drawn - can't undo now - too late!!")
             if pay_type != 3:
                 s = "UPDATE boxes SET box{}= 1 WHERE boxid = {};".format(box_num, boxid)
                 db(s)
             else:
-                box_list.append(box_num) #still append, to eventually set back to 1
+                box_list.append(box_num) #still append, to eventually set back to 1 on all gobble boxes
 
         else:
             s = "SELECT username FROM users WHERE userid = {};".format(boxes[box_num])
@@ -1186,6 +1228,11 @@ def enter_custom_scores():
                 w = "UPDATE scores SET winner = '{}' WHERE boxid = {};".format(j, boxid)
                 db(w)
 
+            elif pay_type == 7:
+                wl = find_winning_user(boxid)[0]
+                w = "UPDATE scores SET winner = '{}' WHERE boxid = {};".format(wl, boxid)
+                db(w)
+
             return redirect(url_for("admin_summary"))
 
     else:
@@ -1436,7 +1483,7 @@ def payment_status():
     for game in all_boxes:
         fee = game[0]
         pay_type = game[1]
-        if pay_type == 5 or pay_type == 6:
+        if pay_type == 5 or pay_type == 6 or pay_type == 7:
             fee = fee // 10
         for box in game[1:]:
             if box != 0 and box != 1:
@@ -1488,7 +1535,7 @@ def admin_summary():
     for game in all_boxes:
         fee = game[0]
         pay_type = game[1]
-        if pay_type == 5 or pay_type == 6:
+        if pay_type == 5 or pay_type == 6 or pay_type == 7:
             fee = fee // 10
             print("fee {}".format(fee))
         for box in game[2:]:
