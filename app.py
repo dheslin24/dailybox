@@ -43,7 +43,7 @@ def login_required(f):
 
 # imported config
 db_config = {'user':config.user, 'password':config.password, 'host':config.host, 'database':config.database}
-print(db_config)
+# print(db_config)
 
 def db(s, db_config=db_config):
     try:
@@ -62,7 +62,7 @@ def db(s, db_config=db_config):
         #cnx.close()
 
     cursor = cnx.cursor()
-    #print(s)
+    print(s)
     cursor.execute(s)
     rv = ()
     if s[:6] == "SELECT":
@@ -74,6 +74,44 @@ def db(s, db_config=db_config):
         cnx.commit()
         cursor.close()
         cnx.close()
+
+def db2(s, params=(), db_config=db_config):
+    try:
+        cnx = mysql.connector.connect(**db_config)
+        #print("try succeeded")
+
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Invalid Username or Password")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist")
+        else:
+            print(err)
+    #else:
+        #print("try failed")
+        #cnx.close()
+
+    if len(params) == 0:
+        cursor = cnx.cursor()
+        print(s)
+        cursor.execute(s)
+    else:
+        cursor = cnx.cursor()
+        print("db2 executing")
+        print(s, params)
+        cursor.execute(s, params)
+
+    rv = ()
+    if s[:6] == "SELECT":
+        rv = cursor.fetchall()
+        cursor.close()
+        cnx.close()
+        return rv
+    else:
+        cnx.commit()
+        cursor.close()
+        cnx.close()
+
 
 def init_grid():
     grid = []
@@ -363,7 +401,7 @@ def get_games(box_type, active = 1):
                 username = db(w)[0][0]
                 game[4] = username
             else:
-                game[4] = "Cancelled"
+                game[4] = "N/A"
             
     else:
         s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type in ({});".format(active, box_string)
@@ -650,7 +688,7 @@ def display_box():
     
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
-        num_selection = "Row/Column numbers will be randomly generated once the last box is selected"
+        num_selection = "Row/Column numbers will be randomly generated once the last box is selected."
         x = {}
         for n in range(10):
             x[str(n)] = '?'
@@ -1263,9 +1301,13 @@ def login():
         elif not request.form.get("password"):
             return apology("must provide password")
 
+        else:
+            username = request.form.get("username")
         # query database for username
-        s = "SELECT username, password, userid FROM users WHERE username = '{}'".format(request.form.get("username"))
-        user = db(s)
+        # s = "SELECT username, password, userid FROM users WHERE username = '{}'".format(request.form.get("username"))
+        s2 = "SELECT username, password, userid FROM users WHERE username = %s"
+        # user = db(s)
+        user = db2(s2, (username,))
         if len(user) != 0:
             u = user[0][0]
             p = user[0][1]
@@ -1275,7 +1317,7 @@ def login():
             # ensure username exists and password is correct
             if not pwd_context.verify(request.form.get("password"), p):
                 print('return invalid username or pwd here')
-                return apology("Invalid username and/or password. \nReach out to Daily Box customer support to reset.")
+                return apology("Invalid username and/or password. \nReach out to customer support (TW) to reset.")
         else:
             return apology("username does not exist")
 
@@ -1352,8 +1394,13 @@ def register():
         print("got here insert user")
 
         #insert username & hash into table
-        s = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES('{}', '{}', '{}', 1, 0, '{}', '{}', '{}');".format(request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
-        db(s)
+        # s = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES('{}', '{}', '{}', 1, 0, '{}', '{}', '{}');".format(request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
+        # db(s)
+
+        s2 = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES(%s, %s, %s, 1, 0, %s, %s, %s);"
+        values = (request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
+        db2(s2, values)
+
 
         # query database for username
         uid_string = "SELECT userid FROM users WHERE username = '{}'".format(request.form.get("username"))
@@ -1420,14 +1467,18 @@ def add_money():
     username = request.form.get('username')
     amount = request.form.get('amount')
     # find out current balance
-    b = "SELECT balance FROM users WHERE username = '{}';".format(username)
-    balance = db(b)[0][0]
+    #b = "SELECT balance FROM users WHERE username = '{}';".format(username)
+    b2 = "SELECT balance FROM users WHERE username = %s"
+    # balance = db(b)[0][0]
+    balance = db2(b2, (username,))[0][0]
     if balance == None:
         balance = 0
     print(balance, type(balance))
     balance += int(amount)
-    s = "UPDATE users SET balance = {} WHERE username = '{}';".format(balance, username)
-    db(s)
+    #s = "UPDATE users SET balance = {} WHERE username = '{}';".format(balance, username)
+    s2 = "UPDATE users SET balance = %s WHERE username = %s;"
+    #db(s)
+    db2(s2, (balance, username))
 
     return redirect(url_for("admin_summary"))
 
@@ -1576,13 +1627,17 @@ def reset_password():
         password = request.form.get('password')
         pswd_confirm = request.form.get('password_confirm')
         s = "SELECT password FROM users WHERE userid = {};".format(session['userid'])
-        curr_pswd = db(s)[0][0]
+        s2 = "SELECT password FROM users WHERE userid = %s;"
+        # curr_pswd = db(s)[0][0]
+        curr_pswd = db2(s2, (session['userid'],))[0][0]
         print(pwd_context.verify(old_pswd, curr_pswd))
         if pwd_context.verify(old_pswd, curr_pswd):
             if password == pswd_confirm:
                 hash = pwd_context.hash(password)
                 s = "UPDATE users SET password = '{}' WHERE userid = {};".format(hash, session['userid'])
-                db(s)
+                s2 = "UPDATE users SET password = %s WHERE userid = %s;"
+                # db(s)
+                db2(s2, (hash, session['userid']))
                 return redirect(url_for('user_details'))
             else:
                 return apology("password confirmation does not match")
