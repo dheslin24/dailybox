@@ -75,5 +75,10 @@
         <input type="text" name="boxes">
         <input type="submit">
     </form>
+    <form action="{{ url_for('deactivate_user') }}" method="POST">
+        <label for="userid">Deactivate UserID</label>
+        <input type="text" name="userid" size="5">
+        <input type="submit">
+    </form>
 
 {% endblock %}

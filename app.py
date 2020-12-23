@@ -1591,6 +1591,13 @@ def reset_password():
     else:
         return render_template("reset_password.html")
 
+@app.route("/deactivate_user", methods=["GET", "POST"])
+def deactivate_user():
+    userid = request.form.get('userid')
+    s = "UPDATE users SET active = 0 WHERE userid = {};".format(userid)
+    db(s)
+
+    return redirect(url_for("admin_summary"))
 
 # LOGOUT Routine
 @app.route("/logout")
