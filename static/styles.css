@@ -78,3 +78,32 @@ main table
     border: 8px solid black;
 }
 
+
+main td.team {
+    width: 60px;
+}
+
+main td.team:hover {
+    background-color: lightblue;
+    color: green;
+    cursor: pointer;
+}
+
+main td.ptd {
+    width: 100px;
+}
+
+main td.pick {
+    width: 60px; 
+    background-color: #aaa;
+    border-left-width: thick;
+    font-weight: bold;
+}
+
+main td.pick > input {
+    width: 60px;
+    background-color: #aaa;
+    border: 0px;
+    text-align: center;
+}
+

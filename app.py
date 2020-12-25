@@ -1280,6 +1280,75 @@ def enter_custom_scores():
 @app.route("/threes", methods=["GET", "POST"])
 def threes():
     return render_template("threes.html")
+
+#pickem game stuff below
+# get games function
+# if detailed == False, returns list of gameids.  If True, returns dict of game objects.
+def get_pickem_games(season, detailed=False):
+
+    # only retrieves the latest game with highest id, incase of changes (i.e. spread change)
+    g = "SELECT DISTINCT g.gameid, g.fav, g.spread, g.dog, g.locked FROM pickem.games g INNER JOIN (SELECT gameid, MAX(id) as maxid FROM pickem.games GROUP BY gameid) gg ON g.gameid = gg.gameid AND g.id = gg.maxid WHERE season = %s ORDER BY g.gameid ASC"
+    games = db2(g, (season,))
+
+    class Game:
+        def __init__(self, fav, dog, spread, locked):
+            self.fav = fav
+            self.dog = dog
+            self.spread = spread
+            self.locked = locked
+
+    game_list = []
+    game_dict = {}
+    index = 0
+    for g in games:
+        game_list.append(g[0])
+        game_dict[g[0]] = Game(g[1], g[3], g[2], g[4])
+
+    if detailed == False:
+        return game_list
+    else:
+        return game_dict
+
+@app.route("/select_pickem_games", methods=["GET", "POST"])
+def select_pickem_games():
+    season = 2021
+    # first get the list of games from db
+    game_list = get_pickem_games(season)
+
+    # get the user picks and insert into db
+    user_picks = {}
+    for game in game_list:
+        pick = request.form.get(game)
+        p = "INSERT INTO pickem.userpicks (userid, gameid, pick, datetime) VALUES (%s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
+        db2(p, (session['userid'], game, pick))
+ 
+    print("userpicks")
+    print(user_picks)
+
+    return redirect(url_for('pickem_game_list'))
+        
+        
+
+@app.route("/pickem_game_list", methods=["GET", "POST"])
+def pickem_game_list():
+
+    # season hardcoded for now - will store in db set by admin
+    season = 2021
+
+    game_list = get_pickem_games(season)
+    game_dict = get_pickem_games(season, True)
+
+    print("game lock")
+    print(game_dict['Game-05 Div'].locked)
+
+    # get user picks
+    p = "SELECT DISTINCT p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid WHERE userid = %s"
+    picks = db2(p, (session['userid'],))
+
+    user_picks = dict(picks)
+    print(user_picks) 
+        
+    return render_template("pickem_game_list.html", game_dict=game_dict, game_list=game_list, user_picks=user_picks)
     
 
 # LOGIN routine
@@ -1305,7 +1374,7 @@ def login():
             username = request.form.get("username")
         # query database for username
         # s = "SELECT username, password, userid FROM users WHERE username = '{}'".format(request.form.get("username"))
-        s2 = "SELECT username, password, userid FROM users WHERE username = %s"
+        s2 = "SELECT username, password, userid FROM users WHERE username = %s and active = 1"
         # user = db(s)
         user = db2(s2, (username,))
         if len(user) != 0:

@@ -1,0 +1,111 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Pickem Game List
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Playoff Pickem Pool <br>
+            Pick all 11 playoff games against the spread.  Best record wins.
+        </p>
+    </h1>
+
+    </br>
+
+
+    <h4>
+        <form action="{{ url_for('select_pickem_games') }}" method="POST">
+        <table class="pickem_table" align="center">
+        <tr>
+            <th> Game ID </th>
+            <th> Fav </th>
+            <th> Spread </th>
+            <th> Dog </th>
+            <th style="border-left-width: thick"> Pick </th>
+        </tr>
+        {% for row in game_list[:4] %}        
+        <tr>
+            <td class="ptd">{{ row }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
+            <td class="ptd">{{ game_dict[row].spread }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
+            <td class="pick">
+                <input class="pick" type="text" id="{{ row }}" name="{{ row }}" value="{{ user_picks[row] }}" readonly>
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+
+        <table align="center">
+        {% for row in game_list[4:8] %}
+        <tr>
+            <td class="ptd">{{ row }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
+            <td class="ptd">{{ game_dict[row].spread }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
+            <td class="pick">
+                <input class="pick" type="text" id="{{ row }}" name="{{ row }}" value="{{ user_picks[row] }}" readonly>
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+
+        <table align="center">
+        {% for row in game_list[8:10] %}
+        <tr>
+            <td class="ptd">{{ row }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
+            <td class="ptd">{{ game_dict[row].spread }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
+            <td class="pick">
+                <input class="pick" type="text" id="{{ row }}" name="{{ row }}" value="{{ user_picks[row] }}" readonly>
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+        <table align="center">
+        {% for row in game_list[10] %}
+        <tr>
+            <td class="ptd">{{ row }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
+            <td class="ptd">{{ game_dict[row].spread }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
+            <td class="pick">
+                <input class="pick" type="text" id="{{ row }}" name="{{ row }}" value="{{ user_picks[row] }}" readonly>
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+        <input type="submit">
+        </form>
+
+    </h4>
+
+<script type="text/javascript">
+    function change(value, id, locked) {
+    id.toString();
+    console.log("got to change value");
+    console.log(value, id, locked);
+    var elem = document.getElementById(id.toString());
+    console.log(document.getElementById(id.toString()));
+    console.log(elem)
+    console.log(typeof id.toString());
+    console.log(typeof locked);
+    if (locked == 0) {
+        elem.value = value;
+    } else {
+        window.alert("Too late - game is locked");
+    }
+}
+</script>
+
+<script>
+    function myClick(){
+        console.log("got to myclick");
+}
+</script>
+
+{% endblock %}
+
