@@ -111,9 +111,5 @@ main td.pick > input {
 main input[type=submit] {
     background-color: black;
     color: white;
-    padding: 20px;
-    margin: 20px;
-    border-radius: 25px;
     border: 2px solid black;
-    width: 200px;
 }

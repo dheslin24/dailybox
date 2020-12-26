@@ -1287,14 +1287,15 @@ def threes():
 def get_pickem_games(season, detailed=False):
 
     # only retrieves the latest game with highest id, incase of changes (i.e. spread change)
-    g = "SELECT DISTINCT g.gameid, g.fav, g.spread, g.dog, g.locked FROM pickem.games g INNER JOIN (SELECT gameid, MAX(id) as maxid FROM pickem.games GROUP BY gameid) gg ON g.gameid = gg.gameid AND g.id = gg.maxid WHERE season = %s ORDER BY g.gameid ASC"
+    g = "SELECT DISTINCT g.gameid, g.game_name, g.fav, g.spread, g.dog, g.locked FROM pickem.games g INNER JOIN (SELECT gameid, MAX(id) as maxid FROM pickem.games GROUP BY gameid) gg ON g.gameid = gg.gameid AND g.id = gg.maxid WHERE season = %s ORDER BY g.gameid ASC"
     games = db2(g, (season,))
 
     class Game:
-        def __init__(self, fav, dog, spread, locked):
+        def __init__(self, game_name, fav, spread, dog, locked):
+            self.game_name = game_name
             self.fav = fav
-            self.dog = dog
             self.spread = spread
+            self.dog = dog
             self.locked = locked
 
     game_list = []
@@ -1302,12 +1303,13 @@ def get_pickem_games(season, detailed=False):
     index = 0
     for g in games:
         game_list.append(g[0])
-        game_dict[g[0]] = Game(g[1], g[3], g[2], g[4])
+        game_dict[g[0]] = Game(g[1], g[2], g[3], g[4], g[5])
 
     if detailed == False:
         return game_list
     else:
         return game_dict
+
 
 @app.route("/select_pickem_games", methods=["GET", "POST"])
 def select_pickem_games():
@@ -1341,9 +1343,6 @@ def pickem_game_list():
     game_list = get_pickem_games(season)
     game_dict = get_pickem_games(season, True)
 
-    print("game lock")
-    print(game_dict['Game-05 Div'].locked)
-
     # get user picks
     p = "SELECT DISTINCT p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid WHERE userid = %s"
     picks = db2(p, (session['userid'],))
@@ -1359,13 +1358,40 @@ def pickem_all_picks():
     
     # first get all active/locked games (you can only show locked games to others)
     game_dict = get_pickem_games(season, True)
-    game_list = get_pickem_games(season)
-    game_details = [] #will be 2nd column heading
+    game_list = get_pickem_games(season) # first column heading - gameid
+    game_details = [] # 2nd column heading with fav/spread/dog
     games_locked = []
     for game in game_list:
-        game.details.append("{} {} {}".format(game_dict[game].fav, game_dict[game].spread, game_dict[game].dog))
+        game_details.append("{} {} {}".format(game_dict[game].fav, game_dict[game].spread, game_dict[game].dog))
         if game_dict[game].locked == 1:
-            games_unlocked.append(game)
+            games_locked.append(game)
+
+
+    class User:
+        def __init__(self):
+            self.picks = {}
+
+    # get all the user picks, eventually change unlocked picks to "---" if still open
+    p = "SELECT DISTINCT p.userid, p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT userid, gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid"
+    all_picks = db2(p)
+
+    user_pick_list = []
+    user_picks = {}
+
+    for pick in all_picks:
+        if (pick[0], pick[1]) not in user_pick_list:  # then this is the latest pick for this uer
+            user_pick_list.append((pick[0], pick[1]))  # make sure the rest skip ovr this then
+            if pick[0] not in user_picks:              # first pick for this user
+                user_picks[pick[0]] = User()           # so create a user object
+                pick[0].picks[pick[1]] = pick[2]        # and set it's first pick
+            else:
+                pick[0].picks[pick[1]] = pick[2] 
+
+
+# todo nutx pickem - finish off this
+        
+
+    return redirect(url_for("pickem_game_list", game_dict=game_dict, game_list=game_list, all_picks=all_picks))
     
         ## todo - finish this display of user picks for locked games        
 
