@@ -306,7 +306,7 @@ def check_box_limit(userid):
     for _ in box_list:
         box_string += _
     box_string = box_string[:-2]
-    box = "SELECT {} FROM boxes WHERE active = 1;".format(box_string)
+    box = "SELECT {} FROM boxes WHERE active = 1 or boxid between 26 and 36;".format(box_string)
     all_boxes = db(box)
     count = 0
     for game in all_boxes:
@@ -1332,6 +1332,9 @@ def select_pickem_games():
 @app.route("/pickem_game_list", methods=["GET", "POST"])
 def pickem_game_list():
 
+    if not session['userid']:
+        return apology("Please log in first.  This page still under construction and requires a successful login")
+
     # season hardcoded for now - will store in db set by admin
     season = 2021
 
@@ -1349,7 +1352,23 @@ def pickem_game_list():
     print(user_picks) 
         
     return render_template("pickem_game_list.html", game_dict=game_dict, game_list=game_list, user_picks=user_picks)
+
+@app.route("/pickem_all_picks", methods=["GET", "POST"])
+def pickem_all_picks():
+    season = 2021
     
+    # first get all active/locked games (you can only show locked games to others)
+    game_dict = get_pickem_games(season, True)
+    game_list = get_pickem_games(season)
+    game_details = [] #will be 2nd column heading
+    games_locked = []
+    for game in game_list:
+        game.details.append("{} {} {}".format(game_dict[game].fav, game_dict[game].spread, game_dict[game].dog))
+        if game_dict[game].locked == 1:
+            games_unlocked.append(game)
+    
+        ## todo - finish this display of user picks for locked games        
+
 
 # LOGIN routine
 @app.route("/login", methods=["GET", "POST"])

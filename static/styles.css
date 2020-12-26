@@ -84,8 +84,8 @@ main td.team {
 }
 
 main td.team:hover {
-    background-color: lightblue;
-    color: green;
+    background-color: black;
+    color: white;
     cursor: pointer;
 }
 
@@ -103,7 +103,17 @@ main td.pick {
 main td.pick > input {
     width: 60px;
     background-color: #aaa;
+    font-size: 16px;
     border: 0px;
     text-align: center;
 }
 
+main input[type=submit] {
+    background-color: black;
+    color: white;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 25px;
+    border: 2px solid black;
+    width: 200px;
+}
