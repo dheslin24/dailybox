@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Pickem All Games
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Playoff Pickem - All Games <br>
+        </p>
+    </h1>
+        <p> User picks remain hidden until game locks </p>
+    </br>
+    <h4>
+        <table class="pickem_table" align="center">
+        <tr>
+            <th rowspan="2" style="width: 250px"> Username </th>
+            <th> WC Game 1 </th>
+            <th> WC Game 2 </th>
+            <th> WC Game 3 </th>
+            <th> WC Game 4 </th>
+            <th> DIV Game 5 </th>
+            <th> DIV Game 6 </th>
+            <th> DIV Game 7 </th>
+            <th> DIV Game 8 </th>
+            <th> CONF Game 9 </th>
+            <th> CONF Game 10 </th>
+            <th> Super Bowl </th>
+        </tr>
+        <tr>
+        {% for col in game_details %} 
+            <th class="all_picks" style="width: 200px; font-size: 12px">{{ col }} </th>
+        {% endfor %}
+        </tr>
+        {% for user in user_picks %}
+        <tr>
+            <td>{{ user }}</td>
+            {% for n in range(1,12) %}
+            <td>{{ user_picks[user].picks[n] }} </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </table>
+
+{% endblock %}
+
