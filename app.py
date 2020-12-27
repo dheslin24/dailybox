@@ -504,6 +504,9 @@ def my_games():
     boxnums = db(bn)
     #print(boxnums)
 
+    u = "SELECT userid, username FROM users;"
+    user_dict = dict(db2(u))
+
     # create dict of boxid:{x:{json}, y:{json}}
     boxnum_x = {}
     boxnum_y = {}
@@ -541,8 +544,9 @@ def my_games():
                 if win_dict[gameid][:1] == "{":
                     winner = "multi" # will parse this later...
                 else:
-                    w = "SELECT username FROM users WHERE userid = {};".format(win_dict[gameid])
-                    winner = db(w)[0][0]
+                    #w = "SELECT username FROM users WHERE userid = {};".format(win_dict[gameid])
+                    #winner = db(w)[0][0]
+                    winner = user_dict[int(win_dict[gameid])]
         for box in game[7:]:
             if box == session['userid'] and active == 1:
                 if gameid in boxnum_x:
