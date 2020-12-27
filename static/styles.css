@@ -115,3 +115,13 @@ main input[type=submit] {
     width: 30px;
     color: white;
 }
+
+main input[type=submit].pick {
+    background-color: black;
+    border: 2px black;
+    border-radius: 25px;
+    width: 200px;
+    color: white;
+    margin: 20px;
+    padding: 20px;
+}

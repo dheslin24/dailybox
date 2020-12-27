@@ -395,11 +395,15 @@ def get_games(box_type, active = 1):
         s = "SELECT b.boxid, b.box_name, b.fee, pt.description, s.winner FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id LEFT JOIN scores s ON s.boxid = b.boxid WHERE b.active = {} and b.box_type in ({});".format(active, box_string)
         games = db(s)
         game_list = [list(game) for game in games]
+        u = "SELECT userid, username FROM users;"
+        user_dict = dict(db2(u))
+        print(user_dict)
         for game in game_list:
             if game[4] is not None:
-                w = "SELECT username FROM users WHERE userid = {};".format(game[4])
-                username = db(w)[0][0]
-                game[4] = username
+                #w = "SELECT username FROM users WHERE userid = {};".format(game[4])
+                #username = db(w)[0][0]
+                # game[4] = username
+                game[4] = user_dict[int(game[4])]
             else:
                 game[4] = "N/A"
             
@@ -1365,35 +1369,60 @@ def pickem_all_picks():
         game_details.append("{} {} {}".format(game_dict[game].fav, game_dict[game].spread, game_dict[game].dog))
         if game_dict[game].locked == 1:
             games_locked.append(game)
+    
+    # fill in 'TBD' for any game not created yet
+    for n in range(len(game_details),11):
+        game_details.append("TBD")
 
 
     class User:
         def __init__(self):
-            self.picks = {}
+            self.picks = {}  # gameid:pick
 
     # get all the user picks, eventually change unlocked picks to "---" if still open
-    p = "SELECT DISTINCT p.userid, p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT userid, gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid"
+    # p = "SELECT DISTINCT p.userid, p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT userid, gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid"
+    p = "SELECT pickid, userid, gameid, pick from pickem.userpicks order by pickid desc;" 
     all_picks = db2(p)
 
-    user_pick_list = []
+    user_pick_list = []  # only used for deduping picks 
     user_picks = {}
 
     for pick in all_picks:
-        if (pick[0], pick[1]) not in user_pick_list:  # then this is the latest pick for this uer
-            user_pick_list.append((pick[0], pick[1]))  # make sure the rest skip ovr this then
-            if pick[0] not in user_picks:              # first pick for this user
-                user_picks[pick[0]] = User()           # so create a user object
-                pick[0].picks[pick[1]] = pick[2]        # and set it's first pick
-            else:
-                pick[0].picks[pick[1]] = pick[2] 
+        if game_dict[pick[2]].locked == 1:
+            if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
+                user_pick_list.append((pick[1], pick[2]))  # make sure the rest skip ovr this then
+                if pick[1] not in user_picks:              # first pick for this user
+                    user_picks[pick[1]] = User()           # so create a user object
+                    user_picks[pick[1]].picks[pick[2]] = pick[3]       # and set it's first pick
+                else:
+                    user_picks[pick[1]].picks[pick[2]] = pick[3]       # obj already exists, add new game and it's pick
 
+        else: # add them, but hidden
+            if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
+                user_pick_list.append((pick[1], pick[2]))  # make sure the rest skip ovr this then
+                if pick[1] not in user_picks:              # first pick for this user
+                    user_picks[pick[1]] = User()           # so create a user object
+                    user_picks[pick[1]].picks[pick[2]] = "hidden"      # and set it's first pick
+                else:
+                    user_picks[pick[1]].picks[pick[2]] = "hidden"      # obj already exists, add new game and it's pick
 
-# todo nutx pickem - finish off this
-        
+    # add empty string for remainder of games
+    for user in user_picks:
+        for n in range(11):
+            if n not in user_picks[user].picks:
+                user_picks[user].picks[n] = ''
 
-    return redirect(url_for("pickem_game_list", game_dict=game_dict, game_list=game_list, all_picks=all_picks))
+    '''
+    #  TESTING USER CLASS BELOW #
+    print("*** USER CLASS ***")
+    print(user_picks[12].picks)
+    print(user_picks[12].picks[8])
+    '''
+
+    return render_template("pickem_all_games.html", game_details=game_details, user_picks=user_picks)
     
         ## todo - finish this display of user picks for locked games        
+    
 
 
 # LOGIN routine
