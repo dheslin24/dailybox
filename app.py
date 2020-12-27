@@ -1328,7 +1328,7 @@ def select_pickem_games():
     # get the user picks and insert into db
     user_picks = {}
     for game in game_list:
-        pick = request.form.get(game)
+        pick = request.form.get(str(game))
         p = "INSERT INTO pickem.userpicks (userid, gameid, pick, datetime) VALUES (%s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
         db2(p, (session['userid'], game, pick))
  
@@ -1390,9 +1390,10 @@ def pickem_all_picks():
 
     user_pick_list = []  # only used for deduping picks 
     user_picks = {}
+    current_user = session['userid']
 
     for pick in all_picks:
-        if game_dict[pick[2]].locked == 1:
+        if game_dict[pick[2]].locked == 1 or current_user == pick[1]:
             if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
                 user_pick_list.append((pick[1], pick[2]))  # make sure the rest skip ovr this then
                 if pick[1] not in user_picks:              # first pick for this user

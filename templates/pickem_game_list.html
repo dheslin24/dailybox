@@ -33,7 +33,7 @@
             <td class="ptd">{{ game_dict[row].spread }}</td>
             <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
             <td class="pick">
-                <input class="pick" type="text" id="{{ row }}" name="{{ row }}" value="{{ user_picks[row] }}" readonly>
+                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
             </td>
         </tr>
         {% endfor %}
@@ -47,7 +47,7 @@
             <td class="ptd">{{ game_dict[row].spread }}</td>
             <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
             <td class="pick">
-                <input class="pick" type="text" id="{{ row }}" name="{{ row }}" value="{{ user_picks[row] }}" readonly>
+                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
             </td>
         </tr>
         {% endfor %}
@@ -61,7 +61,7 @@
             <td class="ptd">{{ game_dict[row].spread }}</td>
             <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
             <td class="pick">
-                <input class="pick" type="text" id="{{ row }}" name="{{ row }}" value="{{ user_picks[row] }}" readonly>
+                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
             </td>
         </tr>
         {% endfor %}
@@ -74,7 +74,7 @@
             <td class="ptd">{{ game_dict[row].spread }}</td>
             <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
             <td class="pick">
-                <input class="pick" type="text" id="{{ row }}" name="{{ row }}" value="{{ user_picks[row] }}" readonly>
+                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
             </td>
         </tr>
         {% endfor %}
