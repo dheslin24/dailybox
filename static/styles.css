@@ -135,3 +135,11 @@ main td.winner {
     background: lightgreen;
     font-weight: bold;
 }
+ 
+main td.current_user {
+    background: navy;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    font-size: 16px;
+}

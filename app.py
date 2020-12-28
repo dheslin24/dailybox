@@ -1354,7 +1354,7 @@ def select_pickem_games():
     print("userpicks")
     print(user_picks)
 
-    return redirect(url_for('pickem_game_list'))
+    return redirect(url_for('pickem_all_picks'))
         
         
 
@@ -1371,10 +1371,15 @@ def pickem_game_list():
     game_dict = get_pickem_games(season, True)
 
     # get user picks
-    p = "SELECT DISTINCT p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid WHERE userid = %s"
+    #p = "SELECT DISTINCT p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid WHERE userid = %s"
+    p = "SELECT gameid, pick FROM pickem.userpicks WHERE userid = %s ORDER BY pickid DESC"
     picks = db2(p, (session['userid'],))
 
-    user_picks = dict(picks)
+    user_picks = {}
+    for pick in picks:
+        if pick[0] not in user_picks:
+            user_picks[pick[0]] = pick[1]
+
     print(user_picks) 
         
     return render_template("pickem_game_list.html", game_dict=game_dict, game_list=game_list, user_picks=user_picks)
@@ -1455,7 +1460,7 @@ def pickem_all_picks():
     user_picks_dict = dict(sorted_user_picks)
 
 
-    return render_template("pickem_all_games.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict)
+    return render_template("pickem_all_games.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'])
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
 def enter_pickem_scores():
@@ -1715,7 +1720,7 @@ def payment_status():
     for _ in box_list:
         box_string += _
     box_string = box_string[:-2]
-    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1 or boxid between 26 and 36;".format(box_string)
+    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1 or boxid between 26 and 35;".format(box_string)
     all_boxes = db(box)
     #print(all_boxes)
     user_box_count = {}

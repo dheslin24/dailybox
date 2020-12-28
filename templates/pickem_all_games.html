@@ -43,17 +43,29 @@
         </tr>
         {% for user in user_picks %}
         <tr>
-            <td style="font-size: 14px; font-weight: bold">{{ user }}</td>
+            {% if user == current_username %}
+                <td class="current_user" style="text-align: left">{{ user }}</td>
+            {% else %}
+                <td style="font-size: 14px; font-weight: bold; text-align: left">{{ user }}</td>
+            {% endif %}
             {% for n in range(1,12) %}
                 {% if user_picks[user].picks[n]  == game_dict[n].winner %}
                     <td class="winner">{{ user_picks[user].picks[n] }} </td>
                 {% elif game_dict[n].winner == "TBD" %}
-                    <td>{{ user_picks[user].picks[n] }} </td>
+                    {% if user == current_username %}
+                        <td class="current_user">{{ user_picks[user].picks[n] }} </td>
+                    {% else %}
+                        <td>{{ user_picks[user].picks[n] }} </td>
+                    {% endif %}
                 {% else %}
                     <td class="loser">{{ user_picks[user].picks[n] }} </td>
                 {% endif %}
             {% endfor %}
-            <td style="font-size: 16px; font-weight: bold">{{ user_picks[user].win_count }} </td>
+            {% if user == current_username %}
+                <td class="current_user">{{ user_picks[user].win_count }} </td>
+            {% else %}
+                <td style="font-size: 16px; font-weight: bold">{{ user_picks[user].win_count }} </td>
+            {% endif %}
         </tr>
         {% endfor %}
         </table>
