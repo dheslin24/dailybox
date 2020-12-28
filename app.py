@@ -1450,19 +1450,10 @@ def pickem_all_picks():
                 print("adding to win total")
                 print(game_dict[game].winner, user_picks[user].picks[game])
                 user_picks[user].win_count += 1
-    print("*$*$ user picks before *$**#")
-    print(user_picks)
 
     sorted_user_picks = sorted(user_picks.items(), key=lambda x: x[1].win_count, reverse=True)
-    print("SORTED USER PICKS")
-    print(sorted_user_picks) # should be a sorted list of tuples by win_count.. userid: user object
-
     user_picks_dict = dict(sorted_user_picks)
 
-    print("*@*$(%* USER PICKS as a dict sorted *%#@)%)*")
-    print(user_picks_dict)
-    print("len picks")
-    print(user_picks_dict['dh4'].picks)
 
     return render_template("pickem_all_games.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict)
 
