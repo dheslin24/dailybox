@@ -125,3 +125,13 @@ main input[type=submit].pick {
     margin: 20px;
     padding: 20px;
 }
+
+main td.loser {
+    background: lightcoral;
+    font-weight: bold;
+}
+
+main td.winner {
+    background: lightgreen;
+    font-weight: bold;
+}

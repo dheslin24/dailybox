@@ -16,16 +16,16 @@
         <table class="pickem_table" align="center">
         <tr>
             <th rowspan="2" style="width: 250px"> Username </th>
-            <th> WC Game 1 </th>
-            <th> WC Game 2 </th>
-            <th> WC Game 3 </th>
-            <th> WC Game 4 </th>
-            <th> DIV Game 5 </th>
-            <th> DIV Game 6 </th>
-            <th> DIV Game 7 </th>
-            <th> DIV Game 8 </th>
-            <th> CONF Game 9 </th>
-            <th> CONF Game 10 </th>
+            <th> WC 1   </th>
+            <th> WC 2   </th>
+            <th> WC 3   </th>
+            <th> WC 4   </th>
+            <th> DIV 5 </th>
+            <th> DIV 6 </th>
+            <th> DIV 7 </th>
+            <th> DIV 8 </th>
+            <th> Conf 9 </th>
+            <th> Conf 10 </th>
             <th> Super Bowl </th>
             <th rowspan="2"> Wins </th>
         </tr>
@@ -34,16 +34,46 @@
             <th class="all_picks" style="width: 200px; font-size: 12px">{{ col }} </th>
         {% endfor %}
         </tr>
+        <tr>
+            <th style="font-size: 12px; text-align: right; background-color: black; color: white"> Winner: </th>
+            {% for n in range(1,12) %}
+            <th style="font-size: 12px; background-color: black; color: white" id={{ n }}>{{ game_dict[n].winner }} </th>
+            {% endfor %}
+            <th style="background-color: black; color: white"></th>
+        </tr>
         {% for user in user_picks %}
         <tr>
-            <td>{{ user }}</td>
+            <td style="font-size: 14px; font-weight: bold">{{ user }}</td>
             {% for n in range(1,12) %}
-            <td>{{ user_picks[user].picks[n] }} </td>
+                {% if user_picks[user].picks[n]  == game_dict[n].winner %}
+                    <td class="winner">{{ user_picks[user].picks[n] }} </td>
+                {% elif game_dict[n].winner == "TBD" %}
+                    <td>{{ user_picks[user].picks[n] }} </td>
+                {% else %}
+                    <td class="loser">{{ user_picks[user].picks[n] }} </td>
+                {% endif %}
             {% endfor %}
-            <td>{{ user_picks[user].win_count }} </td>
+            <td style="font-size: 16px; font-weight: bold">{{ user_picks[user].win_count }} </td>
         </tr>
         {% endfor %}
         </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 {% endblock %}
 

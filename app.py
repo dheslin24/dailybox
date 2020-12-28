@@ -7,7 +7,7 @@ import sys
 import random
 import json
 import config
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 import mysql.connector
 from mysql.connector import errorcode
 from functools import wraps
@@ -1300,7 +1300,7 @@ def get_pickem_games(season, detailed=False):
     games = db2(g, (season,))
 
     class Game:
-        def __init__(self, game_name, fav, spread, dog, locked, winner=None):
+        def __init__(self, game_name, fav, spread, dog, locked, winner="TBD"):
             self.game_name = game_name
             self.fav = fav
             self.spread = spread
@@ -1330,7 +1330,7 @@ def get_pickem_games(season, detailed=False):
     
     # create game objects for games that don't exist yet
     for n in range(len(game_dict) + 1, 12):
-        game_dict[n] = Game('', '', 0, '', False, None)  
+        game_dict[n] = Game('', '', 0, '', False)  
 
     if detailed == False:
         return game_list
@@ -1415,40 +1415,56 @@ def pickem_all_picks():
     user_picks = {} # dictionary of user objects 
     current_user = session['userid']
 
+    u = "SELECT userid, username FROM users WHERE active = 1;"
+    usernames = dict(db2(u))
+
     for pick in all_picks:
+        username = usernames[pick[1]]
         if game_dict[pick[2]].locked == 1 or current_user == pick[1]:
             if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
                 user_pick_list.append((pick[1], pick[2]))  # make sure the rest skip ovr this then
-                if pick[1] not in user_picks:              # first pick for this user
-                    user_picks[pick[1]] = User()           # so create a user object
-                    user_picks[pick[1]].picks[pick[2]] = pick[3]       # and set it's first pick
+                if username not in user_picks:              # first pick for this user
+                    user_picks[username] = User()           # so create a user object
+                    user_picks[username].picks[pick[2]] = pick[3]       # and set it's first pick
                 else:
-                    user_picks[pick[1]].picks[pick[2]] = pick[3]       # obj already exists, add new game and it's pick
+                    user_picks[username].picks[pick[2]] = pick[3]       # obj already exists, add new game and it's pick
 
         else: # add them, but hidden
             if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
                 user_pick_list.append((pick[1], pick[2]))  # make sure the rest skip ovr this then
-                if pick[1] not in user_picks:              # first pick for this user
-                    user_picks[pick[1]] = User()           # so create a user object
-                    user_picks[pick[1]].picks[pick[2]] = "hidden"      # and set it's first pick
+                if username not in user_picks:              # first pick for this user
+                    user_picks[username] = User()           # so create a user object
+                    user_picks[username].picks[pick[2]] = "hidden"      # and set it's first pick
                 else:
-                    user_picks[pick[1]].picks[pick[2]] = "hidden"      # obj already exists, add new game and it's pick
+                    user_picks[username].picks[pick[2]] = "hidden"      # obj already exists, add new game and it's pick
 
-    # add empty string for remainder of games
     for user in user_picks:
+        # add empty string for remainder of games
         for n in range(1,12):
             if n not in user_picks[user].picks:
                 user_picks[user].picks[n] = ''
+
+        # add win totals to user object (todo - change to game lookup)
         for game in user_picks[user].picks:
             if game_dict[game].winner == user_picks[user].picks[game] and user_picks[user].picks[game] != '':
                 print("adding to win total")
                 print(game_dict[game].winner, user_picks[user].picks[game])
                 user_picks[user].win_count += 1
-    user_picks = sorted(user_picks, key=lambda x: user_picks[x].win_count)
-    print("*@*$(%* USER PICKS *%#@)%)*")
+    print("*$*$ user picks before *$**#")
     print(user_picks)
 
-    return render_template("pickem_all_games.html", game_details=game_details, user_picks=user_picks)
+    sorted_user_picks = sorted(user_picks.items(), key=lambda x: x[1].win_count, reverse=True)
+    print("SORTED USER PICKS")
+    print(sorted_user_picks) # should be a sorted list of tuples by win_count.. userid: user object
+
+    user_picks_dict = dict(sorted_user_picks)
+
+    print("*@*$(%* USER PICKS as a dict sorted *%#@)%)*")
+    print(user_picks_dict)
+    print("len picks")
+    print(user_picks_dict['dh4'].picks)
+
+    return render_template("pickem_all_games.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict)
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
 def enter_pickem_scores():
