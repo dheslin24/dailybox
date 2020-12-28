@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Enter Pickem Game Scores
+{% endblock %}
+
+{% block main %}
+    <form action="{{ url_for('enter_pickem_scores') }}" method="post">
+        <fieldset>
+            <div class="form-group">
+                <input autocomplete="off" autofocus class="form-control" name="gameid" placeholder="gameid" type="text" size="5"/>
+                </br>
+                <input class="form-control" name="fav" placeholder="fav score" type="text" size="5"/>
+                <input class="form-control" name="dog" placeholder="dog score" type="text" size="5"/>
+                </br>
+                <button class="btn btn-default" type="submit">Submit</button>
+            </div>
+        </fieldset>
+    </form>
+
+{% endblock %}
