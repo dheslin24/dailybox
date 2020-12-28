@@ -748,10 +748,11 @@ def display_box():
             for item in y:
                 if y[item] == int(winners[1]):
                     y_winner = int(item)
-            rev_winning_username = grid[x_winner][y_winner][1]
-            rev_winning_boxnum = int(str(x_winner) + str(y_winner))
-            rev_winner = Markup('REVERSE</br>WINNER</br>')
-            grid[x_winner][y_winner] = (rev_winning_boxnum, rev_winner + rev_winning_username)
+            # rev_winning_username = grid[x_winner][y_winner][1]
+            # rev_winning_boxnum = int(str(x_winner) + str(y_winner))
+            # rev_winner = Markup('REVERSE</br>WINNER</br>')
+            # grid[x_winner][y_winner] = (rev_winning_boxnum, rev_winner + rev_winning_username)
+            grid[3][1] = (31, Markup('REVERSE</br>WINNER</br>')+'toddw26')
 
         if ptype == 1 and len(winners) == 8:
             final_payment = '' +  str(fee * 10) + ' / ' + str(fee * 30) + ' / ' + str(fee * 10) + ' / ' + str(fee * 50)
@@ -1299,12 +1300,21 @@ def get_pickem_games(season, detailed=False):
     games = db2(g, (season,))
 
     class Game:
-        def __init__(self, game_name, fav, spread, dog, locked):
+        def __init__(self, game_name, fav, spread, dog, locked, winner=None):
             self.game_name = game_name
             self.fav = fav
             self.spread = spread
             self.dog = dog
             self.locked = locked
+            self.winner = winner
+
+    # check for winner
+    s = "SELECT gameid, fav_score, dog_score FROM pickem.pickem_scores ORDER BY score_id DESC;"
+    scores = db2(s)
+    score_dict = {}
+    for score in scores:
+        if score[0] not in score_dict:
+            score_dict[score[0]] = {'fav':score[1], 'dog':score[2]}
 
     game_list = []
     game_dict = {}
@@ -1312,6 +1322,15 @@ def get_pickem_games(season, detailed=False):
     for g in games:
         game_list.append(g[0])
         game_dict[g[0]] = Game(g[1], g[2], g[3], g[4], g[5])
+        if g[0] in score_dict:
+            if (score_dict[g[0]]['fav'] + game_dict[g[0]].spread) - score_dict[g[0]]['dog'] > 0:  # fav won
+                game_dict[g[0]].winner = game_dict[g[0]].fav
+            else:
+                game_dict[g[0]].winner = game_dict[g[0]].dog
+    
+    # create game objects for games that don't exist yet
+    for n in range(len(game_dict) + 1, 12):
+        game_dict[n] = Game('', '', 0, '', False, None)  
 
     if detailed == False:
         return game_list
@@ -1329,8 +1348,8 @@ def select_pickem_games():
     user_picks = {}
     for game in game_list:
         pick = request.form.get(str(game))
-        p = "INSERT INTO pickem.userpicks (userid, gameid, pick, datetime) VALUES (%s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
-        db2(p, (session['userid'], game, pick))
+        p = "INSERT INTO pickem.userpicks (userid, season, gameid, pick, datetime) VALUES (%s, %s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
+        db2(p, (session['userid'], season, game, pick))
  
     print("userpicks")
     print(user_picks)
@@ -1378,10 +1397,14 @@ def pickem_all_picks():
     for n in range(len(game_details),11):
         game_details.append("TBD")
 
-
     class User:
         def __init__(self):
-            self.picks = {}  # gameid:pick
+            d = {}  # initialize user with 11 empty picks
+            for n in range(1,12):
+                d[n] = ''
+                
+            self.picks = d  # gameid:pick
+            self.win_count = 0
 
     # get all the user picks, eventually change unlocked picks to "---" if still open
     # p = "SELECT DISTINCT p.userid, p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT userid, gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid"
@@ -1389,7 +1412,7 @@ def pickem_all_picks():
     all_picks = db2(p)
 
     user_pick_list = []  # only used for deduping picks 
-    user_picks = {}
+    user_picks = {} # dictionary of user objects 
     current_user = session['userid']
 
     for pick in all_picks:
@@ -1413,22 +1436,33 @@ def pickem_all_picks():
 
     # add empty string for remainder of games
     for user in user_picks:
-        for n in range(11):
+        for n in range(1,12):
             if n not in user_picks[user].picks:
                 user_picks[user].picks[n] = ''
-
-    '''
-    #  TESTING USER CLASS BELOW #
-    print("*** USER CLASS ***")
-    print(user_picks[12].picks)
-    print(user_picks[12].picks[8])
-    '''
+        for game in user_picks[user].picks:
+            if game_dict[game].winner == user_picks[user].picks[game] and user_picks[user].picks[game] != '':
+                print("adding to win total")
+                print(game_dict[game].winner, user_picks[user].picks[game])
+                user_picks[user].win_count += 1
+    user_picks = sorted(user_picks, key=lambda x: user_picks[x].win_count)
+    print("*@*$(%* USER PICKS *%#@)%)*")
+    print(user_picks)
 
     return render_template("pickem_all_games.html", game_details=game_details, user_picks=user_picks)
-    
-        ## todo - finish this display of user picks for locked games        
-    
 
+@app.route("/enter_pickem_scores", methods=["GET", "POST"])
+def enter_pickem_scores():
+
+    if request.method == "POST":
+        fav_score = request.form.get('fav')
+        dog_score = request.form.get('dog')
+        gameid = request.form.get('gameid')
+
+        s = "INSERT INTO pickem.pickem_scores (gameid, fav_score, dog_score) values (%s, %s, %s);"
+        db2(s, (int(gameid), int(fav_score), int(dog_score)))
+    
+    return render_template("enter_pickem_scores.html")
+    
 
 # LOGIN routine
 @app.route("/login", methods=["GET", "POST"])
