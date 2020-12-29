@@ -1356,7 +1356,7 @@ def select_pickem_games():
     tiebreak = request.form.get('tb')
     print("tbtiebreaktb!!")
     print(tiebreak)
-    if tiebreak != None:
+    if tiebreak != None and len(tiebreak) != 0:
         t = "INSERT INTO pickem.tiebreak (season, userid, tiebreak, datetime) values (%s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
         db2(t, (season, session['userid'], tiebreak))
  
