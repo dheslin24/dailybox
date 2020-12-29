@@ -142,4 +142,50 @@ main td.current_user {
     text-align: center;
     color: white;
     font-size: 16px;
+    border-size: 8px;
 }
+
+main td.winning_user {
+    background: green;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    font-size: 18px;
+    border-size: 8px;
+}
+
+main td.winner_cu {
+    background: green;
+    font-weight: bold;
+    color: white;
+    font-size: 16px;
+    border-size: 8px;
+}
+
+main td.loser_cu {
+    background: red;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    border-size: 8px;
+}
+
+.drowdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content a {
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #ddd
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+

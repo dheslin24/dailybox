@@ -67,17 +67,21 @@
         {% endfor %}
         </table>
         <table align="center">
-        {% for row in game_list[10] %}
         <tr>
-            <td class="ptd">{{ row }}</td>
-            <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
-            <td class="ptd">{{ game_dict[row].spread }}</td>
-            <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
+            <td class="ptd">11</td>
+            <td class="team" onClick="change('{{ game_dict[11].fav }}', 11, {{ game_dict[11].locked }})">{{ game_dict[11].fav }}</td>
+            <td class="ptd">{{ game_dict[11].spread }}</td>
+            <td class="team" onClick="change('{{ game_dict[11].dog }}', 11, {{ game_dict[11].locked }})">{{ game_dict[11].dog }}</td>
             <td class="pick">
-                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
+                <input class="pick" type="text" id="11" name="11" value="{{ user_picks[11] }}" readonly>
             </td>
         </tr>
-        {% endfor %}
+        <tr>
+            <td class="ptd" colspan="4" style="text-align: right">Enter Superbowl Total Points Tie Breaker Here:</td>
+            <td class="pick">
+                <input class="pick" type="text" id="tb" name="tb" value="{{ user_picks['tb'] }}" style="background-color: white;">
+            </td>
+        </tr>
         </table>
         <input class="pick" type="submit" value="Submit Picks">
         </form>

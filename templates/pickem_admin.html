@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Pickem Admin
+{% endblock %}
+
+
+
+{% block main %}
+    </br>
+    <a href="{{ url_for('enter_pickem_scores') }}">Enter Scores for Playoff Pickem Games</a>
+    </br>
+    </br>
+    <a href=" {{ url_for('pickem_game_list') }}">UAT - playoff pickem game selection screen</a>
+    </br>
+    </br>
+    <a href=" {{ url_for('pickem_all_picks') }}">UAT - playoff pickem all users picks</a>
+    </br>
+    </br>
+    <p> Create new Pickem Game below </p>
+    <form action="{{ url_for('create_pickem_game') }}" method="POST">
+        <label for="season">Season</label>
+        <input type="text" name="season" size="10">
+        <label for="game_name">Game Name</label>
+        <select name="game_name">
+            {% for name in game_name_list %}
+                <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}          
+        </select>
+        <label for="fav">Fav</label>
+        <input type="text" name="fav" size="10">
+        <label for="spread">Spread</label>
+        <input type="text" name="spread" size="10">
+        <label for="dog">Dog</label>
+        <input type="text" name="dog" size="10">
+        <input type="submit">
+    </form>
+    </br></br>
+    <p> Lock/Unlock game below </p>
+    <form action="{{ url_for('lock_pickem_game') }}" method="POST">
+        <label for="game_name">Game Name</label>
+        <select name="game_name">
+            {% for name in game_name_list %}
+                <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <label for="lock">Lock</label>
+        <input type="radio" id="lock" name="lock" value="1" style="padding: 50px;">
+        ----
+        <label for "unlock">Unlock</label>
+        <input type="radio" id="unlock" name="lock" value="0">
+        <input type="submit">
+    </form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% endblock %}

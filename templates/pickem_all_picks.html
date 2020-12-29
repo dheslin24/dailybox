@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Pickem All Games
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Playoff Pickem - All Games <br>
+        </p>
+    </h1>
+        <p> User picks remain hidden until game locks </p>
+    </br>
+    {% if winning_user|length > 0 %}
+        <h2> {{ winning_user }} </h2>
+    {% endif %}
+    {% if tie_break_log|length > 0 %}
+        Tie Break Details: </br>
+        {% for log in tie_break_log %}
+            {{ log }} </br>
+        {% endfor %}
+    {% endif %}
+        
+    <h4>
+        <table class="pickem_table" align="center">
+        <tr>
+            <th rowspan="2" style="width: 250px"> Username </th>
+            <th> WC 1   </th>
+            <th> WC 2   </th>
+            <th> WC 3   </th>
+            <th> WC 4   </th>
+            <th> DIV 5 </th>
+            <th> DIV 6 </th>
+            <th> DIV 7 </th>
+            <th> DIV 8 </th>
+            <th> Conf 9 </th>
+            <th> Conf 10 </th>
+            <th> Super Bowl </th>
+            <th rowspan="3"> SB Tie Break </th>
+            <th rowspan="3"> Wins </th>
+        </tr>
+        <tr>
+        {% for col in game_details %} 
+            <th class="all_picks" style="width: 200px; font-size: 12px">{{ col }} </th>
+        {% endfor %}
+        </tr>
+        <tr>
+            <th style="font-size: 12px; text-align: right; background-color: black; color: white"> Winner: </th>
+            {% for n in range(1,12) %}
+            <th style="font-size: 12px; background-color: black; color: white" id={{ n }}>{{ game_dict[n].winner }} </th>
+            {% endfor %}
+        </tr>
+        {% for user in user_picks %}
+        <tr>
+            {% if user in winner %}
+                <td class="winning_user" style="text-align: center">*** {{ user }} ***</td>
+            {% elif user == current_username %}
+                <td class="current_user" style="text-align: left">{{ user }}</td>
+            {% else %}
+                <td style="font-size: 14px; font-weight: bold; text-align: left">{{ user }}</td>
+            {% endif %}
+            {% for n in range(1,12) %}
+                {% if user_picks[user].picks[n]  == game_dict[n].winner %}
+                    {% if user == current_username %}
+                        <td class="winner_cu">{{ user_picks[user].picks[n] }}</td>
+                    {% else %}
+                        <td class="winner">{{ user_picks[user].picks[n] }} </td>
+                    {% endif %}
+                {% elif game_dict[n].winner == "TBD" %}
+                    {% if user == current_username %}
+                        <td class="current_user">{{ user_picks[user].picks[n] }} </td>
+                    {% else %}
+                        <td>{{ user_picks[user].picks[n] }} </td>
+                    {% endif %}
+                {% else %}
+                    {% if user == current_username %}
+                        <td class="loser_cu">{{ user_picks[user].picks[n] }}</td>
+                    {% else %}
+                        <td class="loser">{{ user_picks[user].picks[n] }} </td>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            {% if user == current_username %}
+                <td class="current_user">{{ tb_dict[user] }}</td>
+                <td class="current_user">{{ user_picks[user].win_count }} </td>
+            {% else %}
+                <td>{{ tb_dict[user] }}</td>
+                <td style="font-size: 16px; font-weight: bold">{{ user_picks[user].win_count }} </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% endblock %}
+

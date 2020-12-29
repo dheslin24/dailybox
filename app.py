@@ -1330,8 +1330,11 @@ def get_pickem_games(season, detailed=False):
     
     # create game objects for games that don't exist yet
     for n in range(len(game_dict) + 1, 12):
-        game_dict[n] = Game('', '', 0, '', False)  
+        game_dict[n] = Game('TBD', 'TBD', 0, 'TBD', False)  
+        game_list.append(n)
 
+    print("gamelistgamelist")
+    print(game_list)
     if detailed == False:
         return game_list
     else:
@@ -1344,23 +1347,26 @@ def select_pickem_games():
     # first get the list of games from db
     game_list = get_pickem_games(season)
 
-    # get the user picks and insert into db
-    user_picks = {}
     for game in game_list:
-        pick = request.form.get(str(game))
-        p = "INSERT INTO pickem.userpicks (userid, season, gameid, pick, datetime) VALUES (%s, %s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
-        db2(p, (session['userid'], season, game, pick))
- 
-    print("userpicks")
-    print(user_picks)
+        if request.form.get(str(game)):
+            pick = request.form.get(str(game))
+            p = "INSERT INTO pickem.userpicks (userid, season, gameid, pick, datetime) VALUES (%s, %s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
+            db2(p, (session['userid'], season, game, pick))
 
+    tiebreak = request.form.get('tb')
+    print("tbtiebreaktb!!")
+    print(tiebreak)
+    if tiebreak != None:
+        t = "INSERT INTO pickem.tiebreak (season, userid, tiebreak, datetime) values (%s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
+        db2(t, (season, session['userid'], tiebreak))
+ 
     return redirect(url_for('pickem_all_picks'))
         
         
 
 @app.route("/pickem_game_list", methods=["GET", "POST"])
 def pickem_game_list():
-
+    # if not logged in, error out (it'll crash if not)
     if not session['userid']:
         return apology("Please log in first.  This page still under construction and requires a successful login")
 
@@ -1380,6 +1386,14 @@ def pickem_game_list():
         if pick[0] not in user_picks:
             user_picks[pick[0]] = pick[1]
 
+    t = "SELECT tiebreak FROM pickem.tiebreak WHERE userid = %s ORDER BY tiebreak_id DESC;"
+    tb = db2(t, (session['userid'],))
+
+    if len(tb) != 0:
+        user_picks['tb'] = tb[0][0]
+    else:
+        user_picks['tb'] = ''
+
     print(user_picks) 
         
     return render_template("pickem_game_list.html", game_dict=game_dict, game_list=game_list, user_picks=user_picks)
@@ -1394,14 +1408,14 @@ def pickem_all_picks():
     game_details = [] # 2nd column heading with fav/spread/dog
     games_locked = []
     for game in game_list:
-        game_details.append("{} {} {}".format(game_dict[game].fav, game_dict[game].spread, game_dict[game].dog))
-        if game_dict[game].locked == 1:
+        if game_dict[game].spread != 0:
+            game_details.append("{} {} {}".format(game_dict[game].fav, game_dict[game].spread, game_dict[game].dog))
+            if game_dict[game].locked == 1:
+                games_locked.append(game)
+        else:
+            game_details.append("TBD")
             games_locked.append(game)
     
-    # fill in 'TBD' for any game not created yet
-    for n in range(len(game_details),11):
-        game_details.append("TBD")
-
     class User:
         def __init__(self):
             d = {}  # initialize user with 11 empty picks
@@ -1443,12 +1457,29 @@ def pickem_all_picks():
                 else:
                     user_picks[username].picks[pick[2]] = "hidden"      # obj already exists, add new game and it's pick
 
+    t = "SELECT userid, tiebreak FROM pickem.tiebreak WHERE season = %s ORDER BY tiebreak_id DESC;"
+    tbs= db2(t, (season,))
+    tb_dict = {}  # userid:tiebreak
+
+    for tb in tbs:
+        username = usernames[tb[0]]
+        if game_dict[11].locked == 1 or current_user == tb[0]:
+            if username not in tb_dict:
+                tb_dict[username] = tb[1] 
+        else:
+            if username not in tb_dict:
+                tb_dict[username] = 'hidden'
+
+    max_wins = 0
+    max_win_users = []
+
     for user in user_picks:
         # add empty string for remainder of games
+        '''
         for n in range(1,12):
             if n not in user_picks[user].picks:
                 user_picks[user].picks[n] = ''
-
+        '''
         # add win totals to user object (todo - change to game lookup)
         for game in user_picks[user].picks:
             if game_dict[game].winner == user_picks[user].picks[game] and user_picks[user].picks[game] != '':
@@ -1456,11 +1487,64 @@ def pickem_all_picks():
                 print(game_dict[game].winner, user_picks[user].picks[game])
                 user_picks[user].win_count += 1
 
+        if user_picks[user].win_count > max_wins:
+            max_wins = user_picks[user].win_count
+            max_win_users = [user]
+        elif user_picks[user].win_count == max_wins:
+            max_win_users.append(user)
+
+    winner = []
+    tie_break_log = []
+    if game_dict[11].winner != "TBD":  # someone won the SB, figure out who won the pool
+        s = "SELECT fav_score, dog_score FROM pickem.pickem_scores WHERE gameid = 11 ORDER BY score_id DESC;"
+        score = db2(s)
+        print("maxwinuser{}".format(max_win_users))
+        print(score)
+
+        if len(max_win_users) == 1:  #only one winner - easy
+            winner.append(max_wins_users[0])
+        elif len(max_win_users) > 1:  # do some tie breaking
+            total_score = score[0][0] + score[0][1]
+            closest_score = 1000
+            closest_users = []
+            for user in max_win_users:
+                print("user {}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score))
+                tie_break_log.append("user {}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score))
+                if abs(tb_dict[user] - total_score) < closest_score:
+                    closest_score = abs(tb_dict[user] - total_score)
+                    closest_users = [user]
+                elif abs(tb_dict[user] - total_score) == closest_score:
+                    closest_users.append(user)
+                else:
+                    print("something went very wrong figuring out tie break")
+
+            if len(closest_users) == 1:  #one winner
+                winner.append(closest_users[0])
+
+            else:
+                for w in closest_users:
+                    winner.append(w)
+
+        else:
+            print("something went very wrong figuring out who won")
+        print("WINNER WINNER")
+        print(winner)
+
+    winning_user = '{} Playoff Pickem Winner'.format(season)
+    if len(winner) > 1:
+        winning_user += 's: '
+        for w in winner:
+            winning_user += w + ' and '
+        winning_user = winning_user[:-5]
+    elif len(winner) == 1:
+        winning_user += ': {}'.format(winner[0])
+    else:
+        winning_user = ''
+        
     sorted_user_picks = sorted(user_picks.items(), key=lambda x: x[1].win_count, reverse=True)
     user_picks_dict = dict(sorted_user_picks)
 
-
-    return render_template("pickem_all_games.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'])
+    return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner)
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
 def enter_pickem_scores():
@@ -1474,6 +1558,66 @@ def enter_pickem_scores():
         db2(s, (int(gameid), int(fav_score), int(dog_score)))
     
     return render_template("enter_pickem_scores.html")
+
+@app.route("/pickem_admin", methods=["GET", "POST"])
+def pickem_admin():
+
+    game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "DIV 5", "DIV 6", "DIV 7", "DIV 8", "CONF 9", "CONF 10", "Super Bowl"]
+    return render_template("pickem_admin.html", game_name_list=game_name_list)
+
+@app.route("/lock_pickem_game", methods=["GET", "POST"])
+def lock_pickem_game():
+    if request.form.get('game_name'):
+        game_name = request.form.get('game_name')
+    else:
+        return apology("what game you locking??")
+    if request.form.get('lock'):
+        lock = int(request.form.get('lock'))
+    else:
+        return apology("lock or unlock?  which is it??")
+
+    s = "UPDATE pickem.games SET locked = %s WHERE game_name = %s"
+    db2(s, (lock, game_name))
+    print("setting game {} lock status to {}".format(game_name, lock))
+
+    return redirect(url_for('pickem_admin'))
+    
+
+@app.route("/create_pickem_game", methods=["GET", "POST"])
+def create_pickem_game():
+    if request.form.get('season'):
+        season = request.form.get('season')
+    else:
+        return apology("what season?  2021?")
+    if request.form.get('game_name'):
+        game_name = request.form.get('game_name')
+    else:
+        return apology("pick a game name please")
+    if request.form.get('fav'):
+        fav = request.form.get('fav')
+    else:
+        return apology("missing favorite")
+    if request.form.get('spread'):
+        spread = request.form.get('spread')
+    else:
+        return apology("missing spread")
+    if request.form.get('dog'):
+        dog = request.form.get('dog')
+    else:
+        return apology("missing underdog")
+
+    if game_name == "Super Bowl":
+        gameid = 11
+    elif game_name == "CONF 10":
+        gameid = 10
+    else:
+        gameid = int(game_name[-1:])
+
+    s = "INSERT INTO pickem.games (season, gameid, game_name, fav, dog, spread, locked) values (%s, %s, %s, %s, %s, %s, 0);"
+    db2(s, (season, gameid, game_name, fav, dog, spread))
+
+    return redirect(url_for('pickem_all_picks'))
+    
     
 
 # LOGIN routine
