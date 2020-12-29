@@ -1388,6 +1388,8 @@ def pickem_game_list():
 
     t = "SELECT tiebreak FROM pickem.tiebreak WHERE userid = %s ORDER BY tiebreak_id DESC;"
     tb = db2(t, (session['userid'],))
+    
+    print("pickem game list tie breaks {}".format(tb))
 
     if len(tb) != 0:
         user_picks['tb'] = tb[0][0]
