@@ -1361,8 +1361,6 @@ def select_pickem_games():
         db2(t, (season, session['userid'], tiebreak))
  
     return redirect(url_for('pickem_all_picks'))
-        
-        
 
 @app.route("/pickem_game_list", methods=["GET", "POST"])
 def pickem_game_list():
@@ -1476,17 +1474,9 @@ def pickem_all_picks():
     max_win_users = []
 
     for user in user_picks:
-        # add empty string for remainder of games
-        '''
-        for n in range(1,12):
-            if n not in user_picks[user].picks:
-                user_picks[user].picks[n] = ''
-        '''
         # add win totals to user object (todo - change to game lookup)
         for game in user_picks[user].picks:
             if game_dict[game].winner == user_picks[user].picks[game] and user_picks[user].picks[game] != '':
-                print("adding to win total")
-                print(game_dict[game].winner, user_picks[user].picks[game])
                 user_picks[user].win_count += 1
 
         if user_picks[user].win_count > max_wins:
@@ -1529,8 +1519,6 @@ def pickem_all_picks():
 
         else:
             print("something went very wrong figuring out who won")
-        print("WINNER WINNER")
-        print(winner)
 
     winning_user = '{} Playoff Pickem Winner'.format(season)
     if len(winner) > 1:
@@ -1564,7 +1552,7 @@ def enter_pickem_scores():
 @app.route("/pickem_admin", methods=["GET", "POST"])
 def pickem_admin():
 
-    game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "DIV 5", "DIV 6", "DIV 7", "DIV 8", "CONF 9", "CONF 10", "Super Bowl"]
+    game_name_list = ["WC", "DIV", "CONF", "Super Bowl"]
     return render_template("pickem_admin.html", game_name_list=game_name_list)
 
 @app.route("/lock_pickem_game", methods=["GET", "POST"])
@@ -1578,8 +1566,14 @@ def lock_pickem_game():
     else:
         return apology("lock or unlock?  which is it??")
 
-    s = "UPDATE pickem.games SET locked = %s WHERE game_name = %s"
-    db2(s, (lock, game_name))
+    games_dict = {"WC" : (1,2,3,4), "DIV" : (5,6,7,8), "CONF" : (9,10,0,0), "Super Bowl" : (11,0,0,0)}
+    g1 = games_dict[game_name][0]
+    g2 = games_dict[game_name][1]
+    g3 = games_dict[game_name][2]
+    g4 = games_dict[game_name][3]
+
+    s = "UPDATE pickem.games SET locked = %s WHERE gameid in (%s, %s, %s, %s);"
+    db2(s, (lock, g1, g2, g3, g4))
     print("setting game {} lock status to {}".format(game_name, lock))
 
     return redirect(url_for('pickem_admin'))
