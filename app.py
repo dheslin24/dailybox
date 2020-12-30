@@ -1494,7 +1494,7 @@ def pickem_all_picks():
         print(score)
 
         if len(max_win_users) == 1:  #only one winner - easy
-            winner.append(max_wins_users[0])
+            winner.append(max_win_users[0])
         elif len(max_win_users) > 1:  # do some tie breaking
             total_score = score[0][0] + score[0][1]
             closest_score = 1000
