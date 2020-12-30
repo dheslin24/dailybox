@@ -76,12 +76,14 @@
                 <input class="pick" type="text" id="11" name="11" value="{{ user_picks[11] }}" readonly>
             </td>
         </tr>
+        {% if game_dict[11].spread != 0 %}
         <tr>
             <td class="ptd" colspan="4" style="text-align: right">Enter Superbowl Total Points Tie Breaker Here:</td>
             <td class="pick">
                 <input class="pick" type="text" id="tb" name="tb" value="{{ user_picks['tb'] }}" style="background-color: white;">
             </td>
         </tr>
+        {% endif %}
         </table>
         <input class="pick" type="submit" value="Submit Picks">
         </form>
