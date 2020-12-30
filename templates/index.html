@@ -21,6 +21,7 @@
         <!-- Gobbler -->
         <!-- <img src="https://e7.pngegg.com/pngimages/776/989/png-clipart-turkey-nfl-on-thanksgiving-day-thanksgiving-dinner-turkey-new-year-american-football.png"> -->
     </h1>
+    <p> Can you go 11-0?  We've had 20 people try every year for 10 years, no one has come close.  </p>
     <div>
         <figure style="display: flex">
             <img src="https://www.sportsbettingexperts.com/wp-content/uploads/2016/09/Mirage-Sportsbook.jpg" style="width: 50%">
@@ -28,6 +29,7 @@
         </figure>
     </div>
 
+    <!--
     <table align = "center", cellpadding = "30">
         <h3>
         <tr>
@@ -35,13 +37,11 @@
             <td></td>
         {% endfor %}
         {% for num in x[1:] %}
-            <!-- <td> {{ num }} </td> -->
             <td> X </td>
         {% endfor %}
         </tr>
         {% for row in grid %}
         <tr>
-            <!-- <td> {{ y[loop.index0] }} </td>  -->
             <td> Y </td>
             {% for box in row %}
             <td>
@@ -54,12 +54,11 @@
         {% endfor %}
         </h3>
     </table>
+    -->
     <!--
     <h2><p> Click on <a href="{{ url_for('custom_game_list') }}">Game List</a> to Join </p></h2>
     -->
-
-
-
+    <h2><p> Click on <a href="{{ url_for('pickem_game_list') }}">Pickem Game List</a> to Join </p></h2>
 
 {% endblock %}
 

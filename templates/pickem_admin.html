@@ -20,7 +20,7 @@
     <p> Create new Pickem Game below </p>
     <form action="{{ url_for('create_pickem_game') }}" method="POST">
         <label for="season">Season</label>
-        <input type="text" name="season" size="10">
+        <input type="text" name="season" size="10" value="{{ season }}">
         <label for="game_name">Game Name</label>
         <select name="game_name">
             {% for name in game_name_list %}

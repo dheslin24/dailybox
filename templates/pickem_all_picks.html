@@ -12,6 +12,7 @@
     </h1>
         <p> User picks remain hidden until game locks </p>
         <p> HOME team in CAPS </p>
+        <a href="{{ url_for('pickem_game_list') }}">Jump to enter your picks</a>
     </br>
     {% if winning_user|length > 0 %}
         <h2 style="color: green; font-weight: bold"> {{ winning_user }} </h2>

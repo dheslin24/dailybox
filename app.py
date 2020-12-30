@@ -1323,9 +1323,9 @@ def get_pickem_games(season, detailed=False):
         game_dict[g[0]] = Game(g[1], g[2], g[3], g[4], g[5])
         if g[0] in score_dict:
             if (score_dict[g[0]]['fav'] + game_dict[g[0]].spread) - score_dict[g[0]]['dog'] > 0:  # fav won
-                game_dict[g[0]].winner = game_dict[g[0]].fav
+                game_dict[g[0]].winner = game_dict[g[0]].fav.upper()
             else:
-                game_dict[g[0]].winner = game_dict[g[0]].dog
+                game_dict[g[0]].winner = game_dict[g[0]].dog.upper()
     
     # create game objects for games that don't exist yet
     for n in range(len(game_dict) + 1, 12):
@@ -1472,7 +1472,7 @@ def pickem_all_picks():
     for user in user_picks:
         # add win totals to user object (todo - change to game lookup)
         for game in user_picks[user].picks:
-            if game_dict[game].winner == user_picks[user].picks[game] and user_picks[user].picks[game] != '':
+            if game_dict[game].winner.upper() == user_picks[user].picks[game] and user_picks[user].picks[game] != '':
                 user_picks[user].win_count += 1
 
         if user_picks[user].win_count > max_wins:
@@ -1549,10 +1549,11 @@ def enter_pickem_scores():
 
 @app.route("/pickem_admin", methods=["GET", "POST"])
 def pickem_admin():
+    season = 2021
 
     game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "DIV 5", "DIV 6", "DIV 7", "DIV 8", "CONF 9", "CONF 10", "Super Bowl"]
     game_group_list = ["WC", "DIV", "CONF", "Super Bowl"]
-    return render_template("pickem_admin.html", game_name_list=game_name_list, game_group_list=game_group_list)
+    return render_template("pickem_admin.html", game_name_list=game_name_list, game_group_list=game_group_list, season=season)
 
 @app.route("/lock_pickem_game", methods=["GET", "POST"])
 def lock_pickem_game():
