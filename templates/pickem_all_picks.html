@@ -54,7 +54,7 @@
         {% for user in user_picks %}
         <tr>
             {% if user in winner %}
-                <td class="winning_user" style="text-align: center">*** {{ user }} ***</td>
+                <td class="winning_user" style="text-align: left">{{ crown }} {{ user }}</td>
             {% elif user == current_username %}
                 <td class="current_user" style="text-align: left">{{ user }}</td>
             {% else %}

@@ -1501,7 +1501,7 @@ def pickem_all_picks():
             closest_users = []
             for user in max_win_users:
                 print("user {}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score))
-                tie_break_log.append("user {}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score))
+                tie_break_log.append("{}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score))
                 if abs(tb_dict[user] - total_score) < closest_score:
                     closest_score = abs(tb_dict[user] - total_score)
                     closest_users = [user]
@@ -1530,11 +1530,13 @@ def pickem_all_picks():
         winning_user += ': {}'.format(winner[0])
     else:
         winning_user = ''
+
+    crown = '\uD83C\uDFC6'.encode('utf-16', 'surrogatepass').decode('utf-16')
         
     sorted_user_picks = sorted(user_picks.items(), key=lambda x: x[1].win_count, reverse=True)
     user_picks_dict = dict(sorted_user_picks)
 
-    return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner)
+    return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown)
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
 def enter_pickem_scores():
