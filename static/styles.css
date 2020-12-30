@@ -189,3 +189,6 @@ main td.loser_cu {
     display: block;
 }
 
+div .img {
+    display: inline-block;
+}

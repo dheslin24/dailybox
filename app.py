@@ -1316,11 +1316,10 @@ def get_pickem_games(season, detailed=False):
         if score[0] not in score_dict:
             score_dict[score[0]] = {'fav':score[1], 'dog':score[2]}
 
-    game_list = []
+    game_list = [1,2,3,4,5,6,7,8,9,10,11]
     game_dict = {}
     index = 0
     for g in games:
-        game_list.append(g[0])
         game_dict[g[0]] = Game(g[1], g[2], g[3], g[4], g[5])
         if g[0] in score_dict:
             if (score_dict[g[0]]['fav'] + game_dict[g[0]].spread) - score_dict[g[0]]['dog'] > 0:  # fav won
@@ -1331,10 +1330,7 @@ def get_pickem_games(season, detailed=False):
     # create game objects for games that don't exist yet
     for n in range(len(game_dict) + 1, 12):
         game_dict[n] = Game('TBD', 'TBD', 0, 'TBD', False)  
-        game_list.append(n)
 
-    print("gamelistgamelist")
-    print(game_list)
     if detailed == False:
         return game_list
     else:

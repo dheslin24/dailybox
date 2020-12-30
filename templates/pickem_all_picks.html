@@ -11,9 +11,10 @@
         </p>
     </h1>
         <p> User picks remain hidden until game locks </p>
+        <p> HOME team in CAPS </p>
     </br>
     {% if winning_user|length > 0 %}
-        <h2> {{ winning_user }} </h2>
+        <h2 style="color: green; font-weight: bold"> {{ winning_user }} </h2>
     {% endif %}
     {% if tie_break_log|length > 0 %}
         Tie Break Details: </br>
