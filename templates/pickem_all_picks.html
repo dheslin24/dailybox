@@ -25,7 +25,7 @@
     <h4>
         <table class="pickem_table" align="center">
         <tr>
-            <th rowspan="2" style="width: 250px"> Username </th>
+            <th rowspan="2" style="width: 250px; border-right: 5px solid black"> Username </th>
             <th> WC 1   </th>
             <th> WC 2   </th>
             <th> WC 3   </th>
@@ -37,7 +37,7 @@
             <th> Conf 9 </th>
             <th> Conf 10 </th>
             <th> Super Bowl </th>
-            <th rowspan="3"> SB Tie Break </th>
+            <th rowspan="3" style="border-left: 5px solid black"> SB Tie Break </th>
             <th rowspan="3"> Wins </th>
         </tr>
         <tr>
@@ -54,11 +54,11 @@
         {% for user in user_picks %}
         <tr>
             {% if user in winner %}
-                <td class="winning_user" style="text-align: left">{{ crown }} {{ user }}</td>
+                <td class="winning_user" style="text-align: left; border-right: 5px solid black">{{ crown }} {{ user }}</td>
             {% elif user == current_username %}
-                <td class="current_user" style="text-align: left">{{ user }}</td>
+                <td class="current_user" style="text-align: left; border-right: 5px solid black">{{ user }}</td>
             {% else %}
-                <td style="font-size: 14px; font-weight: bold; text-align: left">{{ user }}</td>
+                <td style="font-size: 14px; font-weight: bold; text-align: left; border-right: 5px solid black">{{ user }}</td>
             {% endif %}
             {% for n in range(1,12) %}
                 {% if user_picks[user].picks[n]  == game_dict[n].winner %}
@@ -82,10 +82,10 @@
                 {% endif %}
             {% endfor %}
             {% if user == current_username %}
-                <td class="current_user">{{ tb_dict[user] }}</td>
+                <td class="current_user" style="border-left: 5px solid black">{{ tb_dict[user] }}</td>
                 <td class="current_user">{{ user_picks[user].win_count }} </td>
             {% else %}
-                <td>{{ tb_dict[user] }}</td>
+                <td style="border-left: 5px solid black">{{ tb_dict[user] }}</td>
                 <td style="font-size: 16px; font-weight: bold">{{ user_picks[user].win_count }} </td>
             {% endif %}
         </tr>

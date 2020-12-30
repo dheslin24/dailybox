@@ -66,7 +66,8 @@ function empty()
     // var myanimation = document.getElementById("myImg");
     // var snowflakes = ["$",  $(image).attr('src')];
     // var snowflakes = ["\uD83C\uDF57"]; // <-- turkey legs
-    var snowflakes = ["\uD83C\uDF84", "\u2744", "\u2603", "\uD83C\uDF85"]; // <-- xmas tree
+    // var snowflakes = ["\uD83C\uDF84", "\u2744", "\u2603", "\uD83C\uDF85"]; // <-- xmas tree
+    var snowflakes = ["\uD83C\uDFC8", "\uD83C\uDF76", "\uD83C\uDF7B", "\uD83C\uDF77", "\uD83E\uDD43", "\uD83E\uDD64"]
     var prevTime;
     var absMax = 20;
     var flakeCount = 0;
