@@ -1552,8 +1552,9 @@ def enter_pickem_scores():
 @app.route("/pickem_admin", methods=["GET", "POST"])
 def pickem_admin():
 
-    game_name_list = ["WC", "DIV", "CONF", "Super Bowl"]
-    return render_template("pickem_admin.html", game_name_list=game_name_list)
+    game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "DIV 5", "DIV 6", "DIV 7", "DIV 8", "CONF 9", "CONF 10", "Super Bowl"]
+    game_group_list = ["WC", "DIV", "CONF", "Super Bowl"]
+    return render_template("pickem_admin.html", game_name_list=game_name_list, game_group_list=game_group_list)
 
 @app.route("/lock_pickem_game", methods=["GET", "POST"])
 def lock_pickem_game():

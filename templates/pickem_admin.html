@@ -40,7 +40,7 @@
     <form action="{{ url_for('lock_pickem_game') }}" method="POST">
         <label for="game_name">Game Name</label>
         <select name="game_name">
-            {% for name in game_name_list %}
+            {% for name in game_group_list %}
                 <option value="{{ name }}">{{ name }}</option>
             {% endfor %}
         </select>
