@@ -9,7 +9,7 @@
         <p>
             Playoff Pickem Pool <br>
     </h1>
-            Pick all 11 playoff games against the spread.<br>
+            Pick all 13 playoff games against the spread.<br>
             Best record wins.  Click on team in table to select.<br>
             Home team in CAPS.
         </p>
@@ -28,7 +28,7 @@
             <th style="border-left-width: thick"> Pick </th>
         </tr>
         {% if game_dict[1].locked == 0 and game_dict[1].fav != "TBD" %}
-        {% for row in game_list[:4] %}        
+        {% for row in game_list[:6] %}        
         <tr>
             <td class="ptd">{{ row }}</td>
             <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
@@ -40,7 +40,7 @@
         </tr>
         {% endfor %}
         {% else %}
-        {% for row in game_list[:4] %}
+        {% for row in game_list[:6] %}
         <tr>
             <td class="locked_ptd">{{ row }}</td>
             <td class="locked_team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
@@ -55,8 +55,8 @@
         </table>
 
         <table align="center">
-        {% if game_dict[5].locked == 0 and game_dict[5].fav != "TBD" %}
-        {% for row in game_list[4:8] %}
+        {% if game_dict[7].locked == 0 and game_dict[7].fav != "TBD" %}
+        {% for row in game_list[6:10] %}
         <tr>
             <td class="ptd">{{ row }}</td>
             <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
@@ -68,7 +68,7 @@
         </tr>
         {% endfor %}
         {% else %}
-        {% for row in game_list[4:8] %}
+        {% for row in game_list[6:10] %}
         <tr>
             <td class="locked_ptd">{{ row }}</td>
             <td class="locked_team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
@@ -82,45 +82,45 @@
         {% endif %}
         </table>
 
-        <table align="center">
-        {% if game_dict[9].locked == 0 and game_dict[9].fav != "TBD" %}
-        {% for row in game_list[8:10] %}
-        <tr>
-            <td class="ptd">{{ row }}</td>
-            <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
-            <td class="ptd">{{ game_dict[row].spread }}</td>
-            <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
-            <td class="pick">
-                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
-            </td>
-        </tr>
-        {% endfor %}
-        {% else %}
-        {% for row in game_list[8:10] %}
-        <tr>
-            <td class="locked_ptd">{{ row }}</td>
-            <td class="locked_team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
-            <td class="locked_ptd">{{ game_dict[row].spread }}</td>
-            <td class="locked_team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
-            <td class="pick">
-                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
-            </td>
-        </tr>
-        {% endfor %}
-        {% endif %}
-        </table>
         <table align="center">
         {% if game_dict[11].locked == 0 and game_dict[11].fav != "TBD" %}
+        {% for row in game_list[10:12] %}
         <tr>
-            <td class="ptd">11</td>
-            <td class="team" onClick="change('{{ game_dict[11].fav }}', 11, {{ game_dict[11].locked }})">{{ game_dict[11].fav }}</td>
-            <td class="ptd">{{ game_dict[11].spread }}</td>
-            <td class="team" onClick="change('{{ game_dict[11].dog }}', 11, {{ game_dict[11].locked }})">{{ game_dict[11].dog }}</td>
+            <td class="ptd">{{ row }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
+            <td class="ptd">{{ game_dict[row].spread }}</td>
+            <td class="team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
             <td class="pick">
-                <input class="pick" type="text" id="11" name="11" value="{{ user_picks[11] }}" readonly>
+                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
             </td>
         </tr>
-        {% if game_dict[11].spread != 0 %}
+        {% endfor %}
+        {% else %}
+        {% for row in game_list[10:12] %}
+        <tr>
+            <td class="locked_ptd">{{ row }}</td>
+            <td class="locked_team" onClick="change('{{ game_dict[row].fav }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].fav }}</td>
+            <td class="locked_ptd">{{ game_dict[row].spread }}</td>
+            <td class="locked_team" onClick="change('{{ game_dict[row].dog }}', '{{ row }}', {{ game_dict[row].locked }})">{{ game_dict[row].dog }}</td>
+            <td class="pick">
+                <input class="pick" type="text" id="{{ row|int }}" name="{{ row|int }}" value="{{ user_picks[row] }}" readonly>
+            </td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+        </table>
+        <table align="center">
+        {% if game_dict[13].locked == 0 and game_dict[13].fav != "TBD" %}
+        <tr>
+            <td class="ptd">13</td>
+            <td class="team" onClick="change('{{ game_dict[13].fav }}', 13, {{ game_dict[13].locked }})">{{ game_dict[13].fav }}</td>
+            <td class="ptd">{{ game_dict[11].spread }}</td>
+            <td class="team" onClick="change('{{ game_dict[13].dog }}', 13, {{ game_dict[13].locked }})">{{ game_dict[13].dog }}</td>
+            <td class="pick">
+                <input class="pick" type="text" id="13" name="13" value="{{ user_picks[13] }}" readonly>
+            </td>
+        </tr>
+        {% if game_dict[13].spread != 0 %}
         <tr>
             <td class="ptd" colspan="4" style="text-align: right">Enter Superbowl Total Points Tie Breaker Here:</td>
             <td class="pick">
@@ -130,19 +130,19 @@
         {% endif %}
         {% else %}
         <tr>
-            <td class="locked_ptd">11</td>
-            <td class="locked_team" onClick="change('{{ game_dict[11].fav }}', 11, {{ game_dict[11].locked }})">{{ game_dict[11].fav }}</td>
-            <td class="locked_ptd">{{ game_dict[11].spread }}</td>
-            <td class="locked_team" onClick="change('{{ game_dict[11].dog }}', 11, {{ game_dict[11].locked }})">{{ game_dict[11].dog }}</td>
+            <td class="locked_ptd">13</td>
+            <td class="locked_team" onClick="change('{{ game_dict[13].fav }}', 13, {{ game_dict[13].locked }})">{{ game_dict[13].fav }}</td>
+            <td class="locked_ptd">{{ game_dict[13].spread }}</td>
+            <td class="locked_team" onClick="change('{{ game_dict[13].dog }}', 13, {{ game_dict[13].locked }})">{{ game_dict[13].dog }}</td>
             <td class="pick">
-                <input class="pick" type="text" id="11" name="11" value="{{ user_picks[11] }}" readonly>
+                <input class="pick" type="text" id="13" name="13" value="{{ user_picks[13] }}" readonly>
             </td>
         </tr>
-        {% if game_dict[11].spread != 0 %}
+        {% if game_dict[13].spread != 0 %}
         <tr>
             <td class="locked_ptd" colspan="4" style="text-align: right">Enter Superbowl Total Points Tie Breaker Here:</td>
             <td class="pick">
-                <input class="pick" type="text" id="tb" name="tb" value="{{ user_picks['tb'] }}" style="background-color: white;">
+                <input class="pick" type="text" id="tb" name="tb" value="{{ user_picks['tb'] }}" style="background-color: white;" readonly>
             </td>
         </tr>
         {% endif %}

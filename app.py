@@ -1316,7 +1316,7 @@ def get_pickem_games(season, detailed=False):
         if score[0] not in score_dict:
             score_dict[score[0]] = {'fav':score[1], 'dog':score[2]}
 
-    game_list = [1,2,3,4,5,6,7,8,9,10,11]
+    game_list = [x for x in range(1,14)]
     game_dict = {}
     index = 0
     for g in games:
@@ -1328,7 +1328,7 @@ def get_pickem_games(season, detailed=False):
                 game_dict[g[0]].winner = game_dict[g[0]].dog.upper()
     
     # create game objects for games that don't exist yet
-    for n in range(len(game_dict) + 1, 12):
+    for n in range(len(game_dict) + 1, 14):
         game_dict[n] = Game('TBD', 'TBD', 0, 'TBD', False)  
 
     if detailed == False:
@@ -1414,14 +1414,14 @@ def pickem_all_picks():
     
     class User:
         def __init__(self):
-            d = {}  # initialize user with 11 empty picks
-            for n in range(1,12):
+            d = {}  # initialize user with 13 empty picks
+            for n in range(1,14):
                 d[n] = ''
                 
             self.picks = d  # gameid:pick
             self.win_count = 0
 
-    # get all the user picks, eventually change unlocked picks to "---" if still open
+    # get all the user picks, eventually change unlocked picks to "hidden" if still open
     # p = "SELECT DISTINCT p.userid, p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT userid, gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid"
     p = "SELECT pickid, userid, gameid, pick from pickem.userpicks order by pickid desc;" 
     all_picks = db2(p)
@@ -1459,7 +1459,7 @@ def pickem_all_picks():
 
     for tb in tbs:
         username = usernames[tb[0]]
-        if game_dict[11].locked == 1 or current_user == tb[0]:
+        if game_dict[13].locked == 1 or current_user == tb[0]:
             if username not in tb_dict:
                 tb_dict[username] = tb[1] 
         else:
@@ -1470,7 +1470,7 @@ def pickem_all_picks():
     max_win_users = []
 
     for user in user_picks:
-        # add win totals to user object (todo - change to game lookup)
+        # add win totals to user object
         for game in user_picks[user].picks:
             if game_dict[game].winner.upper() == user_picks[user].picks[game] and user_picks[user].picks[game] != '':
                 user_picks[user].win_count += 1
@@ -1483,8 +1483,8 @@ def pickem_all_picks():
 
     winner = []
     tie_break_log = []
-    if game_dict[11].winner != "TBD":  # someone won the SB, figure out who won the pool
-        s = "SELECT fav_score, dog_score FROM pickem.pickem_scores WHERE gameid = 11 ORDER BY score_id DESC;"
+    if game_dict[13].winner != "TBD":  # someone won the SB, figure out who won the pool
+        s = "SELECT fav_score, dog_score FROM pickem.pickem_scores WHERE gameid = 13 ORDER BY score_id DESC;"
         score = db2(s)
         print("maxwinuser{}".format(max_win_users))
         print(score)
@@ -1497,12 +1497,14 @@ def pickem_all_picks():
             closest_users = []
             for user in max_win_users:
                 print("user {}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score))
-                tie_break_log.append("{}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score))
+                tb_log = "{}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score)
                 if abs(tb_dict[user] - total_score) < closest_score:
                     closest_score = abs(tb_dict[user] - total_score)
                     closest_users = [user]
+                    tie_break_log.insert(0, tb_log)  # want this tb to display first always, as it's potentially the winner
                 elif abs(tb_dict[user] - total_score) == closest_score:
                     closest_users.append(user)
+                    tie_break_log.append(tb_log)
                 else:
                     print("something went very wrong figuring out tie break")
 
@@ -1551,7 +1553,7 @@ def enter_pickem_scores():
 def pickem_admin():
     season = 2021
 
-    game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "DIV 5", "DIV 6", "DIV 7", "DIV 8", "CONF 9", "CONF 10", "Super Bowl"]
+    game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "WC 5", "WC 6", "DIV 7", "DIV 8", "DIV 9", "DIV 10", "CONF 11", "CONF 12", "Super Bowl"]
     game_group_list = ["WC", "DIV", "CONF", "Super Bowl"]
     return render_template("pickem_admin.html", game_name_list=game_name_list, game_group_list=game_group_list, season=season)
 
@@ -1566,14 +1568,16 @@ def lock_pickem_game():
     else:
         return apology("lock or unlock?  which is it??")
 
-    games_dict = {"WC" : (1,2,3,4), "DIV" : (5,6,7,8), "CONF" : (9,10,0,0), "Super Bowl" : (11,0,0,0)}
-    g1 = games_dict[game_name][0]
-    g2 = games_dict[game_name][1]
-    g3 = games_dict[game_name][2]
-    g4 = games_dict[game_name][3]
+    games_dict = {"WC" : (1,2,3,4,5,6), "DIV" : (7,8,9,10), "CONF" : (11,12), "Super Bowl" : (13,)}
+    game_tup = (lock, ) + games_dict[game_name]
 
-    s = "UPDATE pickem.games SET locked = %s WHERE gameid in (%s, %s, %s, %s);"
-    db2(s, (lock, g1, g2, g3, g4))
+    param_string = ''
+    for _ in range(len(games_dict[game_name])):
+        param_string += '%s, '
+    param_string = param_string[:-2]  # get rid of ", "
+
+    s = "UPDATE pickem.games SET locked = %s WHERE gameid in ({});".format(param_string)
+    db2(s, game_tup) 
     print("setting game {} lock status to {}".format(game_name, lock))
 
     return redirect(url_for('pickem_admin'))
@@ -1603,8 +1607,10 @@ def create_pickem_game():
         return apology("missing underdog")
 
     if game_name == "Super Bowl":
-        gameid = 11
-    elif game_name == "CONF 10":
+        gameid = 13
+    elif game_name[0] == "C":
+        gameid = game_name[-2:]
+    elif game_name == "DIV 10":
         gameid = 10
     else:
         gameid = int(game_name[-1:])
