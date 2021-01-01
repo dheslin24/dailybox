@@ -19,8 +19,11 @@
     {% endif %}
     {% if tie_break_log|length > 0 %}
         Tie Break Details: </br>
-        {% for log in tie_break_log %}
-            {{ log }} </br>
+        {% for log in tie_break_log[:1] %}
+            <p style="color: green; margin: 0; padding: 0"> {{ log }} </p>
+        {% endfor %}
+        {% for log in tie_break_log[1:] %}
+            <p style="color: red; margin: 0; padding: 0"> {{ log }} </p>
         {% endfor %}
     {% endif %}
         
@@ -60,7 +63,7 @@
             {% if user in winner %}
                 <td class="winning_user" style="text-align: left; border-right: 5px solid black">{{ crown }} {{ user }}</td>
             {% elif user == current_username %}
-                <td class="current_user" style="text-align: left; border-right: 5px solid black">{{ user }}</td>
+                <td class="current_user" style="text-align: left; border-right: 5px solid black">{{ user }} </td>
             {% else %}
                 <td style="font-size: 14px; font-weight: bold; text-align: left; border-right: 5px solid black">{{ user }}</td>
             {% endif %}

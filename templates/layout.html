@@ -52,9 +52,7 @@
     </head>
 
     <body>
-
-        <div id="x" class="container">
-
+        <div class="container">
             <nav class="navbar navbar-default">
                 <div class="container-fluid">
                     <div class="navbar-header">
@@ -78,6 +76,7 @@
                                 -->
                                 <li><a href="{{ url_for('pickem_game_list') }}">Enter Your Picks</a></li>
                                 <li><a href="{{ url_for('pickem_all_picks') }}">See All User Picks</a></li>
+                                <li><a href="{{ url_for('pickem_payment_status') }}">Payment Status</a></li>
                                 <!--    
                                 <li><a href="{{ url_for('payment_status') }}">Payment Status</a></li>
                                 -->
@@ -105,15 +104,9 @@
                 </header>
             {% endif %}
 
-            <main>
-            <!--
-            <div id="x">
-                <img src="https://www.kindpng.com/picc/m/31-311472_turkey-leg-clipart-transparent-hd-png-download.png">; 
-            </div>
-            -->
-            <div id="x"></div>
-                {% block main %}{% endblock %}
-            </main>
+        <main>
+            {% block main %}{% endblock %}
+        </main>
 
         </div>
 

@@ -1413,11 +1413,12 @@ def pickem_all_picks():
             games_locked.append(game)
     
     class User:
-        def __init__(self):
+        def __init__(self, userid):
             d = {}  # initialize user with 13 empty picks
             for n in range(1,14):
                 d[n] = ''
                 
+            self.userid = userid
             self.picks = d  # gameid:pick
             self.win_count = 0
 
@@ -1439,7 +1440,7 @@ def pickem_all_picks():
             if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
                 user_pick_list.append((pick[1], pick[2]))  # make sure the rest skip ovr this then
                 if username not in user_picks:              # first pick for this user
-                    user_picks[username] = User()           # so create a user object
+                    user_picks[username] = User(pick[1])           # so create a user object
                     user_picks[username].picks[pick[2]] = pick[3]       # and set it's first pick
                 else:
                     user_picks[username].picks[pick[2]] = pick[3]       # obj already exists, add new game and it's pick
@@ -1448,7 +1449,7 @@ def pickem_all_picks():
             if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
                 user_pick_list.append((pick[1], pick[2]))  # make sure the rest skip ovr this then
                 if username not in user_picks:              # first pick for this user
-                    user_picks[username] = User()           # so create a user object
+                    user_picks[username] = User(pick[1])           # so create a user object
                     user_picks[username].picks[pick[2]] = "hidden"      # and set it's first pick
                 else:
                     user_picks[username].picks[pick[2]] = "hidden"      # obj already exists, add new game and it's pick
@@ -1466,6 +1467,13 @@ def pickem_all_picks():
             if username not in tb_dict:
                 tb_dict[username] = 'hidden'
 
+    # p = "SELECT * FROM pickem.pickem_payment;"
+    # payment_status = dict(db2(p))
+    thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    middle_finger = '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16')
+
+
     max_wins = 0
     max_win_users = []
 
@@ -1480,6 +1488,9 @@ def pickem_all_picks():
             max_win_users = [user]
         elif user_picks[user].win_count == max_wins:
             max_win_users.append(user)
+
+        #if user_picks[user].userid not in payment_status:
+        #    payment_status[user_picks[user].userid] = thumbs_down
 
     winner = []
     tie_break_log = []
@@ -1506,7 +1517,7 @@ def pickem_all_picks():
                     closest_users.append(user)
                     tie_break_log.append(tb_log)
                 else:
-                    print("something went very wrong figuring out tie break")
+                    tie_break_log.append(tb_log) # not closest user, but still will display this result
 
             if len(closest_users) == 1:  #one winner
                 winner.append(closest_users[0])
@@ -1533,7 +1544,7 @@ def pickem_all_picks():
         
     sorted_user_picks = sorted(user_picks.items(), key=lambda x: x[1].win_count, reverse=True)
     user_picks_dict = dict(sorted_user_picks)
-
+    
     return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown)
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
@@ -1620,7 +1631,54 @@ def create_pickem_game():
 
     return redirect(url_for('pickem_all_picks'))
     
+
+@app.route("/pickem_payment_status", methods=["GET", "POST"])
+def pickem_payment_status():
+    season = 2021 
+    # find users that have a pickem entry
+    u = "SELECT DISTINCT up.userid, u.username FROM pickem.userpicks up LEFT JOIN users u ON up.userid = u.userid WHERE up.season = {};".format(season)
+    pickem_users = dict(db2(u))
+
+    p = "SELECT * FROM pickem.pickem_payment;"
+    payment_dict = dict(db2(p))
+
+    thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    middle_finger = '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16')
     
+    display_list = []
+    for user in pickem_users:
+        if user not in payment_dict:
+            display_list.append((user, pickem_users[user], thumbs_down))
+        else:
+            if payment_dict[user] == True:
+                display_list.append((user, pickem_users[user], thumbs_up))
+            else:
+                display_list.append((user, pickem_users[user], thumbs_down))
+    print("payment stuff")
+    print(pickem_users)
+    print(payment_dict)
+    print(display_list)
+                
+    return render_template("pickem_payment_status.html", display_list=display_list)
+
+@app.route("/pickem_mark_paid", methods=["GET", "POST"])
+def pickem_mark_paid():
+    userid = int(request.form.get("userid"))
+    paid = request.form.get("paid")
+
+    s = "SELECT * FROM pickem.pickem_payment;"
+    paid_status = dict(db2(s))
+
+    if userid not in paid_status:
+        s = "INSERT INTO pickem.pickem_payment (userid, payment_status) VALUES (%s, %s);"
+        db2(s, (userid, True))
+    else:
+        s = "UPDATE pickem.pickem_payment SET payment_status = %s WHERE userid = %s;"
+        db2(s, (True, userid))
+
+    return redirect(url_for('pickem_payment_status')) 
+
 
 # LOGIN routine
 @app.route("/login", methods=["GET", "POST"])
