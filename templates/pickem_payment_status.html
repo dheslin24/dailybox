@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Pickem Payment Status
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Payment Status for all Users (public shaming)
+        </p>
+    </h1>
+    
+    <h4>
+        <table align = "center", name="user_table", class="user_table", cellpadding = "10">
+            <tr>
+            <th> userid </th>
+            <th> username </th>
+            <th> paid? </th>
+            </tr>
+            {% for user in display_list %}
+            <tr>
+                {% for field in user %}
+                <td class="payment"> {{ field }} </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </h4>
+
+<script>
+var allTableCells = document.getElementsByTagName("td");
+
+for(var i = 0, max = allTableCells.length; i < max; i++) {
+    var node = allTableCells[i];
+
+    //get the value of fee and paid column
+    var fee = node.childNodes[5].nodeValue; 
+    var paid = node.childNodes[6].nodeValue;
+
+    //check for 'one' and assign this table cell's background color accordingly 
+    if (fee != paid)
+        node.style.backgroundColor = "red";
+}
+</script>
+
+<script>
+$('.user_table .f').each(function() {
+    var val = parseInt( $(this).text(), 10),
+        dd = parseInt( $('#'d).text(), 10);
+    if (val != dd) {
+        $(this).css('background-color', 'red');
+    }
+});
+</script>
+
+{% endblock %}
+
