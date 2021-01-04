@@ -1672,6 +1672,14 @@ def pickem_payment_status():
     p = "SELECT * FROM pickem.pickem_payment;"
     payment_dict = dict(db2(p))
 
+    # find list of admins who can update status
+    s = "SELECT userid FROM users WHERE is_admin = 1;"
+    a = db2(s)
+    admins = []
+    for admin in a:
+        admins.append(admin[0])
+    print(admins)
+
     thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
     thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
     middle_finger = '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16')
@@ -1692,7 +1700,7 @@ def pickem_payment_status():
     print(payment_dict)
     print(display_list)
                 
-    return render_template("pickem_payment_status.html", display_list=display_list)
+    return render_template("pickem_payment_status.html", display_list=display_list, admins=admins)
 
 @app.route("/pickem_mark_paid", methods=["GET", "POST"])
 def pickem_mark_paid():
