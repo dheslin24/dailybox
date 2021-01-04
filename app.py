@@ -1888,6 +1888,12 @@ def register():
             return apology("password confirmation does not match")
         print("got here insert user")
 
+        s = "SELECT userid FROM users WHERE username = %s;"
+        check_userid = db2(s, (request.form.get("username"),))
+        print("check userid found {}".format(check_userid))
+        if len(check_userid) > 0:
+            return apology("username already exists")
+
         #insert username & hash into table
         # s = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES('{}', '{}', '{}', 1, 0, '{}', '{}', '{}');".format(request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
         # db(s)
