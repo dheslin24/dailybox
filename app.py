@@ -11,6 +11,8 @@ from operator import itemgetter, attrgetter
 import mysql.connector
 from mysql.connector import errorcode
 from functools import wraps
+from sportsreference.nfl.boxscore import Boxscores, Boxscore
+from sportsreference.nfl.schedule import Schedule
 
 app = Flask(__name__)
 
@@ -1336,6 +1338,34 @@ def get_pickem_games(season, detailed=False):
     else:
         return game_dict
 
+def sref_to_pickem(convention='p'):
+    # p == return pickem value
+    # s == return sportsreference value
+    p = { \
+        "nor" : "NO",  "min" : "MIN", \
+        "det" : "DET", "tam" : "TPA", \
+        "crd" : "ARI", "sfo" : "SF",  \
+        "rai" : "LV",  "mia" : "MIA", \
+        "rav" : "BAL", "nyg" : "NYG", \
+        "pit" : "PIT", "clt" : "IND", \
+        "nyj" : "NYJ", "cle" : "CLE", \
+        "kan" : "KC",  "atl" : "ATL", \
+        "jax" : "JAX", "chi" : "CHI", \
+        "htx" : "HOU", "cin" : "CIN", \
+        "was" : "WAS", "car" : "CAR", \
+        "sdg" : "LAC", "den" : "DEN", \
+        "sea" : "SEA", "ram" : "LAR", \
+        "dal" : "DAL", "phi" : "PHI", \
+        "gnb" : "GB",  "oti" : "TEN", \
+        "nwe" : "NE",  "buf" : "BUF" \
+        }
+
+    # provide reverse lookup if requested
+    if convention == 's':
+        s = dict([(value, key) for key, value in p.items()])
+        return s
+    else:
+        return p
 
 @app.route("/select_pickem_games", methods=["GET", "POST"])
 def select_pickem_games():
@@ -1679,6 +1709,63 @@ def pickem_mark_paid():
 
     return redirect(url_for('pickem_payment_status')) 
 
+@app.route("/pickem_rules", methods=["GET", "POST"])
+def pickem_rules():
+    return render_template("pickem_rules.html")
+
+## test stuff for auto download of scores
+@app.route("/get_scores", methods=["GET", "POST"])
+def get_scores():
+    week = 17
+    year = 2020
+
+    team_dict = sref_to_pickem()
+
+    # get list of game ids
+    game_list = []
+    game_data = Boxscores(week, year)
+    for game in game_data.games[str(week) + '-' + str(year)]:
+        game_list.append(game['boxscore'])
+
+    # get boxscore objects for each game id
+    game_dict = {}
+    for game in game_list:
+        b = Boxscore(game)
+        print(b.home_abbreviation, b.home_points, b.away_abbreviation, b.away_points, b.summary)
+        game_dict[game] = b
+
+        gameid = game
+        # hometeam = game_data.games[str(week) + '-' + str(year)][gameid]['home_name']
+        home_abbr = b.home_abbreviation
+        home_score = b.home_points
+        # awayteam = game_data.games[str(week) + '-' + str(year)][gameid]['away_name']
+        away_abbr = b.away_abbreviation
+        away_score = b.away_points
+        if len(b.summary['home']) > 0:
+            home_q1 = b.summary['home'][0] 
+            home_q2 = b.summary['home'][1]
+            home_q3 = b.summary['home'][2]
+            home_q4 = b.summary['home'][3]
+            away_q1 = b.summary['away'][0]
+            away_q2 = b.summary['away'][1]
+            away_q3 = b.summary['away'][2]
+            away_q4 = b.summary['away'][3]
+        else:
+            home_q1 = 0 
+            home_q2 = 0 
+            home_q3 = 0
+            home_q4 = 0
+            away_q1 = 0
+            away_q2 = 0
+            away_q3 = 0
+            away_q4 = 0
+
+    s = "INSERT INTO pickem.pickem_scores_sref (gameid, home_abbr, home_score, away_abbr, away_score, home_q1, home_q2, home_q3, home_q4, away_q1, away_q2, away_q3, away_q4) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+
+    db2(s, (gameid, team_dict[home_abbr], home_score, team_dict[away_abbr], away_score, home_q1, home_q2, home_q3, home_q4, away_q1, away_q2, away_q3, away_q4))
+
+    return render_template('get_scores.html', game_list=game_list, game_dict=game_dict, team_dict=team_dict)
+
 
 # LOGIN routine
 @app.route("/login", methods=["GET", "POST"])
@@ -1688,7 +1775,7 @@ def login():
     # forget any user_id
     session.clear()
 
-    # if user reached route via POST (as by submitting a form via POST)
+    # if user reached route via POST (as by submitting a form via POST) 
     if request.method == "POST":
 
         # ensure username was submitted
