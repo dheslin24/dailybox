@@ -1489,6 +1489,7 @@ def pickem_all_picks():
     empty_users = db2(uid)
 
     # create empty User objects for them
+    print("empty users {}".format(empty_users))
     if len(empty_users) > 0:
         for userid in empty_users[0]:
             if userid not in user_picks:
