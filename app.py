@@ -1735,7 +1735,7 @@ def pickem_mark_paid():
         s = "UPDATE pickem.pickem_payment SET payment_status = %s WHERE userid = %s;"
         db2(s, (True, userid))
 
-    return redirect(url_for('pickem_admin')) 
+    return redirect(url_for('pickem_payment_status')) 
 
 @app.route("/pickem_enable_user", methods=["GET", "POST"])
 def pickem_enable_user():
