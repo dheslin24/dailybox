@@ -1491,9 +1491,9 @@ def pickem_all_picks():
     # create empty User objects for them
     print("empty users {}".format(empty_users))
     if len(empty_users) > 0:
-        for userid in empty_users[0]:
-            if userid not in user_picks:
-                user_picks[usernames[userid]] = User(userid) # create user object with no picks
+        for userid in empty_users:
+            if usernames[userid[0]] not in user_picks:
+                user_picks[usernames[userid[0]]] = User(userid) # create user object with no picks
 
     t = "SELECT userid, tiebreak FROM pickem.tiebreak WHERE season = %s ORDER BY tiebreak_id DESC;"
     tbs= db2(t, (season,))
