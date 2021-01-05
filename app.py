@@ -1484,6 +1484,16 @@ def pickem_all_picks():
                 else:
                     user_picks[username].picks[pick[2]] = "hidden"      # obj already exists, add new game and it's pick
 
+    # add pickem users who haven't selected any picks yet - for tracking
+    uid = "SELECT userid FROM users WHERE is_pickem_user = 1"
+    empty_users = db2(uid)
+
+    # create empty User objects for them
+    if len(empty_users) > 0:
+        for userid in empty_users[0]:
+            if userid not in user_picks:
+                user_picks[usernames[userid]] = User(userid) # create user object with no picks
+
     t = "SELECT userid, tiebreak FROM pickem.tiebreak WHERE season = %s ORDER BY tiebreak_id DESC;"
     tbs= db2(t, (season,))
     tb_dict = {}  # userid:tiebreak
@@ -1701,6 +1711,7 @@ def pickem_payment_status():
     print(display_list)
                 
     return render_template("pickem_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list)) 
+
 @app.route("/pickem_mark_paid", methods=["GET", "POST"])
 def pickem_mark_paid():
     userid = int(request.form.get("userid"))
@@ -1716,7 +1727,16 @@ def pickem_mark_paid():
         s = "UPDATE pickem.pickem_payment SET payment_status = %s WHERE userid = %s;"
         db2(s, (True, userid))
 
-    return redirect(url_for('pickem_payment_status')) 
+    return redirect(url_for('pickem_admin')) 
+
+@app.route("/pickem_enable_user", methods=["GET", "POST"])
+def pickem_enable_user():
+    userid = int(request.form.get("userid"))
+
+    s = "UPDATE users SET is_pickem_user = 1 WHERE userid = %s"
+    db2(s, (userid,))
+
+    return redirect(url_for('pickem_admin'))
 
 @app.route("/pickem_rules", methods=["GET", "POST"])
 def pickem_rules():

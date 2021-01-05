@@ -17,6 +17,9 @@
     <a href=" {{ url_for('pickem_all_picks') }}">UAT - playoff pickem all users picks</a>
     </br>
     </br>
+    <a href="{{ url_for('get_scores') }}">UAT - get scores from sports reference</a></br>
+    </br>
+    </br>
     <p> Create new Pickem Game below </p>
     <form action="{{ url_for('create_pickem_game') }}" method="POST">
         <label for="season">Season</label>
@@ -51,12 +54,19 @@
         <input type="radio" id="unlock" name="lock" value="0">
         <input type="submit">
     </form>
+    </br>
+    </br>
     <form action="{{ url_for('pickem_mark_paid') }}" method="POST">
         <label for="userid">userid</label>
-        <input type="text" id="userid" name="userid" value="True">
+        <input type="text" id="userid" name="userid" style="width: 50px">
         <button type="submit">Mark Paid</button>
     </form>
-
+    </br></br>
+    <form action="{{ url_for('pickem_enable_user') }}" method="POST">
+        <label for="userid">userid: </label>
+        <input type="text" id="userid" name="userid" style="width: 50px">
+        <button type="submit">Enable for Pickem</button>
+    </form>
 
 
 
