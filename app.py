@@ -1700,8 +1700,7 @@ def pickem_payment_status():
     print(payment_dict)
     print(display_list)
                 
-    return render_template("pickem_payment_status.html", display_list=display_list, admins=admins)
-
+    return render_template("pickem_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list)) 
 @app.route("/pickem_mark_paid", methods=["GET", "POST"])
 def pickem_mark_paid():
     userid = int(request.form.get("userid"))
@@ -1892,7 +1891,7 @@ def register():
         check_userid = db2(s, (request.form.get("username"),))
         print("check userid found {}".format(check_userid))
         if len(check_userid) > 0:
-            return apology("username already exists")
+            return apology("username already exists.  reach out to customer support (aka TW) to have it reset.")
 
         #insert username & hash into table
         # s = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES('{}', '{}', '{}', 1, 0, '{}', '{}', '{}');".format(request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
