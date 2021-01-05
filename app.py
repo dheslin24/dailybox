@@ -1683,6 +1683,13 @@ def pickem_payment_status():
     p = "SELECT * FROM pickem.pickem_payment;"
     payment_dict = dict(db2(p))
 
+    # add users who are in but haven't made picks yet
+    uid = "SELECT userid, username FROM users WHERE is_pickem_user = 1"
+    empty_users = db2(uid)
+    if len(empty_users) > 0:
+        for user in empty_users:
+            pickem_users[user[0]] = user[1]
+
     # find list of admins who can update status
     s = "SELECT userid FROM users WHERE is_admin = 1;"
     a = db2(s)
