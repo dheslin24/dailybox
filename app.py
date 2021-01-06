@@ -1707,7 +1707,7 @@ def pickem_payment_status():
         if user not in payment_dict:
             display_list.append((user, pickem_users[user], thumbs_down))
         else:
-            if user == 113 or user == 11:
+            if user == 113:
                 display_list.append((user, pickem_users[user], middle_finger))
             elif payment_dict[user] == True:
                 display_list.append((user, pickem_users[user], thumbs_up))
