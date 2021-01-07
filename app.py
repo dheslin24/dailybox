@@ -1389,6 +1389,7 @@ def select_pickem_games():
     return redirect(url_for('pickem_all_picks'))
 
 @app.route("/pickem_game_list", methods=["GET", "POST"])
+@login_required
 def pickem_game_list():
     # if not logged in, error out (it'll crash if not)
     if not session['userid']:
@@ -1425,6 +1426,7 @@ def pickem_game_list():
     return render_template("pickem_game_list.html", game_dict=game_dict, game_list=game_list, user_picks=user_picks)
 
 @app.route("/pickem_all_picks", methods=["GET", "POST"])
+@login_required
 def pickem_all_picks():
     season = 2021
     
