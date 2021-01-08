@@ -1693,6 +1693,9 @@ def pickem_payment_status():
     if len(empty_users) > 0:
         for user in empty_users:
             pickem_users[user[0]] = user[1]
+    
+    entry = 50
+    prize_pool = 50 * len(pickem_users)
 
     # find list of admins who can update status
     s = "SELECT userid FROM users WHERE is_admin = 1;"
@@ -1725,7 +1728,7 @@ def pickem_payment_status():
     print(payment_dict)
     print(display_list)
                 
-    return render_template("pickem_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list)) 
+    return render_template("pickem_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list), prize_pool=prize_pool) 
 
 @app.route("/pickem_mark_paid", methods=["GET", "POST"])
 def pickem_mark_paid():
