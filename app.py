@@ -1515,6 +1515,8 @@ def pickem_all_picks():
     thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
     thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
     middle_finger = '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    check = '\u2714'
+    ex = '\u274c'
 
 
     max_wins = 0
@@ -1703,18 +1705,21 @@ def pickem_payment_status():
     thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
     thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
     middle_finger = '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    check = '\u2714'
+    ex = '\u274c'
+
     
     display_list = []
     for user in pickem_users:
         if user not in payment_dict:
-            display_list.append((user, pickem_users[user], thumbs_down))
+            display_list.append((user, pickem_users[user], ex))
         else:
             if user == 113:
                 display_list.append((user, pickem_users[user], middle_finger))
             elif payment_dict[user] == True:
-                display_list.append((user, pickem_users[user], thumbs_up))
+                display_list.append((user, pickem_users[user], check))
             else:
-                display_list.append((user, pickem_users[user], thumbs_down))
+                display_list.append((user, pickem_users[user], ex))
     print("payment stuff")
     print(pickem_users)
     print(payment_dict)
