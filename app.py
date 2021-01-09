@@ -1887,6 +1887,8 @@ def index():
 def register():
     """Register user."""
 
+    return(apology("sorry, closed to new entries.  where were you on tuesday when we could've used you??  too bad."))
+
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
