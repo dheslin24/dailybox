@@ -12,6 +12,9 @@
     </h1>
         <p> User picks remain hidden until game locks </p>
         <p> Spreads not final until Friday - set according to NY Post </p>
+        {% if eliminated_list|length > 0 %}
+            <p> If your name is in <em style="color: red">RED</em>, see you next year... </p>
+        {% endif %}
         <p> HOME team in CAPS </p>
         <a href="{{ url_for('pickem_game_list') }}">Jump to enter your picks</a>
     </br>
@@ -65,6 +68,8 @@
                 <td class="winning_user" style="text-align: left; border-right: 5px solid black">{{ crown }} {{ user }}</td>
             {% elif user == current_username %}
                 <td class="current_user" style="text-align: left; border-right: 5px solid black">{{ user }} </td>
+            {% elif user in eliminated_list %}
+                <td class="eliminated" style="text-align: left; border-right: 5px  solid black">{{ user }} </td>
             {% else %}
                 <td style="font-size: 14px; font-weight: bold; text-align: left; border-right: 5px solid black">{{ user }}</td>
             {% endif %}

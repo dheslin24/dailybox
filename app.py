@@ -1453,6 +1453,7 @@ def pickem_all_picks():
             self.userid = userid
             self.picks = d  # gameid:pick
             self.win_count = 0
+            self.max_wins = 13  # will make this configurable.. may change down the road
 
     # get all the user picks, eventually change unlocked picks to "hidden" if still open
     # p = "SELECT DISTINCT p.userid, p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT userid, gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid"
@@ -1518,6 +1519,11 @@ def pickem_all_picks():
     check = '\u2714'
     ex = '\u274c'
 
+    # see who is eliminated
+    g = "SELECT max(gameid) FROM pickem.pickem_scores;"
+    max_game = db2(g)[0][0]
+    print("max game {}".format(max_game))
+    eliminated_list = []
 
     max_wins = 0
     max_win_users = []
@@ -1533,9 +1539,15 @@ def pickem_all_picks():
             max_win_users = [user]
         elif user_picks[user].win_count == max_wins:
             max_win_users.append(user)
+        
+        # eliminated?
+        games_left = 13 - max_game
+        user_picks[user].max_wins = user_picks[user].win_count + games_left
 
-        #if user_picks[user].userid not in payment_status:
-        #    payment_status[user_picks[user].userid] = thumbs_down
+    for user in user_picks:
+        # see who's eliminated...
+        if user_picks[user].max_wins < max_wins:  # you can't possibly catch the leader
+            eliminated_list.append(user)
 
     winner = []
     tie_break_log = []
@@ -1590,7 +1602,7 @@ def pickem_all_picks():
     sorted_user_picks = sorted(user_picks.items(), key=lambda x: x[1].win_count, reverse=True)
     user_picks_dict = dict(sorted_user_picks)
     
-    return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown)
+    return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown, eliminated_list=eliminated_list)
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
 def enter_pickem_scores():
