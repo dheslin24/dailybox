@@ -1,5 +1,6 @@
 from flask import Flask, flash, redirect, render_template, request, session, url_for, Markup
 from flask_session import Session
+import logging
 #from flask_sslify import SSLify
 from passlib.apps import custom_app_context as pwd_context
 #from werkzeug.serving import make_ssl_devcert, run_simple
@@ -13,6 +14,8 @@ from mysql.connector import errorcode
 from functools import wraps
 from sportsreference.nfl.boxscore import Boxscores, Boxscore
 from sportsreference.nfl.schedule import Schedule
+
+logging.basicConfig(filename="byg.log", level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -1385,6 +1388,8 @@ def select_pickem_games():
     if tiebreak != None and len(tiebreak) != 0:
         t = "INSERT INTO pickem.tiebreak (season, userid, tiebreak, datetime) values (%s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
         db2(t, (season, session['userid'], tiebreak))
+
+    logging.info("{} just selected picks".format(session["username"]))
  
     return redirect(url_for('pickem_all_picks'))
 
@@ -1401,8 +1406,6 @@ def pickem_game_list():
     game_list = get_pickem_games(season)
     game_dict = get_pickem_games(season, True)
 
-    # get user picks
-    #p = "SELECT DISTINCT p.gameid, p.pick FROM pickem.userpicks p INNER JOIN (SELECT gameid, MAX(pickid) as maxid FROM pickem.userpicks GROUP BY gameid) gp ON p.gameid = gp.gameid AND p.pickid = gp.maxid WHERE userid = %s"
     p = "SELECT gameid, pick FROM pickem.userpicks WHERE userid = %s ORDER BY pickid DESC"
     picks = db2(p, (session['userid'],))
 
@@ -1601,6 +1604,8 @@ def pickem_all_picks():
         
     sorted_user_picks = sorted(user_picks.items(), key=lambda x: x[1].win_count, reverse=True)
     user_picks_dict = dict(sorted_user_picks)
+
+    logging.info("{} just ran all_picks".format(session["username"]))
     
     return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown, eliminated_list=eliminated_list)
 
@@ -1892,6 +1897,8 @@ def index():
     print("***")
     print("*******************")
 
+    logging.info("{} logged in".format(session["username"]))
+
     return render_template("index.html", grid=grid, x=x_nums, y=y_nums)
 
 # REGISTER new user
@@ -1970,6 +1977,8 @@ def register():
         print("************")
         print(session["userid"])
         print(session["username"])
+
+        logger.info("{} just registered".format(session["username"]))
 
         # redirect user to home page
         return redirect(url_for("index"))
