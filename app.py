@@ -15,7 +15,7 @@ from functools import wraps
 from sportsreference.nfl.boxscore import Boxscores, Boxscore
 from sportsreference.nfl.schedule import Schedule
 
-logging.basicConfig(filename="byg.log", level=logging.DEBUG)
+logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
 app = Flask(__name__)
 
@@ -1379,14 +1379,14 @@ def select_pickem_games():
     for game in game_list:
         if request.form.get(str(game)):
             pick = request.form.get(str(game))
-            p = "INSERT INTO pickem.userpicks (userid, season, gameid, pick, datetime) VALUES (%s, %s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
+            p = "INSERT INTO pickem.userpicks (userid, season, gameid, pick, datetime) VALUES (%s, %s, %s, %s, convert_tz(now(), '-00:00', '-05:00'));"
             db2(p, (session['userid'], season, game, pick))
 
     tiebreak = request.form.get('tb')
     print("tbtiebreaktb!!")
     print(tiebreak)
     if tiebreak != None and len(tiebreak) != 0:
-        t = "INSERT INTO pickem.tiebreak (season, userid, tiebreak, datetime) values (%s, %s, %s, convert_tz(now(), '-08:00', '-05:00'));"
+        t = "INSERT INTO pickem.tiebreak (season, userid, tiebreak, datetime) values (%s, %s, %s, convert_tz(now(), '-00:00', '-05:00'));"
         db2(t, (season, session['userid'], tiebreak))
 
     logging.info("{} just selected picks".format(session["username"]))
