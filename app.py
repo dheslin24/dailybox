@@ -1525,11 +1525,12 @@ def pickem_all_picks():
     # see who is eliminated
     g = "SELECT max(gameid) FROM pickem.pickem_scores;"
     max_game = db2(g)[0][0]
+    games_left = 13 - max_game  
     print("max game {}".format(max_game))
     eliminated_list = []
 
-    max_wins = 0
-    max_win_users = []
+    max_wins = 0  # this is the most someone has NOW
+    max_win_users = []  # and who has that amount NOW
 
     for user in user_picks:
         # add win totals to user object
@@ -1544,13 +1545,39 @@ def pickem_all_picks():
             max_win_users.append(user)
         
         # eliminated?
-        games_left = 13 - max_game
         user_picks[user].max_wins = user_picks[user].win_count + games_left
 
     for user in user_picks:
         # see who's eliminated...
-        if user_picks[user].max_wins < max_wins:  # you can't possibly catch the leader
+        if user_picks[user].max_wins < max_wins:  # easy - you can't possibly catch the leader
             eliminated_list.append(user)
+
+        #### elimination rules after conf or sb picks 
+        ####                                          
+        #### max_game == 12.. means we have locked conf picks
+        #### rules are:
+        #### if i'm 3 behind, i need to be completely opposite all of the leaders
+        #### if i'm 2 behind, i need to have at least 1 different from all of leaders
+        #### if i'm 1 behind, i'm still alive no matter what before the games start
+        ####  ----------- next -----------
+        #### max_game == 13.. means we have locked sb picks (1 game left)
+        #### if i'm 1 behind, i need to be opposite all leaders
+        #### ----------- thats it --------
+
+        elif max_game == 12 and game_dict[12].locked == 1:  # we've locked conf picks - see who may get trumped
+            if max_wins - user_picks[user].max_wins == 3:  # you need to be completely opposite all leaders
+                for leader in max_win_users:
+                    if user_picks[leader].picks[11] == user_picks[user].picks[11] or user_picks[leader].picks[12] == user_picks[user].picks[12]:
+                        eliminated_list.append(user)  # can't catch them... needed both opposite
+            elif max_wins - user_picks[user].max_wins == 2: # you need at least 1 diff
+                for leader in max_win_users:
+                    if user_picks[leader].picks[11] == user_picks[user].picks[11] and user_picks[leader].picks[12] == user_picks[user].picks[12]:
+                        eliminated_list.append(user)  # needed at least 1 diff
+        elif max_game == 13 and game_dict[13].locked == 1:  # locked sb picks - trumped?
+            if max_wins - user_picks[user].max_wins == 1:
+                for leader in max_win_users:
+                    if user_picks[leader].picks[13] == user_picks[user].picks[13]:
+                        eliminated_list.append(user)  # can't catch them
 
     winner = []
     tie_break_log = []
