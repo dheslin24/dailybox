@@ -1525,7 +1525,11 @@ def pickem_all_picks():
     # see who is eliminated
     g = "SELECT max(gameid) FROM pickem.pickem_scores;"
     max_game = db2(g)[0][0]
-    games_left = 13 - max_game  
+    if max_game:
+        games_left = 13 - max_game  
+    else:
+        games_left = 13
+        max_game = 0
     print("max game {}".format(max_game))
     eliminated_list = []
 
@@ -1548,6 +1552,8 @@ def pickem_all_picks():
         user_picks[user].max_wins = user_picks[user].win_count + games_left
 
     for user in user_picks:
+        # how far behind?
+        wins_behind = max_wins - user_picks[user].max_wins
         # see who's eliminated...
         if user_picks[user].max_wins < max_wins:  # easy - you can't possibly catch the leader
             eliminated_list.append(user)
@@ -1564,6 +1570,12 @@ def pickem_all_picks():
         #### if i'm 1 behind, i need to be opposite all leaders
         #### ----------- thats it --------
 
+        elif max_game == 13 and game_dict[13].locked == 1:  # locked sb picks - trumped?
+            if max_wins - user_picks[user].max_wins == 1:
+                for leader in max_win_users:
+                    if user_picks[leader].picks[13] == user_picks[user].picks[13]:
+                        eliminated_list.append(user)  # can't catch them
+
         elif max_game == 12 and game_dict[12].locked == 1:  # we've locked conf picks - see who may get trumped
             if max_wins - user_picks[user].max_wins == 3:  # you need to be completely opposite all leaders
                 for leader in max_win_users:
@@ -1573,11 +1585,6 @@ def pickem_all_picks():
                 for leader in max_win_users:
                     if user_picks[leader].picks[11] == user_picks[user].picks[11] and user_picks[leader].picks[12] == user_picks[user].picks[12]:
                         eliminated_list.append(user)  # needed at least 1 diff
-        elif max_game == 13 and game_dict[13].locked == 1:  # locked sb picks - trumped?
-            if max_wins - user_picks[user].max_wins == 1:
-                for leader in max_win_users:
-                    if user_picks[leader].picks[13] == user_picks[user].picks[13]:
-                        eliminated_list.append(user)  # can't catch them
 
     winner = []
     tie_break_log = []
@@ -1654,7 +1661,7 @@ def pickem_admin():
     season = 2021
 
     game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "WC 5", "WC 6", "DIV 7", "DIV 8", "DIV 9", "DIV 10", "CONF 11", "CONF 12", "Super Bowl"]
-    game_group_list = ["WC-Sat", "WC-Sun", "DIV", "CONF", "Super Bowl"]
+    game_group_list = ["WC-Sat", "WC-Sun", "DIV-Sat", "DIV-Sun", "CONF", "Super Bowl"]
     return render_template("pickem_admin.html", game_name_list=game_name_list, game_group_list=game_group_list, season=season)
 
 @app.route("/lock_pickem_game", methods=["GET", "POST"])
@@ -1668,7 +1675,7 @@ def lock_pickem_game():
     else:
         return apology("lock or unlock?  which is it??")
 
-    games_dict = {"WC-Sat" : (1,2,3), "WC-Sun": (4,5,6), "DIV" : (7,8,9,10), "CONF" : (11,12), "Super Bowl" : (13,)}
+    games_dict = {"WC-Sat" : (1,2,3), "WC-Sun": (4,5,6), "DIV-Sat" : (7,8), "DIV-Sun" : (9,10), "CONF" : (11,12), "Super Bowl" : (13,)}
     game_tup = (lock, ) + games_dict[game_name]
 
     param_string = ''
