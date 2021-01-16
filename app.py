@@ -1432,6 +1432,18 @@ def pickem_game_list():
 @login_required
 def pickem_all_picks():
     season = 2021
+
+    # see who is eliminated
+    g = "SELECT max(gameid) FROM pickem.pickem_scores;"
+    max_game = db2(g)[0][0]
+    if max_game:
+        games_left = 13 - max_game
+    else:
+        games_left = 13
+        max_game = 0
+    print("max game {}".format(max_game))
+    eliminated_list = []
+
     
     # first get all active/locked games (you can only show locked games to others)
     game_dict = get_pickem_games(season, True)
@@ -1465,6 +1477,7 @@ def pickem_all_picks():
 
     user_pick_list = []  # only used for deduping picks 
     user_picks = {} # dictionary of user objects 
+    user_picks_unplayed = {} # dictionary of non played games used for elimination analysis
     current_user = session['userid']
 
     u = "SELECT userid, username FROM users WHERE active = 1;"
@@ -1480,6 +1493,10 @@ def pickem_all_picks():
                     user_picks[username].picks[pick[2]] = pick[3]       # and set it's first pick
                 else:
                     user_picks[username].picks[pick[2]] = pick[3]       # obj already exists, add new game and it's pick
+            if username not in user_picks_unplayed and pick[2] > max_game:  # locked but unplayed game, add to dict for elimination check
+                user_picks_unplayed[username] = [pick[3]]
+            elif pick[2] > max_game:
+                user_picks_unplayed[username].append(pick[3])
 
         else: # add them, but hidden
             if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
@@ -1489,6 +1506,8 @@ def pickem_all_picks():
                     user_picks[username].picks[pick[2]] = "hidden"      # and set it's first pick
                 else:
                     user_picks[username].picks[pick[2]] = "hidden"      # obj already exists, add new game and it's pick
+
+    print("userpicks unplayed {}".format(user_picks_unplayed))
 
     # add pickem users who haven't selected any picks yet - for tracking
     uid = "SELECT userid FROM users WHERE is_pickem_user = 1"
@@ -1522,17 +1541,6 @@ def pickem_all_picks():
     check = '\u2714'
     ex = '\u274c'
 
-    # see who is eliminated
-    g = "SELECT max(gameid) FROM pickem.pickem_scores;"
-    max_game = db2(g)[0][0]
-    if max_game:
-        games_left = 13 - max_game  
-    else:
-        games_left = 13
-        max_game = 0
-    print("max game {}".format(max_game))
-    eliminated_list = []
-
     max_wins = 0  # this is the most someone has NOW
     max_win_users = []  # and who has that amount NOW
 
@@ -1553,22 +1561,12 @@ def pickem_all_picks():
 
     for user in user_picks:
         # how far behind?
-        wins_behind = max_wins - user_picks[user].max_wins
+        wins_behind = max_wins - user_picks[user].win_count
+        diff = games_left - wins_behind # if number of matching picks with leader > diff - eliminated
+
         # see who's eliminated...
         if user_picks[user].max_wins < max_wins:  # easy - you can't possibly catch the leader
             eliminated_list.append(user)
-
-        #### elimination rules after conf or sb picks 
-        ####                                          
-        #### max_game == 12.. means we have locked conf picks
-        #### rules are:
-        #### if i'm 3 behind, i need to be completely opposite all of the leaders
-        #### if i'm 2 behind, i need to have at least 1 different from all of leaders
-        #### if i'm 1 behind, i'm still alive no matter what before the games start
-        ####  ----------- next -----------
-        #### max_game == 13.. means we have locked sb picks (1 game left)
-        #### if i'm 1 behind, i need to be opposite all leaders
-        #### ----------- thats it --------
 
         elif max_game == 13 and game_dict[13].locked == 1:  # locked sb picks - trumped?
             if max_wins - user_picks[user].max_wins == 1:
@@ -1585,6 +1583,16 @@ def pickem_all_picks():
                 for leader in max_win_users:
                     if user_picks[leader].picks[11] == user_picks[user].picks[11] and user_picks[leader].picks[12] == user_picks[user].picks[12]:
                         eliminated_list.append(user)  # needed at least 1 diff
+        
+        else:
+            for player in max_win_users:
+                match = 0
+                for p in user_picks_unplayed[player]:
+                    if p in user_picks_unplayed[user]:
+                        match += 1
+                if match > diff:  # you need your win differential to be greater than matching picks, otherwise see ya!
+                    eliminated_list.append(user)    
+    
 
     winner = []
     tie_break_log = []
