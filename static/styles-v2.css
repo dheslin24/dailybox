@@ -118,6 +118,11 @@ main td.locked_pick {
     font-weight: bold;
 }
 
+main td.eliminated {
+    width: 60px;
+    color: red;
+}
+
 main td.pick > input {
     width: 60px;
     background-color: #aaa;
