@@ -1545,10 +1545,13 @@ def pickem_all_picks():
     max_win_users = []  # and who has that amount NOW
 
     for user in user_picks:
+        no_pick_count = 0
         # add win totals to user object
         for game in user_picks[user].picks:
             if game_dict[game].winner.upper() == user_picks[user].picks[game] and user_picks[user].picks[game] != '':
                 user_picks[user].win_count += 1
+            elif user_picks[user].picks[game] == 'x':
+                no_pick_count += 1
 
         if user_picks[user].win_count > max_wins:
             max_wins = user_picks[user].win_count
@@ -1557,7 +1560,7 @@ def pickem_all_picks():
             max_win_users.append(user)
         
         # eliminated?
-        user_picks[user].max_wins = user_picks[user].win_count + games_left
+        user_picks[user].max_wins = user_picks[user].win_count + games_left - no_pick_count
 
     for user in user_picks:
         # how far behind?

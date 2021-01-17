@@ -1,0 +1,221 @@
+.container
+{
+    /* center contents */
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+/* colors for navbar */
+.navbar-default .navbar-brand .blue
+{
+    color: #537fbe;
+}
+.navbar-default .navbar-brand .red
+{
+    color: #ea433b;
+}
+.navbar-default .navbar-brand .yellow
+{
+    color: #f5b82e;
+}
+.navbar-default .navbar-brand .green
+{
+    color: #2e944b;
+}
+
+.floater {
+    margin: 5px;
+    float: right;
+}
+
+main .form-control
+{
+    /* center form controls */
+    display: inline-block;
+
+    /* override Bootstrap's 100% width for form controls */
+    width: auto;
+}
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}
+
+main th
+{
+    padding: 5px;
+    border-spacing: 5px;
+    text-align: center;
+    background-color: #aaa;
+    border: 3px solid black;
+}
+
+main td
+{
+    /* left-align tables' cells */
+    text-align: center;
+    border: 2px solid black;
+    font-size: 12px;
+    padding: 5px 5px 5px 5px;
+    background-color: #ccc;
+}
+
+.bordercell {
+    background-color: #aaa;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #ccc;
+    border-top: #ccc;
+}
+
+main table
+{
+    border-spacing: 1px;
+    border-collapse: collapse;
+    border: 8px solid black;
+}
+
+main td.team {
+    width: 60px;
+    background-color: lightgreen;
+}
+
+main td.locked_team {
+    width: 60px;
+    background-color: #ccc;
+}
+
+main td.team:hover {
+    background-color: black;
+    color: white;
+    cursor: pointer;
+}
+
+main td.ptd {
+    width: 100px;
+    background-color: lightgreen;
+}
+
+main td.locked_ptd {
+    width: 100px;
+    background-color: #ccc;
+}    
+
+main td.pick {
+    width: 60px; 
+    background-color: #aaa;
+    border-left-width: thick;
+    font-weight: bold;
+}
+
+main td.locked_pick {
+    width: 60px;
+    background-color: #ccc;
+    border-left-width: thick;
+    font-weight: bold;
+}
+
+main td.eliminated {
+    width: 60px;
+    color: red;
+}
+
+main td.pick > input {
+    width: 60px;
+    background-color: #aaa;
+    font-size: 16px;
+    border: 0px;
+    text-align: center;
+}
+
+main input[type=submit] {
+    background-color: black;
+    border: 1px black;
+    border-radius: 4px;
+    width: 30px;
+    color: white;
+}
+
+main input[type=submit].pick {
+    background-color: black;
+    border: 2px black;
+    border-radius: 25px;
+    width: 200px;
+    color: white;
+    margin: 20px;
+    padding: 20px;
+}
+
+main td.loser {
+    background: lightcoral;
+    font-weight: bold;
+}
+
+main td.winner {
+    background: lightgreen;
+    font-weight: bold;
+}
+ 
+main td.current_user {
+    background: navy;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    font-size: 16px;
+    border-size: 8px;
+}
+
+main td.winning_user {
+    background: green;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    font-size: 18px;
+    border-size: 8px;
+}
+
+main td.winner_cu {
+    background: green;
+    font-weight: bold;
+    color: white;
+    font-size: 16px;
+    border-size: 8px;
+}
+
+main td.loser_cu {
+    background: red;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    border-size: 8px;
+}
+    
+main td.payment {
+    font-size: 24px;
+}
+
+.drowdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content a {
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #ddd
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+div .img {
+    display: inline-block;
+}
