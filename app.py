@@ -1495,7 +1495,7 @@ def pickem_all_picks():
                     user_picks[username].picks[pick[2]] = pick[3]       # obj already exists, add new game and it's pick
             if username not in user_picks_unplayed and pick[2] > max_game and game_dict[pick[2]].locked == 1:  # locked but unplayed game, add to dict for elimination check
                 user_picks_unplayed[username] = [pick[3]]
-            elif pick[2] > max_game:
+            elif pick[2] > max_game and game_dict[pick[2]].locked == 1:
                 user_picks_unplayed[username].append(pick[3])
 
         else: # add them, but hidden
