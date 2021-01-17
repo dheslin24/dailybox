@@ -1571,7 +1571,6 @@ def pickem_all_picks():
         if user_picks[user].max_wins < max_wins:  # easy - you can't possibly catch the leader
             eliminated_list.append(user)
 
-    '''
         elif max_game == 13 and game_dict[13].locked == 1:  # locked sb picks - trumped?
             if max_wins - user_picks[user].max_wins == 1:
                 for leader in max_win_users:
@@ -1590,14 +1589,14 @@ def pickem_all_picks():
         
         else:
             for leader in max_win_users:
-                match = 0
-                for p in user_picks_unplayed[leader]:
-                    if p in user_picks_unplayed[user]:
-                        match += 1
-                if match > diff:  # you need your win differential to be greater than matching picks, otherwise see ya!
-                    eliminated_list.append(user)    
+                if user_picks_unplayed:
+                    match = 0
+                    for p in user_picks_unplayed[leader]:
+                        if p in user_picks_unplayed[user]:
+                            match += 1
+                    if match > diff:  # you need your win differential to be greater than matching picks, otherwise see ya!
+                        eliminated_list.append(user)    
                 
-    ''' 
 
     winner = []
     tie_break_log = []
