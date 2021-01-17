@@ -1953,44 +1953,44 @@ def index():
 def register():
     """Register user."""
 
-    return(apology("sorry, closed to new entries.  where were you on tuesday when we could've used you??  too bad."))
+    return(apology("Sorry, We have closed this for new entries. We were last opened on tuesday. Sorry :/"))
 
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
         # ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username")
+            return apology("Please provide your username")
 
         # ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password")
+            return apology("Please provide your password (We keep this info safe)")
 
         # ensure password was confirmed
         elif not request.form.get("password_confirm"):
-            return apology("must confirm password")
+            return apology("Please confirm your email. Just an extra step to prevent typos :)")
 
         # ensure email was submitted
         elif not request.form.get("email"):
-            return apology("must enter email")
+            return apology("Please provide your email.")
 
         # ensure email was submitted
         elif not request.form.get("first_name"):
-            return apology("must enter first name")
+            return apology("Please provide your first name.")
 
         # ensure email was submitted
         elif not request.form.get("last_name"):
-            return apology("must enter last name")
+            return apology("Please provide your last name")
 
         # ensure email was submitted
         elif not request.form.get("mobile"):
-            return apology("must enter mobile number")
+            return apology("Please provide your mobile phone number.")
 
         # encrypt password
         if request.form.get("password") == request.form.get("password_confirm"):
             hash = pwd_context.hash(request.form.get("password"))
         else:
-            return apology("password confirmation does not match")
+            return apology("Please check your password confirmation, they do not match.")
         print("got here insert user")
 
         s = "SELECT userid FROM users WHERE username = %s;"
