@@ -1477,6 +1477,7 @@ def pickem_all_picks():
 
     user_pick_list = []  # only used for deduping picks 
     user_picks = {} # dictionary of user objects 
+    user_picks_unplayed_list = []  # only used for deduping
     user_picks_unplayed = {} # dictionary of non played games used for elimination analysis
     current_user = session['userid']
 
@@ -1493,10 +1494,12 @@ def pickem_all_picks():
                     user_picks[username].picks[pick[2]] = pick[3]       # and set it's first pick
                 else:
                     user_picks[username].picks[pick[2]] = pick[3]       # obj already exists, add new game and it's pick
-            if username not in user_picks_unplayed and pick[2] > max_game and game_dict[pick[2]].locked == 1:  # locked but unplayed game, add to dict for elimination check
-                user_picks_unplayed[username] = [pick[3]]
-            elif pick[2] > max_game and game_dict[pick[2]].locked == 1:
-                user_picks_unplayed[username].append(pick[3])
+            if (pick[1], pick[2]) not in user_picks_unplayed_list:  # make sure latest pick for user
+                user_picks_unplayed_list.append((pick[1], pick[2]))
+                if username not in user_picks_unplayed and pick[2] > max_game and game_dict[pick[2]].locked == 1:  # locked but unplayed game, add to dict for elimination check
+                    user_picks_unplayed[username] = [pick[3]]
+                elif pick[2] > max_game and game_dict[pick[2]].locked == 1:
+                    user_picks_unplayed[username].append(pick[3])
 
         else: # add them, but hidden
             if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
