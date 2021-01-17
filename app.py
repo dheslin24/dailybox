@@ -1589,7 +1589,7 @@ def pickem_all_picks():
         
         else:
             for leader in max_win_users:
-                if user_picks_unplayed:
+                if len(user_picks_unplayed) > 0:
                     match = 0
                     for p in user_picks_unplayed[leader]:
                         if p in user_picks_unplayed[user]:
