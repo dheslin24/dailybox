@@ -168,6 +168,15 @@ main td.current_user {
     border-size: 8px;
 }
 
+main td.current_user_elim {
+    background: navy;
+    font-weight: bold;
+    text-align: center;
+    color: red;
+    font-size: 16px;
+    border-size: 8px;
+}
+
 main td.winning_user {
     background: green;
     font-weight: bold;
