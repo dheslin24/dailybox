@@ -1905,19 +1905,29 @@ def login():
             username = request.form.get("username")
         # query database for username
         # s = "SELECT username, password, userid FROM users WHERE username = '{}'".format(request.form.get("username"))
-        s2 = "SELECT username, password, userid FROM users WHERE username = %s and active = 1"
+        s2 = "SELECT username, password, userid, failed_login_count FROM users WHERE username = %s and active = 1"
         # user = db(s)
         user = db2(s2, (username,))
         if len(user) != 0:
             u = user[0][0]
             p = user[0][1]
             uid = user[0][2]
-            print(u, uid, len(u))
+            failures = user[0][3]
+            print(u, uid, failures, len(u))
+
+            if failures > 9:
+                return apology("{}x??  man... you really have no clue what your password is..  you're locked out now even if you get it right - good job.  talk to TW (or if you are JZ trying brute force.. just stop - thanks)".format(failures))
 
             # ensure username exists and password is correct
             if not pwd_context.verify(request.form.get("password"), p):
+                failures += 1
+                s = "UPDATE users SET failed_login_count = %s WHERE userid = %s;"
+                db2(s, (failures, uid))
                 print('return invalid username or pwd here')
-                return apology("Invalid username and/or password. \nReach out to customer support (TW) to reset.")
+                if failures == 10:
+                    return apology("That's it - you're done.  No more.. talk to TW.. BYE")
+                else:
+                    return apology(Markup("Failed login attempt {} of 10. <br><br>You're a portly fellow.. a bit long in the waistband?  So what's your pleasure; is it the salty snacks you crave?<br>No, no, no, no... yours is a sweet-tooth.  Oh, you may stray, but you'll always return to your dark master:  the cocoa-bean!<br><br><br>Try BOSCO... or reach out to customer support (TW) to reset.".format(failures)))
         else:
             return apology("username does not exist")
 
@@ -1925,6 +1935,10 @@ def login():
         session["userid"] = uid
         session["username"] = u
         print("userid is: {}".format(uid))
+
+        # reset fail count to 0 - you made it!
+        s = "UPDATE users SET failed_login_count = 0 WHERE userid = %s;"
+        db2(s, (uid,))
 
         # redirect user to home page
         return redirect(url_for("index"))
@@ -2055,7 +2069,7 @@ def user_reset():
     else:
         return apology("password confirmation does not match")
 
-    s = "UPDATE users SET password = '{}' WHERE username = '{}';".format(hash, username)
+    s = "UPDATE users SET password = '{}', failed_login_count = 0 WHERE username = '{}';".format(hash, username)
     db(s)
 
     return redirect(url_for("admin_summary"))
