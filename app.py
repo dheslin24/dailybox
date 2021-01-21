@@ -1916,6 +1916,7 @@ def login():
             print(u, uid, failures, len(u))
 
             if failures > 9:
+                logging.info("{} - {} just keeps trying to login".format(u, uid))
                 return apology("{}x??  man... you really have no clue what your password is..  you're locked out now even if you get it right - good job.  talk to TW (or if you are JZ trying brute force.. just stop - thanks)".format(failures))
 
             # ensure username exists and password is correct
@@ -1923,6 +1924,7 @@ def login():
                 failures += 1
                 s = "UPDATE users SET failed_login_count = %s WHERE userid = %s;"
                 db2(s, (failures, uid))
+                logging.info("{} - {} just had failed login attempt {}".format(u, uid, failures))
                 print('return invalid username or pwd here')
                 if failures == 10:
                     return apology("That's it - you're done.  No more.. talk to TW.. BYE")
@@ -2043,7 +2045,7 @@ def register():
         print(session["userid"])
         print(session["username"])
 
-        logger.info("{} just registered".format(session["username"]))
+        logging.info("{} just registered".format(session["username"]))
 
         # redirect user to home page
         return redirect(url_for("index"))
