@@ -2160,7 +2160,7 @@ def payment_status():
     for _ in box_list:
         box_string += _
     box_string = box_string[:-2]
-    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1 or boxid between 26 and 35;".format(box_string)
+    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1;".format(box_string)
     all_boxes = db(box)
     #print(all_boxes)
     user_box_count = {}
