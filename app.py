@@ -1966,7 +1966,13 @@ def index():
 
     logging.info("{} logged in".format(session["username"]))
 
-    return render_template("index.html", grid=grid, x=x_nums, y=y_nums)
+    return render_template("landing_page.html", grid=grid, x=x_nums, y=y_nums)
+
+# new landing page - redirect btwn pickem & boxes
+@app.route("/landing_page", methods=["GET", "POST"])
+@login_required
+def landing_page():
+    return render_template("landing_page.html")
 
 # REGISTER new user
 @app.route("/register", methods=["GET", "POST"])
