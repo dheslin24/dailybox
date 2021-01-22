@@ -201,6 +201,14 @@ main td.loser_cu {
     font-size: 16px;
     border-size: 8px;
 }
+
+main td.landing {
+    width: 500px; 
+    height: 500px;
+    background: white;
+    font-size: 24px;
+    cursor: pointer;
+}
     
 main td.payment {
     font-size: 24px;
