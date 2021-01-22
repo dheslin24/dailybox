@@ -1678,7 +1678,7 @@ def pickem_admin():
     season = 2021
 
     game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "WC 5", "WC 6", "DIV 7", "DIV 8", "DIV 9", "DIV 10", "CONF 11", "CONF 12", "Super Bowl"]
-    game_group_list = ["WC-Sat", "WC-Sun", "DIV-Sat", "DIV-Sun", "CONF", "Super Bowl"]
+    game_group_list = ["WC-Sat", "WC-Sun", "DIV-Sat", "DIV-Sun", "CONF-NFC", "CONF-AFC", "Super Bowl"]
     return render_template("pickem_admin.html", game_name_list=game_name_list, game_group_list=game_group_list, season=season)
 
 @app.route("/lock_pickem_game", methods=["GET", "POST"])
@@ -1692,7 +1692,7 @@ def lock_pickem_game():
     else:
         return apology("lock or unlock?  which is it??")
 
-    games_dict = {"WC-Sat" : (1,2,3), "WC-Sun": (4,5,6), "DIV-Sat" : (7,8), "DIV-Sun" : (9,10), "CONF" : (11,12), "Super Bowl" : (13,)}
+    games_dict = {"WC-Sat" : (1,2,3), "WC-Sun": (4,5,6), "DIV-Sat" : (7,8), "DIV-Sun" : (9,10), "CONF-NFC" : (11,), "CONF-AFC" : (12,), "Super Bowl" : (13,)}
     game_tup = (lock, ) + games_dict[game_name]
 
     param_string = ''
