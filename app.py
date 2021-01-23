@@ -1546,6 +1546,7 @@ def pickem_all_picks():
 
     max_wins = 0  # this is the most someone has NOW
     max_win_users = []  # and who has that amount NOW
+    second_best_users = [] # will check top 2 scores
 
     for user in user_picks:
         no_pick_count = 0
@@ -1558,9 +1559,15 @@ def pickem_all_picks():
 
         if user_picks[user].win_count > max_wins:
             max_wins = user_picks[user].win_count
+            if len(max_win_users) > 0:
+                second_best_users = max_win_users  # swap out max to second
             max_win_users = [user]
+            
         elif user_picks[user].win_count == max_wins:
             max_win_users.append(user)
+
+        elif user_picks[user].win_count == max_wins -1:
+            second_best_users.append(user)
         
         # eliminated?
         user_picks[user].max_wins = user_picks[user].win_count + games_left - no_pick_count
@@ -1599,6 +1606,15 @@ def pickem_all_picks():
                             match += 1
                     if match > diff:  # you need your win differential to be greater than matching picks, otherwise see ya!
                         eliminated_list.append(user)    
+
+            for runnerup in second_best_users:
+                if len(user_picks_unplayed) > 0:
+                    match = 0
+                    for p in user_picks_unplayed[runnerup]:
+                        if p in user_picks_unplayed[user]:  
+                            match += 1
+                    if match > diff + 1:  # comparing against 2nd best here, so 1 higher
+                        eliminated_list.append(user)
                 
 
     winner = []
@@ -1703,6 +1719,40 @@ def lock_pickem_game():
     s = "UPDATE pickem.games SET locked = %s WHERE gameid in ({});".format(param_string)
     db2(s, game_tup) 
     print("setting game {} lock status to {}".format(game_name, lock))
+
+    # set anyone who hasn't picked to 'x'
+    # 1. what is the first current game, and last game from last period?
+    #    - so gamedict gamename [0] and gamename [0]-1... if gamename [0] is not 1 (first period)
+    # 2. get full list of users with picks in last round
+    #    - if had last round and no pick this round, make x
+    picks = "nothin yet"
+    current_game = games_dict[game_name][0]
+    if current_game != 1 and lock == 1:
+        last_game = current_game - 1
+        s = "SELECT userid, gameid, pick FROM pickem.userpicks WHERE gameid in ({}, {}) ORDER BY pickid DESC;".format(last_game, current_game)
+        picks = db2(s) 
+
+        user_dict = {}
+        for user in picks:
+            if user[0] not in user_dict:
+                user_dict[user[0]] = {user[1] : user[2]}
+            elif user[1] not in user_dict[user[0]]:  # do not overwrite if multiple picks for a game, only use the first (really last) as we sorted by pickid desc
+                user_dict[user[0]][user[1]] = user[2]
+
+        print(user_dict)
+
+        x_list = []
+        for u in user_dict:
+            if current_game not in user_dict[u]:
+                x_list.append(u)
+            
+        print(x_list)
+         
+        print(picks)
+        
+        for x in x_list:
+            u = "INSERT INTO pickem.userpicks (userid, season, gameid, pick) VALUES ({}, 2021, {}, 'x');".format(x, current_game)
+            db2(u)
 
     return redirect(url_for('pickem_admin'))
     
