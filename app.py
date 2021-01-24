@@ -628,6 +628,7 @@ def display_box():
     else:
         boxid = request.args['boxid']
         
+    logging.info("user {} just ran display_box for boxid {}".format(session['username'], boxid))
     s = "SELECT * FROM boxes where boxid = {};".format(boxid)
     box = list(db(s))[0]
     box_type = box[2]
@@ -938,6 +939,7 @@ def select_box():
             if box_type != 3:
                 s = "UPDATE boxes SET box{}= 1 WHERE boxid = {};".format(box_num, boxid)
                 db(s)
+                logging.info("user {} just unselected box {} in boxid {}".format(session['username'], box_num, boxid))
             else:
                 box_list.append(box_num) #still append, to eventually set back to 1 on all gobble boxes
 
@@ -990,6 +992,7 @@ def select_box():
             # assign box to user
             s = "UPDATE boxes SET box{}={} WHERE boxid = {};".format(b, session['userid'], boxid)
             db(s)
+            logging.info("user {} just picked box {} in boxid {}".format(session['username'], b, boxid))
 
         # update balance
         # new_bal = balance - (fee * len(box_list))
