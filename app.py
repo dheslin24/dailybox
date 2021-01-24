@@ -811,10 +811,9 @@ def display_box():
             winners = db(s)
             max_score_num = 1
             final_payout = (int(fee) * 100) - (max_score_num * (fee * 3)) - (fee * 10)
+            winner_dict = {}
             
             if len(winners) != 0:
-                winner_dict = {}
-                
                 for w in winners:
                     if w[0] >= max_score_num and w[0] < 100:
                         max_score_num = w[0]
@@ -854,7 +853,9 @@ def display_box():
             else:
                 final_payout = (fee * 100) - (fee * 10) - (fee * 3)  # total pool - reverse - 0/0 
 
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winning_dict=winning_dict)
+        winner_dict = {}
+
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict)
 
 
     if box_type == 1:

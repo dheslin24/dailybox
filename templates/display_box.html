@@ -67,11 +67,13 @@
         <!--
         <tr><td style="background-color: #aaa" colspan="12"><strong style="font-size:  30px; letter-spacing: 5px">{{ home[0:3] }}</td></tr>
         -->
-        <tr><td class="{{ home }}" colspan="12"><strong style="font-size:  30px; letter-spacing: 5px">{{ home[0:3] }}</td></tr>
         <tr>
-        <td style="background-color: #aaa; font-size: 20px" colspan="2">Box: {{ boxid }} </td>
+        <td class="BYG" colspan="2" style="border-bottom: solid blue;"><strong style="font-size: 30px;">BYG</td>
+        <td class="{{ home }}" colspan="10" style="border-bottom: solid black;"><strong style="font-size:  30px; letter-spacing: 5px">{{ home[0:3] }}</td></tr>
+        <tr>
+        <td class="BYG" colspan="2" style="border-bottom: 1px solid black;">Box: {{ boxid }} </td>
         {% for num in x %}
-            <h1><td><strong style="font-size: 30px"> {{ x[loop.index0|string] }} </strong></td></h1>
+            <h1><td class="{{ home }}"><strong style="font-size: 30px"> {{ x[loop.index0|string] }} </strong></td></h1>
         {% endfor %}
         </tr>
         </h1>
@@ -90,7 +92,7 @@
             <h1><td class="bordercell"><strong style="font-size: 30px"> {{ away_team[loop.index0|string] }} </strong></td></h1>
             -->
             <h1><td class="{{ away }}"><strong style="font-size: 30px"> {{ away_team[loop.index0|string] }} </strong></td></h1>
-            <h1><td><strong style="font-size: 30px"> {{ y[loop.index0|string] }} </strong></td></h1>
+            <h1><td class="{{ away }}" style="border-bottom: 2px solid black;"><strong style="font-size: 30px"> {{ y[loop.index0|string] }} </strong></td></h1>
             {% for box in row %}
                 {% if box[1] == session['username'] %}
                 <td class="user_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
@@ -101,7 +103,7 @@
                     {{- box[1] -}}
                     </form>
                 </td>
-                {% elif box[1] in winning_dict %}
+                {% elif box[1] in winner_dict %}
                 <td class="winning_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
                     <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
                     <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
