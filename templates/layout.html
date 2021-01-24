@@ -16,7 +16,7 @@
         <!-- documentation at http://getbootstrap.com/, alternative themes at https://www.bootstrapcdn.com/bootswatch/ -->
         <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
 
-        <link href="{{ url_for('static', filename='styles-v3.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='styles-v4.css') }}" rel="stylesheet"/>
 
         <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -29,6 +29,8 @@
 
         <!-- app's own JavaScript -->
         <script src="{{ url_for('static', filename='scripts-v6_nosnow.js') }}" defer></script>  
+
+        <!--
         <script type="text/javascript">
         $(document).ready(function(){
             $("#grid td.user_box:contains('{{ session['username'] }}')").css('background-color','#5DADE2');
@@ -36,17 +38,13 @@
         </script>
         <script type="text/javascript">
         $(document).ready(function(){
-            $("#grid td.user_box:contains('Open')").css('background-color','#fff');
+            $("#grid td.user_box:contains(' ')").css('background-color','#fff');
         });
         </script>
         <script type="text/javascript">
         $(document).ready(function(){
             $("#grid td.user_box:contains('WINNER')").css('background-color','#28B463');
         });
-        </script>
-        <!--
-        <script type="text/javascript">
-        $(document).ready(myMove());
         </script>
         -->
 
