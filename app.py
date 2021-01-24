@@ -206,7 +206,7 @@ def payout_calc(pay_type, fee):
     elif pay_type == 7:
         s = 'Final: {}  /  Reverse Final: {}'.format(int((fee * 10) *.75), int((fee * 10) *.25))
     elif pay_type == 3:
-        s = 'Every Score Wins {}.  \nReverse Final Wins {}.  \nFinal gets the remainder.'.format(fee * 3, fee * 10)
+        s = Markup('Every Score Wins {} up to 28 scores.  Reverse Final Wins {}.  <br>Anything touching reverse or final wins {}.  Final gets the remainder.'.format(fee * 3, fee * 10, fee))
     else:
         s = 'Payouts for Game Type not yet supported' # will add later date
 
@@ -623,7 +623,6 @@ def custom_game_list():
 @app.route("/display_box", methods=["GET", "POST"])
 @login_required
 def display_box():
-    #sf = {'0':'', '1':'', '2':'', '3':'', '4':'S', '5':'F', '6':'', '7':'', '8':'', '9':''}
     if request.method == "POST":
         boxid = request.form.get('boxid')
     else:
@@ -659,9 +658,13 @@ def display_box():
     away_team = {}
     for i in range(10):
         away_team[str(i)] = ''
-    away_team['3'] = away[0]
-    away_team['4'] = away[1]
-    away_team['5'] = away[2]
+    if len(away) == 3:
+        away_team['3'] = away[0]
+        away_team['4'] = away[1]
+        away_team['5'] = away[2]
+    else:
+        away_team['4'] = away[0]
+        away_team['5'] = away[1]
 
 
     # create a dict of userid:username
@@ -677,7 +680,7 @@ def display_box():
         l = []
         for x in box[7 + row : 17 + row]:
             if x == 1 or x == 0:
-                x = 'Open'
+                x = ' '
                 avail += 1
             else:
                 #s = "SELECT username FROM users where userid = {};".format(x)
@@ -803,6 +806,7 @@ def display_box():
             return apology("something went wrong with winner calculations")
 
         if ptype == 3:
+            print("paytype == 3 i'm here")
             s = "SELECT score_num, winning_box FROM everyscore where boxid = {};".format(boxid) ## finish
             winners = db(s)
             max_score_num = 1
@@ -845,10 +849,13 @@ def display_box():
                         y_win = '0'
     
                     winner_username = grid[int(y_win)][int(x_win)][1]
-                    winner_markup = Markup('</br>WINNER</br>{}'.format(cash))
-                    grid[int(y_win)][int(x_win)] = (winning_box, winner_username + winner_markup)
+                    winner_markup = Markup('</br>{}'.format(cash))
+                    grid[int(y_win)][int(x_win)] = (winner_username + winner_markup)
             else:
                 final_payout = (fee * 100) - (fee * 10) - (fee * 3)  # total pool - reverse - 0/0 
+
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winning_dict=winning_dict)
+
 
     if box_type == 1:
         sf = ['' for x in range(10)]
@@ -856,6 +863,7 @@ def display_box():
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, sf=sf, home=home, away=away, away_team=away_team)
     else:
         print("xy {} {}".format(x,y))
+        print("home/away: {} {}".format(home,away))
         final_payout = 'Current Final Payout: ' + str(final_payout)
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection)
 
@@ -926,7 +934,7 @@ def select_box():
             # first - if rand_list len == 0, game has started, can't undo
             if len(rand_list) == 0:
                 return apology("Really??  numbers were drawn - can't undo now - too late!!")
-            if pay_type != 3:
+            if box_type != 3:
                 s = "UPDATE boxes SET box{}= 1 WHERE boxid = {};".format(box_num, boxid)
                 db(s)
             else:
