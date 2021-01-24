@@ -680,7 +680,7 @@ def display_box():
         l = []
         for x in box[7 + row : 17 + row]:
             if x == 1 or x == 0:
-                x = ' '
+                x = '          '
                 avail += 1
             else:
                 #s = "SELECT username FROM users where userid = {};".format(x)
