@@ -206,7 +206,7 @@ def payout_calc(pay_type, fee):
     elif pay_type == 7:
         s = 'Final: {}  /  Reverse Final: {}'.format(int((fee * 10) *.75), int((fee * 10) *.25))
     elif pay_type == 3:
-        s = Markup('Every Score Wins {} up to 27 scores.  Reverse final win TBD (see TW email).  <br>Anything touching reverse or final wins {}.  Final gets the remainder, min 1000.'.format(fee * 3, fee))
+        s = Markup('Every Score Wins {} up to 27 scores.  Final gets remainder after all payouts, min 1000.  <br>Reverse final wins min 100 / max 1000 (see TW email).  Anything touching reverse or final wins {}.'.format(fee * 3, fee))
     else:
         s = 'Payouts for Game Type not yet supported' # will add later date
 
