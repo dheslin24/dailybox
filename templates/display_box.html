@@ -100,7 +100,7 @@
                     <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
                     <input type="hidden" name="boxid", value="{{ boxid }}">
                     <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
-                    {{- box[1] -}}
+                    {{- box[1][:10] -}}
                     </form>
                 </td>
                 {% elif box[1] in winner_dict %}
@@ -109,7 +109,7 @@
                     <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
                     <input type="hidden" name="boxid", value="{{ boxid }}">
                     <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
-                    {{- box[1] -}}
+                    {{- box[1][:10] -}}
                     </form>
                 </td>
                 {% elif box[1] != ' ' %}
@@ -118,7 +118,7 @@
                     <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
                     <input type="hidden" name="boxid", value="{{ boxid }}">
                     <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
-                    {{- box[1] -}}
+                    {{- box[1][:10] -}}
                     </form>
                 </td>
                 {% else %}
@@ -127,7 +127,7 @@
                     <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
                     <input type="hidden" name="boxid", value="{{ boxid }}">
                     <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
-                    {{- box[1] -}}
+                    {{- box[1][:10] -}}
                     </form>
                 </td>
                 {% endif %}
