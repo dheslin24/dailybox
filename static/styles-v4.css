@@ -139,6 +139,15 @@ main td.locked_ptd {
     background-color: #ccc;
 }    
 
+main td.BYG {
+    background-color: blue;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: solid black;
+}
+
+
 main td.NFC {
     background-color: #013369;
     color: #D50A0A;
