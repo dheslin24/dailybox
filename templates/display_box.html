@@ -112,7 +112,7 @@
                     {{- box[1][:10] -}}
                     </form>
                 </td>
-                {% elif box[1] != ' ' %}
+                {% elif box[1] != '          ' %}
                 <td class="taken_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
                     <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
                     <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
