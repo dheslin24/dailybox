@@ -2240,11 +2240,25 @@ def payment_status():
                     user_box_count[box] = 1
                     user_fees[box] = fee
 
+    thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    middle_finger = '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    check = '\u2714'
+    ex = '\u274c'
+
     users = []
+    emoji = {}
     print("before {}".format(users_list))
     for user in users_list:
         if user[0] in user_fees:
             users.append(user)
+            if user[0] in [67, 113, 15]:
+                emoji[user[0]] = middle_finger
+            elif user_fees[user[0]] > paid[user[0]]:
+                emoji[user[0]] = ex
+            else:
+                emoji[user[0]] = check
+            
             
     print("after {}".format(users))
 
@@ -2255,9 +2269,7 @@ def payment_status():
     for admin in a:
         admins.append(admin[0])
 
-
-
-    return render_template("payment_status.html", users=users, d=user_box_count, fees=user_fees, paid=paid, admins=admins)
+    return render_template("payment_status.html", users=users, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji)
 
 @app.route("/mark_paid", methods=["GET", "POST"])
 def mark_paid():
