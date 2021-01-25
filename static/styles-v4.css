@@ -106,7 +106,7 @@ main td.box {
 
 main td.box:hover {
     background-color: lightblue;
-    color: white;
+    color: black;
     cursor: pointer;
 }
 

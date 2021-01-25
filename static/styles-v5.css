@@ -219,6 +219,262 @@ main td.BUF {
     border-top: #00338D;
 }
 
+main td.ARI {
+    background-color: #97233F;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #97233F;
+    border-top: #97233F;
+}
+
+main td.ATL {
+    background-color: #A71930;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #A71930;
+    border-top: #A71930;
+}
+
+main td.BAL {
+    background-color: #241773;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #241773;
+    border-top: #241773;
+}
+
+main td.CAR {
+    background-color: #0085CA;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0085CA;
+    border-top: #0085CA;
+}
+
+main td.CHI {
+    background-color: #0B162A;
+    color: #C83803;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0B162A;
+    border-top: #0B162A;
+}
+
+main td.CIN {
+    background-color: #FB4F14;
+    color: black;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #FB4F14;
+    border-top: #FB4F14;
+}
+
+main td.CLE {
+    background-color: #311D00;
+    color: #FF3C00;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #311D00;
+    border-top: #311D00;
+}
+
+main td.DAL {
+    background-color: #041E42;
+    color: #869397;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #041E42;
+    border-top: #041E42;
+}
+
+main td.DEN {
+    background-color: #FB4F14;
+    color: #002244;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #FB4F14;
+    border-top: #FB4F14;
+}
+
+main td.DET {
+    background-color: #0076B6;
+    color: #B0B7BC;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0076B6;
+    border-top: #0076B6;
+}
+
+main td.HOU {
+    background-color: #03202F;
+    color: #A71930;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #03202F;
+    border-top: #03202F;
+}
+
+main td.IND {
+    background-color: #002C5F;
+    color: #A2AAAD;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #002C5F;
+    border-top: #002C5F;
+}
+
+main td.JAX {
+    background-color: #006778;
+    color: #9F792C;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #006778;
+    border-top: #006778;
+}
+
+main td.LAC {
+    background-color: #0080C6;
+    color: #FFC20E;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0080C6;
+    border-top: #0080C6;
+}
+
+main td.LAR {
+    background-color: #003594;
+    color: #FFA300;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #003594;
+    border-top: #003594;
+}
+
+main td.MIA {
+    background-color: #008E97;
+    color: #FC4C02;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #008E97;
+    border-top: #008E97;
+}
+
+
+main td.MIN {
+    background-color: #4F2683;
+    color: #FFC62F;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #4F2683;
+    border-top: #4F2683;
+}
+
+main td.NE {
+    background-color: #002244;
+    color: #C60C30;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #002244;
+    border-top: #002244;
+}
+
+main td.NO {
+    background-color: #D3BC8D;
+    color: #101820;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #D3BC8D;
+    border-top: #D3BC8D;
+}
+
+main td.NYG {
+    background-color: #0B2265;
+    color: #A71930;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0B2265;
+    border-top: #0B2265;
+}
+
+main td.NYJ {
+    background-color: #125740;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #125740;
+    border-top: #125740;
+}
+
+main td.LV {
+    background-color: black;
+    color: #A5ACAF;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: black;
+    border-top: black;
+}
+
+main td.PHI {
+    background-color: #004C54;
+    color: #A5ACAF;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #004C54;
+    border-top: #004C54;
+}
+
+#FFB612
+main td.PIT {
+    background-color: #FFB612;
+    color: #101820;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #FFB612;
+    border-top: #FFB612;
+}
+
+main td.SF {
+    background-color: #AA0000;
+    color: #B3995D;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #AA0000;
+    border-top: #AA0000;
+}
+
+main td.SEA {
+    background-color: #002244;
+    color: #69BE28;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #002244;
+    border-top: #002244;
+}
+
+main td.TEN {
+    background-color: #0C2340;
+    color:  #4B92DB;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0C2340;
+    border-top: #0C2340;
+}
+
+main td.WAS {
+    background-color: #773141;
+    color:  #FFB612;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #773141;
+    border-top: #773141;
+}
+
+
+
 main td.pick {
     width: 60px; 
     background-color: #aaa;
