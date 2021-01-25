@@ -2248,8 +2248,30 @@ def payment_status():
             
     print("after {}".format(users))
 
+    # find list of admins who can update status
+    s = "SELECT userid FROM users WHERE is_admin = 1;"
+    a = db2(s)
+    admins = []
+    for admin in a:
+        admins.append(admin[0])
 
-    return render_template("payment_status.html", users=users, d=user_box_count, fees=user_fees, paid=paid)
+
+
+    return render_template("payment_status.html", users=users, d=user_box_count, fees=user_fees, paid=paid, admins=admins)
+
+@app.route("/mark_paid", methods=["GET", "POST"])
+def mark_paid():
+    userid = int(request.form.get("userid"))
+    paid = request.form.get("paid")
+    fees = int(request.form.get("fees"))
+    amt_paid = int(request.form.get("amt_paid"))
+
+    update_amt = fees - amt_paid
+
+    u = "UPDATE users SET amt_paid = %s WHERE userid = %s;"
+    db2(u, (update_amt, userid))
+
+    return redirect(url_for("payment_status"))
 
 @app.route("/admin_summary", methods=["GET", "POST"])
 def admin_summary():

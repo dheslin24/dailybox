@@ -36,12 +36,16 @@
         </tr>
             {% for row in game_list %}
             <tr>
-                <form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
-                <td><input type="submit" value="{{ row[0] }}" name="boxid"></td>
+                <td class="team" onClick="document.getElementById('{{ row[0] }}').submit()">
+                <form action="{{ url_for("display_box") }}", method="post", id="{{ row[0] }}">
+                <input type="hidden" value="{{ row[0] }}" name="boxid">
+                {{ row[0] }}
+                </form>
+                </td>
                 {% for field in row[1:] %}
                     <td>{{ field }}</td>
                 {% endfor %}
-                <td> {{ available[row[0]] }}
+                <td> {{ available[row[0]] }}</td>
             </tr>
             {% endfor %}
         </table>
