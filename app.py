@@ -850,7 +850,7 @@ def display_box():
     
                     winner_username = grid[int(y_win)][int(x_win)][1]
                     winner_markup = Markup('WINNER</br>{}</br>{}'.format(winner_username[:10], cash))
-                    grid[int(y_win)][int(x_win)] = (grid[int(y_win)][int(x_win)][0], winner_markup)
+                    grid[int(y_win)][int(x_win)] = (grid[int(y_win)][int(x_win)][0], winner_markup, winner_username)
 
                     print(winner_markup)
                     print("WINNER DICT!!")
