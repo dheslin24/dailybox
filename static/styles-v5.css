@@ -413,9 +413,9 @@ main td.LV {
     background-color: black;
     color: #A5ACAF;
     border-left: 5px green;
-    border-right: 2px solid black;
-    border-bottom: black;
-    border-top: black;
+    border-right: 2px solid #A5ACAF;
+    border-bottom: #A5ACAF;
+    border-top: #A5ACAF;
 }
 
 main td.PHI {
