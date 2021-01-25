@@ -560,7 +560,7 @@ def my_games():
                 else:
                     h_num = "TBD"
                     a_num = "TBD"
-                game_list.append((gameid,box_name,box_index,fee,pay_type,h_num,a_num))
+                game_list.append((gameid,box_name,box_index + 1,fee,pay_type,h_num,a_num))
 
             elif box == session['userid'] and active == 0:
                 completed_game_list.append((gameid,box_type,box_name,box_index,fee,pay_type,winner))
@@ -2231,7 +2231,7 @@ def payment_status():
         pay_type = game[1]
         if pay_type == 5 or pay_type == 6 or pay_type == 7:
             fee = fee // 10
-        for box in game[1:]:
+        for box in game[2:]:
             if box != 0 and box != 1:
                 if box in user_box_count.keys():
                     user_box_count[box] += 1
