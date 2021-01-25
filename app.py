@@ -855,6 +855,7 @@ def display_box():
                 final_payout = (fee * 100) - (fee * 10) - (fee * 3)  # total pool - reverse - 0/0 
 
         winner_dict = {}
+        print("home/away2 {} {}".format(home,away))
 
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict)
 
