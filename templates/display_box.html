@@ -84,18 +84,7 @@
             <h1><td class="{{ away }}"><strong style="font-size: 30px"> {{ away_team[outer_loop.index0|string] }} </strong></td></h1>
             <h1><td class="{{ away }}" style="border-bottom: 2px solid black;"><strong style="font-size: 30px"> {{ y[outer_loop.index0|string] }} </strong></td></h1>
             {% for box in row %}
-                {% if box[1] == session['username'] %}
-                <td class="user_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
-                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
-                    <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
-                    <input type="hidden" name="boxid", value="{{ boxid }}">
-                    <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
-                    {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
-                    <p class="corner"> {{ bnum }}</p>
-                    {{- box[1][:10] -}}
-                    </form>
-                </td>
-                {% elif box[1] in winner_dict %}
+                {% if box[1][:6] == 'WINNER' %} 
                 <td class="winning_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
                     <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
                     <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
@@ -103,6 +92,17 @@
                     <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
                     {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
                      <p class="corner"> {{ bnum }}</p>
+                    {{ box[1] }}<br><br>
+                    </form>
+                </td>
+                {% elif box[1] == session['username'] %}
+                <td class="user_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
+                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                    <!-- <input type="submit" value="{{- box[0]|int -}}" name="box_num"><br> </br>{{- box[1] -}} -->
+                    <input type="hidden" name="boxid", value="{{ boxid }}">
+                    <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                    {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                    <p class="corner"> {{ bnum }}</p>
                     {{- box[1][:10] -}}
                     </form>
                 </td>
