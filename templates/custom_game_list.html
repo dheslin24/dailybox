@@ -7,9 +7,10 @@
 {% block main %}
     <h1>
         <p>
-            Superbowl Boxes (Coming Soon) <br>
+            Superbowl Boxes <br>
         </p>
     </h1>
+            Click on game ID in green to join <br>
 
     <a href="{{ url_for('completed_games') }}">View Completed Games</a>
     </br>
@@ -26,24 +27,18 @@
         </tr>
             {% for row in game_list %}
             <tr>
-                <form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
-                <td><input type="submit" value="{{ row[0] }}" name="boxid"></td>
+                <td class="team" onClick="document.getElementById('{{ row[0] }}').submit()">
+                    <form action="{{ url_for('display_box') }}" id="{{ row[0] }}" method="POST">
+                    <input type="hidden" name="boxid" value={{ row[0] }}>
+                    {{ row[0] }}
+                    </form>
+                </td>
                 {% for field in row[1:] %}
-                    <td>{{ field }}</td>
+                    <td> {{ field }} </td>
                 {% endfor %}
+                </form>
             </tr>
             {% endfor %}
-            <!--
-            {% for row in game_list[-1:] %}
-            <tr>
-                <form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}"> 
-                <td><input type="submit" value"{{ row[0] }}" name="boxid"></td>
-                {% for field in row[1:] %}
-                    <td>{{ field }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-            -->
         </table>
     </h4>
 {% endblock %}
