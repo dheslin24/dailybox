@@ -139,6 +139,19 @@ main td.winning_box {
     margin: 0px;
 }
 
+main td.my_winning_box {
+    vertical-align: top;
+    background-color: darkgreen;
+    color: white;
+    font-weight: bold;
+    width: 80px;
+    height: 80px;
+    padding-top: 0px;
+    padding: 0px;
+    margin-top: 0px;
+    margin: 0px;
+}
+
 main td.taken_box {
     background-color: grey;
     width: 80px;
