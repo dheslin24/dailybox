@@ -410,12 +410,12 @@ main td.NYJ {
 }
 
 main td.LV {
-    background-color: black;
-    color: #A5ACAF;
+    background-color: #A5ACAF;
+    color: black;
     border-left: black;
     border-right: 2px solid black;
-    border-bottom: black;
-    border-top: black;
+    border-bottom: #A5ACAF;
+    border-top: #A5ACAF;
 }
 
 main td.PHI {
