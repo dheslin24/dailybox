@@ -20,6 +20,7 @@
             <th> # active boxes </th>
             <th> total fees </th>
             <th> amt paid </th>
+            <th> paid in full?</th>
             <th> mark paid </th>
             </tr>
             {% for user in users %}
@@ -30,6 +31,7 @@
                 <td>{{ d[user[0]] }}</td>
                 <td class="f">{{ fees[user[0]] }}</td>
                 <td id="p">{{ paid[user[0]] }} </td>
+                <td> {{ emoji[user[0]] }} </td>
                 <td><form action="{{ url_for('mark_paid') }}" method="POST">
                     <input type="submit" value="{{ user[0] }}" name="userid">
                     <input type="hidden" value="True" name="paid">
