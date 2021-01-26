@@ -818,7 +818,10 @@ def display_box():
                 for w in winners:
                     if w[0] >= max_score_num and w[0] < 100:
                         max_score_num = w[0]
-                final_payout = (int(fee) * 100) - (max_score_num * (fee * 3)) - (fee * 10)
+                if max_score_num <= 24:
+                    final_payout = (int(fee) * 100) - (max_score_num * (fee * 3)) - (fee * 10) - (fee * 8)
+                else:
+                    final_payout = fee * 10
     
                 for winning_box in winners:
                     print(winning_box)
@@ -827,11 +830,31 @@ def display_box():
                             winner_dict[winning_box[1]] += (fee * 3)
                         else:
                             winner_dict[winning_box[1]] = (fee * 3)
-                    elif winning_box[0] == 100:  # reverse final winner
+                    elif winning_box[0] == 101:  # touching reverse final
+                        if winning_box[1] in winner_dict:
+                            winner_dict[winning_box[1]] += fee
+                        else:
+                            winner_dict[winning_box[1]] = fee
+                    elif winning_box[0] == 201:  #touching final
+                        if winning_box[1] in winner_dict:
+                            winner_dict[winning_box[1]] += fee
+                        else:
+                            winner_dict[winning_box[1]] = fee
+                    elif winning_box[0] == 100 and max_score_num <= 24:  # reverse final winner max payout 1000
                         if winning_box[1] in winner_dict:
                             winner_dict[winning_box[1]] += (fee * 10)
                         else:
                             winner_dict[winning_box[1]] = (fee * 10)
+                    elif winning_box[0] == 100 and max_score_num <= 26 and max_score_num >24:  # 700, 400, 100....
+                        if winning_box[1] in winner_dict:
+                            winner_dict[winning_box[1]] += 1000 - ((max_score_num - 24) * (fee * 3)) 
+                        else:
+                            winner_dict[winning_box[1]] = 1000 - ((max_score_num - 24) * (fee * 3))
+                    elif winning_box[0] == 100 and max_score_num <= 27:  #100
+                        if winning_box[1] in winner_dict:
+                            winner_dict[winning_box[1]] += fee 
+                        else:
+                            winner_dict[winning_box[1]] = fee 
                     elif winning_box[0] == 200:  # final winner
                         if winning_box[1] in winner_dict:
                             winner_dict[winning_box[1]] += final_payout
@@ -1194,33 +1217,36 @@ def current_winners(boxid):
         return render_template("current_winners.html", scores=scores, boxid=boxid)
 
 def find_touching_boxes(boxnum):
-    # corners first - hard code
-    # edges next
-    # boxnum % 10 = 0 is left column - wrap to right column
-    # boxnum % 10 = 9 is right column - wrap to left column
-    # boxnum <= 9 is top row - wrap to bottom
-    # boxnum > 90 is bottom row - wrap to top
+    # corners first - just hard code
+    # edges next:
+    #   boxnum % 10 == 0 is left column - wrap to right column
+    #   boxnum % 10 == 9 is right column - wrap to left column
+    #   boxnum <= 9 is top row - wrap to bottom
+    #   boxnum >= 90 is bottom row - wrap to top
     # then middle
-    touch_list = []
+    touch_list = ()
     corner = [0,9,90,99]
     if boxnum == 0:
-        touch_list.append(1, 9, 10, 90)  # TODO -left off here
-    if boxnum == 9:
-        touch_list.append(0, 8, 19, 99)
-    if boxnum == 90:
-        touch_list.append(0, 80, 91, 99)
-    if boxnum == 99:
-        touch_list.append(9, 89, 90, 98)
-    if boxnum % 10 == 0 and boxnum not in corner:
-        touch_list.append(boxnum + 9, boxnum - 10, boxnum + 10, boxnum + 1)
-    if boxnum % 10 == 9 and boxnum not in corner:
-        touch_list.append(boxnum - 9, boxnum - 10, boxnum + 10, boxnum - 1)
-    if boxnum <= 9 and boxnum not in corner:
-        touch_list.append(boxnum + 90, boxnum + 10, boxnum + 1, boxnum - 1)
-    if boxnum >= 90 and boxnum not in corner:
-        touch_list.append(boxnum - 90, boxnum - 10, boxnum + 1, boxnum - 1)
+        touch_list = (1, 9, 10, 90) 
+    elif boxnum == 9:
+        touch_list = (0, 8, 19, 99)
+    elif boxnum == 90:
+        touch_list = (0, 80, 91, 99)
+    elif boxnum == 99:
+        touch_list = (9, 89, 90, 98)
+    elif boxnum % 10 == 0 and boxnum not in corner:
+        touch_list = (boxnum + 9, boxnum - 10, boxnum + 10, boxnum + 1)
+    elif boxnum % 10 == 9 and boxnum not in corner:
+        touch_list = (boxnum - 9, boxnum - 10, boxnum + 10, boxnum - 1)
+    elif boxnum <= 9 and boxnum not in corner:
+        touch_list = (boxnum + 90, boxnum + 10, boxnum + 1, boxnum - 1)
+    elif boxnum >= 90 and boxnum not in corner:
+        touch_list = (boxnum - 90, boxnum - 10, boxnum + 1, boxnum - 1)
     else:
-        touch_list.append(boxnum + 10, boxnum - 10, boxnum + 1, boxnum - 1)
+        touch_list = (boxnum + 10, boxnum - 10, boxnum + 1, boxnum - 1)
+
+    print("{} are touching winner {}".format(touch_list, boxnum))
+    return touch_list
 
     
 
@@ -1231,6 +1257,18 @@ def end_game():
         boxid = request.form.get('boxid')
         home_score = request.form.get('home')
         away_score = request.form.get('away')
+
+        b = "SELECT {} FROM boxes WHERE boxid = {};".format(box_string(), boxid)
+        all_boxnum = db(b)[0]
+
+        box_counter = 0
+        boxnum_dict = {}
+        for userid in all_boxnum:
+            boxnum_dict[box_counter] = userid 
+            box_counter += 1
+
+        print("boxnum_dict")
+        print(boxnum_dict)
         
         # find the reverse winner - running function with home/away backward
         rev_box = find_winning_box(boxid, away_score, home_score)
@@ -1239,6 +1277,12 @@ def end_game():
         # all reverse score_num are 100
         s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '100', 'Reverse Final', '{}', '{}', '{}', '{}');".format(str(boxid), str(away_score), str(home_score), str(rev_winner), str(rev_boxnum))
         db(s)
+    
+        # reverse touch scores are 101 
+        rev_boxes = find_touching_boxes(int(rev_boxnum))
+        for box in rev_boxes:
+            r = "INSERT INTO everyscore (boxid, score_num, score_type, winner, winning_box) VALUES (%s, 101, 'Touch Reverse Final', %s, %s);"
+            db2(r, (boxid, boxnum_dict[box], box))
 
         # find final winner
         final_box = find_winning_box(boxid, home_score, away_score)
@@ -1247,6 +1291,12 @@ def end_game():
         # all final score_num are 200
         s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '200', 'Final Score', '{}', '{}', '{}', '{}');".format(str(boxid), str(home_score), str(away_score), str(final_winner), str(final_boxnum)) 
         db(s)
+
+        # final touch scores are 201
+        fin_boxes = find_touching_boxes(int(final_boxnum))
+        for box in fin_boxes:
+            f = "INSERT INTO everyscore (boxid, score_num, score_type, winner, winning_box) VALUES (%s, 201, 'Touch Final', %s, %s);"
+            db2(f, (boxid, boxnum_dict[box], box))
 
         return redirect(url_for("enter_every_score"))
     else:
