@@ -1193,6 +1193,37 @@ def current_winners(boxid):
 
         return render_template("current_winners.html", scores=scores, boxid=boxid)
 
+def find_touching_boxes(boxnum):
+    # corners first - hard code
+    # edges next
+    # boxnum % 10 = 0 is left column - wrap to right column
+    # boxnum % 10 = 9 is right column - wrap to left column
+    # boxnum <= 9 is top row - wrap to bottom
+    # boxnum > 90 is bottom row - wrap to top
+    # then middle
+    touch_list = []
+    corner = [0,9,90,99]
+    if boxnum == 0:
+        touch_list.append(1, 9, 10, 90)  # TODO -left off here
+    if boxnum == 9:
+        touch_list.append(0, 8, 19, 99)
+    if boxnum == 90:
+        touch_list.append(0, 80, 91, 99)
+    if boxnum == 99:
+        touch_list.append(9, 89, 90, 98)
+    if boxnum % 10 == 0 and boxnum not in corner:
+        touch_list.append(boxnum + 9, boxnum - 10, boxnum + 10, boxnum + 1)
+    if boxnum % 10 == 9 and boxnum not in corner:
+        touch_list.append(boxnum - 9, boxnum - 10, boxnum + 10, boxnum - 1)
+    if boxnum <= 9 and boxnum not in corner:
+        touch_list.append(boxnum + 90, boxnum + 10, boxnum + 1, boxnum - 1)
+    if boxnum >= 90 and boxnum not in corner:
+        touch_list.append(boxnum - 90, boxnum - 10, boxnum + 1, boxnum - 1)
+    else:
+        touch_list.append(boxnum + 10, boxnum - 10, boxnum + 1, boxnum - 1)
+
+    
+
 @app.route("/end_game", methods=["POST", "GET"])
 @login_required
 def end_game():
@@ -2096,7 +2127,7 @@ def register():
         # s = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES('{}', '{}', '{}', 1, 0, '{}', '{}', '{}');".format(request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
         # db(s)
 
-        s2 = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES(%s, %s, %s, 1, 0, %s, %s, %s);"
+        s2 = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile, failed_login_count) VALUES(%s, %s, %s, 1, 0, %s, %s, %s, 0);"
         values = (request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
         db2(s2, values)
 
