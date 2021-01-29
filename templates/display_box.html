@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "layout_uat.html" %}
 
 {% block title %}
     Index
@@ -6,27 +6,37 @@
 
 {% block main %}
 
+    <div class="row">
+    <div class="col-md-8 col-xs-12">
     <h2>
-        <p>
+        <p class="text-center">
             {{ box_name }} </br>
         <p>
     </h2>
     <h3>
-        <p>
+        <p class="text-center">
             Entry Fee: {{ fee }}
             Boxes Available: {{ avail }} </br>
         </p>
     </h3>
-    <h4>
-        <p>
+    <h5>
+        <p class="text-center">
             {{ payout }} </br>
             <!--
             {{ final_payout }}
             -->
         </p>
-        <p> Click your selection again to 'undo' pick. </p>
-    </h4>
-    <h4><p>{{ num_selection }}</p>
+    </h5>
+        {% if avail != 0 %}
+    <h5>
+        <p class="text-center"> Click your selection again to 'undo' pick. </p>
+    </h5>
+        {% else %}
+    <h3>
+        <p class="text-center">Current Final Payout: <span style="color: darkgreen;"><strong>{{ final_payout }}</strong></span>           Current Reverse Final Payout: <span style="color: darkgreen;"><strong>{{ rev_payout }}</strong></span></p>
+        {% endif %}
+    </h3>
+    <h4><p class="text-center">{{ num_selection }}</p>
     <!--
     <a href="{{ url_for("current_winners", boxid=boxid) }}">Click here for list of current winners</a>
     -->
@@ -44,9 +54,14 @@
         <input type="submit" onClick="return empty()">
     </form>
     -->
+    </div>
+    <div class="col-md-4 col-xs-12">
+    </div>
+    </div>
 
-<div>
-    <table id="grid" align="center">
+    <div class="row">
+        <div class="col-md-8 col-xs-12">
+        <table id="grid" align="center">
         <h3>
         <!--
         <tr>
@@ -141,10 +156,71 @@
         </tr>
         {% endfor %}
         </h3>
-    </table>
+        </table>
+        </div>
+        <div class="col-md-4 col-xs-12">
+        <p class="text-center"> Live IN-Game Updates (Must Refresh) </p>
+        <table class="table table-striped" align="center" style="padding-top: 30px">
+            <th>#</th>
+            <th>TB</th>
+            <th>KC</th>
+            <th>Desc</th>
+            <th>Winner</th>
+            <th>Box</th>
+            {% for score in scores %}
+                {% if score[0] == 100 %}
+                    <tr>
+                    <td style="background-color: blue; color: white;">RF</td>
+                    {% for field in score[1:-1] %}
+                    <td class="revfinal" style="background-color: blue; color: white;">{{ field }}</td>
+                    {% endfor %}
+                    <td style="background-color: blue; color: white;">{{ score[-1]|int  + 1 }}</td>
+                    </tr>
+                {% elif score[0] == 101 %}
+                    <tr>
+                    <td style="background-color: lightblue;">RFT</td>
+                    <td style="background-color: lightblue;">n/a</td>
+                    <td style="background-color: lightblue;">n/a</td>
+                    {% for field in score[3:-1] %}
+                    <td style="background-color: lightblue;">{{ field }}</td>
+                    {% endfor %}
+                    <td style="background-color: lightblue;">{{ score[-1]|int  + 1 }}</td>
+                    </tr>
+                {% elif score[0] == 200 %}
+                    <tr>
+                    <td style="background-color: darkgreen; color: white;">F</td>
+                    {% for field in score[1:-1] %}
+                    <td style="background-color: darkgreen; color: white;">{{ field }}</td>
+                    {% endfor %}
+                    <td style="background-color: darkgreen; color: white;">{{ score[-1]|int  + 1 }}</td>
+                    </tr>
+                {% elif score[0] == 201 %}
+                    <tr>
+                    <td style="background-color: lightgreen;">FT</td>
+                    <td style="background-color: lightgreen;">n/a</td>
+                    <td style="background-color: lightgreen;">n/a</td>
+                    {% for field in score[3:-1] %}
+                    <td style="background-color: lightgreen;">{{ field }}</td>
+                    {% endfor %}
+                    <td style="background-color: lightgreen;">{{ score[-1]|int  + 1 }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                    {% for field in score[:-1] %}
+                        {% if field == None %}
+                        <td>n/a</td>
+                        {% else %}
+                        <td>{{ field }}</td>
+                        {% endif %}
+                    {% endfor %}
+                        <td>{{ score[-1]|int + 1 }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </table>
+        </div>
     </div>
 {% endblock %}
-
 
 
 
