@@ -642,6 +642,7 @@ def display_box():
     ptype = box[5]
     gobbler_id = box[6]
     payout = payout_calc(ptype, fee)
+    rev_payout = 0
     #current_user = Session['userid']
     if ptype != 2 and ptype != 5:
         final_payout = fee * 100
