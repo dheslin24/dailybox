@@ -78,6 +78,20 @@ main table
     border: 8px solid black;
 }
 
+main td.revfinal {
+    background-color: lightgreen;
+}
+
+main td.final {
+    background-color: darkgreen;
+    color: white;
+}
+
+main table.table-striped>tbody>tr:nth-child(odd)>td, 
+.table-striped>tbody>tr:nth-child(odd) {
+   background-color: #bbb; // Choose your own color here
+}
+
 main td.team {
     width: 60px;
     background-color: lightgreen;

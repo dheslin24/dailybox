@@ -831,8 +831,16 @@ def display_box():
                         max_score_num = w[0]
                 if max_score_num <= 24:
                     final_payout = (int(fee) * 100) - (max_score_num * (fee * 3)) - (fee * 10) - (fee * 8)
+                    rev_payout = fee * 10
+                elif max_score_num == 25:
+                    final_payout = fee * 10
+                    rev_payout = (fee * 10) - (fee * 3)
+                elif max_score_num == 26:
+                    final_payout = fee * 10
+                    rev_payout = (fee * 10) - (fee * 6)
                 else:
                     final_payout = fee * 10
+                    rev_payout = fee
     
                 for winning_box in winners:
                     print(winning_box)
@@ -897,14 +905,14 @@ def display_box():
         winner_dict = {}
         print("home/away2 {} {}".format(home,away))
 
-        s = "SELECT e.score_num, e.x_score, e.y_score, e.score_type, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid where e.boxid = {} order by e.score_num, e.score_id;".format(boxid)
+        s = "SELECT e.score_num, e.x_score, e.y_score, e.score_type, u.username, e.winning_box FROM everyscore e LEFT JOIN users u ON e.winner = u.userid where e.boxid = {} order by e.score_num, e.score_id;".format(boxid)
         scores = db2(s)
 
         if uat == True:
-            return render_template("display_box_uat.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores)
+            return render_template("display_box_uat.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
 
         else:
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
 
 
     if box_type == 1:
@@ -1276,12 +1284,33 @@ def end_game():
         home_score = request.form.get('home')
         away_score = request.form.get('away')
 
-        b = "SELECT {} FROM boxes WHERE boxid = {};".format(box_string(), boxid)
+        b = "SELECT fee, {} FROM boxes WHERE boxid = {};".format(box_string(), boxid)
         all_boxnum = db(b)[0]
+    
+        fee = all_boxnum[0]
+
+        sn = "SELECT max(score_num) FROM everyscore WHERE boxid = {};".format(boxid)
+        max_score_num = db2(sn)[0][0]
+        if max_score_num <= 23:
+            rev_cash = fee * 10
+            fin_cash = ((24 - max_score_num) * (fee * 3)) + 1000
+        elif max_score_num == 24:
+            rev_cash = fee * 10
+            fin_cash = fee * 10
+        elif max_score_num == 25:
+            rev_cash = (fee * 10) - (fee * 3)
+            fin_cash = fee * 10
+        elif max_score_num == 26:
+            rev_cash = (fee * 10) - (fee * 6)
+            fin_cash = fee * 10
+        else:
+            rev_cash = fee
+            fin_cash = fee * 10
 
         box_counter = 0
         boxnum_dict = {}
-        for userid in all_boxnum:
+        fee = all_boxnum[0]
+        for userid in all_boxnum[1:]:
             boxnum_dict[box_counter] = userid 
             box_counter += 1
 
@@ -1293,28 +1322,28 @@ def end_game():
         rev_boxnum = rev_box[0]
         rev_winner = rev_box[1]
         # all reverse score_num are 100
-        s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '100', 'Reverse Final', '{}', '{}', '{}', '{}');".format(str(boxid), str(away_score), str(home_score), str(rev_winner), str(rev_boxnum))
+        s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '100', 'Reverse Final {}', '{}', '{}', '{}', '{}');".format(str(boxid), str(rev_cash), str(away_score), str(home_score), str(rev_winner), str(rev_boxnum))
         db(s)
     
         # reverse touch scores are 101 
         rev_boxes = find_touching_boxes(int(rev_boxnum))
         for box in rev_boxes:
-            r = "INSERT INTO everyscore (boxid, score_num, score_type, winner, winning_box) VALUES (%s, 101, 'Touch Reverse Final', %s, %s);"
-            db2(r, (boxid, boxnum_dict[box], box))
+            r = "INSERT INTO everyscore (boxid, score_num, score_type, winner, winning_box) VALUES (%s, 101, 'Touch Reverse %s', %s, %s);"
+            db2(r, (boxid, fee, boxnum_dict[box], box))
 
         # find final winner
         final_box = find_winning_box(boxid, home_score, away_score)
         final_boxnum = final_box[0]
         final_winner = final_box[1]
         # all final score_num are 200
-        s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '200', 'Final Score', '{}', '{}', '{}', '{}');".format(str(boxid), str(home_score), str(away_score), str(final_winner), str(final_boxnum)) 
+        s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '200', 'Final Score {}', '{}', '{}', '{}', '{}');".format(str(boxid), str(fin_cash), str(home_score), str(away_score), str(final_winner), str(final_boxnum)) 
         db(s)
 
         # final touch scores are 201
         fin_boxes = find_touching_boxes(int(final_boxnum))
         for box in fin_boxes:
-            f = "INSERT INTO everyscore (boxid, score_num, score_type, winner, winning_box) VALUES (%s, 201, 'Touch Final', %s, %s);"
-            db2(f, (boxid, boxnum_dict[box], box))
+            f = "INSERT INTO everyscore (boxid, score_num, score_type, winner, winning_box) VALUES (%s, 201, 'Touch Final %s', %s, %s);"
+            db2(f, (boxid, fee, boxnum_dict[box], box))
 
         return redirect(url_for("enter_every_score"))
     else:
