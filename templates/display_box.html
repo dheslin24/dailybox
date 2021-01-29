@@ -7,7 +7,11 @@
 {% block main %}
 
     <div class="row">
+    {% if scores|length > 1 %}
     <div class="col-md-8 col-xs-12">
+    {% else %}
+    <div class="col-md-12">
+    {% endif %}
     <h2>
         <p class="text-center">
             {{ box_name }} </br>
@@ -55,12 +59,19 @@
     </form>
     -->
     </div>
+    {% if scores|length > 0 %}
     <div class="col-md-4 col-xs-12">
+    {% endif %}
+    
     </div>
     </div>
 
     <div class="row">
+        {% if scores|length > 0 %}
         <div class="col-md-8 col-xs-12">
+        {% else %}
+        <div class="col-md-12">
+        {% endif %}
         <table id="grid" align="center">
         <h3>
         <!--
@@ -158,6 +169,7 @@
         </h3>
         </table>
         </div>
+        {% if scores|length > 0 %}
         <div class="col-md-4 col-xs-12">
         <p class="text-center"> Live IN-Game Updates (Must Refresh) </p>
         <table class="table table-striped" align="center" style="padding-top: 30px">
@@ -219,6 +231,7 @@
             {% endfor %}
         </table>
         </div>
+        {% endif %}
     </div>
 {% endblock %}
 

@@ -632,12 +632,6 @@ def display_box():
     else:
         boxid = request.args['boxid']
     
-    if request.args['uat']:
-        uat = int(request.args['uat'])
-    else:
-        uat = 0
-    print("UAT = {}".format(uat))
-    print(type(uat))
         
     logging.info("user {} just ran display_box for boxid {}".format(session['username'], boxid))
     s = "SELECT * FROM boxes where boxid = {};".format(boxid)
@@ -908,11 +902,7 @@ def display_box():
         s = "SELECT e.score_num, e.x_score, e.y_score, e.score_type, u.username, e.winning_box FROM everyscore e LEFT JOIN users u ON e.winner = u.userid where e.boxid = {} order by e.score_num, e.score_id;".format(boxid)
         scores = db2(s)
 
-        if uat == True:
-            return render_template("display_box_uat.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
-
-        else:
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
 
 
     if box_type == 1:
