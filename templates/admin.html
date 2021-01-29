@@ -25,7 +25,10 @@
     <a href="{{ url_for('pickem_admin') }}">Pickem Admin Page</a>
     </br>
     </br>
-    <a href="{{ url_for('display_box', uat=1, boxid=56) }}">UAT New BOX</a>
+    <a href="{{ url_for('display_box', uat=1, boxid=56) }}">UAT New BOX in DEV</a>
+    </br>
+    </br>
+    <a href="{{ url_for('display_box', uat=1, boxid=37) }}">UAT New BOX in PROD</a>
     </br>
     </br>
     <form action="{{ url_for('add_money') }}" method="POST">
