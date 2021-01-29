@@ -16,8 +16,8 @@ from functools import wraps
 from sportsreference.nfl.boxscore import Boxscores, Boxscore
 from sportsreference.nfl.schedule import Schedule
 import weasyprint
-from weasyprint import HTML
-from flask_weasyprint import HTML, render_pdf
+#from weasyprint import HTML
+#from flask_weasyprint import HTML, render_pdf
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -917,6 +917,7 @@ def display_box():
         final_payout = 'Current Final Payout: ' + str(final_payout)
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection)
 
+"""
 @app.route("/pdf_box", methods=["GET", "POST"])
 def pdf_box():
     boxid = request.args["boxid"]
@@ -989,6 +990,7 @@ def pdf_box():
     print(len(pdg))
 
     return redirect('/')
+"""
 
 
 @app.route("/select_box", methods=["GET", "POST"])
