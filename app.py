@@ -15,7 +15,7 @@ from mysql.connector import errorcode
 from functools import wraps
 from sportsreference.nfl.boxscore import Boxscores, Boxscore
 from sportsreference.nfl.schedule import Schedule
-import weasyprint
+#import weasyprint
 #from weasyprint import HTML
 #from flask_weasyprint import HTML, render_pdf
 
