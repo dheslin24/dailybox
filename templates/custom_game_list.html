@@ -28,7 +28,7 @@
             {% for row in game_list %}
             <tr>
                 <td class="team" onClick="document.getElementById('{{ row[0] }}').submit()">
-                    <form action="{{ url_for('display_box') }}" id="{{ row[0] }}" method="POST">
+                    <form action="{{ url_for('display_box', uat=0) }}" id="{{ row[0] }}" method="POST">
                     <input type="hidden" name="boxid" value={{ row[0] }}>
                     {{ row[0] }}
                     </form>

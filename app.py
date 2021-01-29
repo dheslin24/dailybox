@@ -8,12 +8,16 @@ import sys
 import random
 import json
 import config
+import re
 from operator import itemgetter, attrgetter
 import mysql.connector
 from mysql.connector import errorcode
 from functools import wraps
 from sportsreference.nfl.boxscore import Boxscores, Boxscore
 from sportsreference.nfl.schedule import Schedule
+import weasyprint
+from weasyprint import HTML
+from flask_weasyprint import HTML, render_pdf
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -627,6 +631,13 @@ def display_box():
         boxid = request.form.get('boxid')
     else:
         boxid = request.args['boxid']
+    
+    if request.args['uat']:
+        uat = int(request.args['uat'])
+    else:
+        uat = 0
+    print("UAT = {}".format(uat))
+    print(type(uat))
         
     logging.info("user {} just ran display_box for boxid {}".format(session['username'], boxid))
     s = "SELECT * FROM boxes where boxid = {};".format(boxid)
@@ -886,7 +897,14 @@ def display_box():
         winner_dict = {}
         print("home/away2 {} {}".format(home,away))
 
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict)
+        s = "SELECT e.score_num, e.x_score, e.y_score, e.score_type, e.winning_box, u.username FROM everyscore e LEFT JOIN users u ON e.winner = u.userid where e.boxid = {} order by e.score_num, e.score_id;".format(boxid)
+        scores = db2(s)
+
+        if uat == True:
+            return render_template("display_box_uat.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores)
+
+        else:
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores)
 
 
     if box_type == 1:
@@ -898,6 +916,79 @@ def display_box():
         print("home/away: {} {}".format(home,away))
         final_payout = 'Current Final Payout: ' + str(final_payout)
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection)
+
+@app.route("/pdf_box", methods=["GET", "POST"])
+def pdf_box():
+    boxid = request.args["boxid"]
+    grid = request.args.getlist("grid")
+    box_name = request.args["box_name"]
+    fee = request.args["fee"]
+    avail = request.args["avail"]
+    payout = request.args["payout"]
+    final_payout = request.args["final_payout"]
+    x = request.args["x"]
+    y = request.args["y"]
+    home = request.args["home"]
+    away = request.args["away"]
+    away_team = request.args["away_team"]
+    winner_dict = request.args["winner_dict"]
+
+    print("PDF baby")
+    print(grid)
+    print(type(grid))
+    print(type(grid[0]))
+    
+    tmp_grid = []
+
+    index = 0
+    for string in grid:
+        s = ''
+        add = False
+        markup = False
+        for ch in string:
+            if ch == 'M':  # in markup.. next ( and ) are part of the item
+                s += ch
+                markup = True
+            elif ch == '(' and markup == True: 
+                s += ch
+            elif ch == '(':
+                s = ''
+                add = True
+            elif ch == ')' and markup == True:
+                s += ch
+                markup = False
+            elif ch == ')':
+                tmp_grid.append(s)
+                add = False
+            elif add == True:
+                s += ch
+
+    new_grid = []
+    for string in tmp_grid:
+        l = []
+        count = 0
+        for item in string.split(','):
+            if count == 0:
+                l.append(int(item))
+                count += 1
+            else:
+                s = item.replace(" ", "")
+                s = s.replace("'","")
+                l.append(s)
+                count += 1
+        new_grid.append(l)
+            
+    html =  render_template('display_box.html', new_grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict)
+
+    #return render_pdf(url_for('display_box', new_grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict))
+
+    #return render_pdf(HTML(string=html))
+
+    pdf = weasyprint.HTML(url_for('display_box', boxid=boxid)).write_pdf()
+    print("PDF")
+    print(len(pdg))
+
+    return redirect('/')
 
 
 @app.route("/select_box", methods=["GET", "POST"])

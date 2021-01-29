@@ -6,27 +6,29 @@
 
 {% block main %}
 
+    <div class="row">
+    <div class="col-md-8">
     <h2>
-        <p>
+        <p class="text-center">
             {{ box_name }} </br>
         <p>
     </h2>
     <h3>
-        <p>
+        <p class="text-center">
             Entry Fee: {{ fee }}
             Boxes Available: {{ avail }} </br>
         </p>
     </h3>
     <h4>
-        <p>
+        <p class="text-center">
             {{ payout }} </br>
             <!--
             {{ final_payout }}
             -->
         </p>
-        <p> Click your selection again to 'undo' pick. </p>
+        <p class="text-center"> Click your selection again to 'undo' pick. </p>
     </h4>
-    <h4><p>{{ num_selection }}</p>
+    <h4><p class="text-center">{{ num_selection }}</p>
     <!--
     <a href="{{ url_for("current_winners", boxid=boxid) }}">Click here for list of current winners</a>
     -->
@@ -44,9 +46,14 @@
         <input type="submit" onClick="return empty()">
     </form>
     -->
+    </div>
+    <div class="col-md-4">
+    </div>
+    </div>
 
-<div>
-    <table id="grid" align="center">
+    <div class="row">
+        <div class="col-md-8">
+        <table id="grid" align="center">
         <h3>
         <!--
         <tr>
@@ -141,10 +148,31 @@
         </tr>
         {% endfor %}
         </h3>
-    </table>
+        </table>
+        <!--
+        <a href="{{ url_for('pdf_box', fee=fee, boxid=boxid, grid=grid, box_name=box_name, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict) }}">download pdf</a>
+        -->
+        </div>
+        <div class="col-md-4">
+        <p class="text-center"> Running list of every score </p>
+        <table align="center" style="padding-top: 30px">
+            <th>#</th>
+            <th>TB</th>
+            <th>KC</th>
+            <th>Desc</th>
+            <th>Box</th>
+            <th>Winner</th>
+            {% for score in scores %}
+            <tr>
+                {% for field in score %}
+                <td>{{ field }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+        </div>
     </div>
 {% endblock %}
-
 
 
 
