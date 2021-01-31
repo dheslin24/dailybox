@@ -1,0 +1,227 @@
+{% extends "layout_uat.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+
+    <div class="row">
+    <div class="col-md-8 col-xs-12">
+    <h2>
+        <p class="text-center">
+            {{ box_name }} </br>
+        <p>
+    </h2>
+    <h3>
+        <p class="text-center">
+            Entry Fee: {{ fee }}
+            Boxes Available: {{ avail }} </br>
+        </p>
+    </h3>
+    <h5>
+        <p class="text-center">
+            {{ payout }} </br>
+            <!--
+            {{ final_payout }}
+            -->
+        </p>
+    </h5>
+        {% if avail != 0 %}
+    <h5>
+        <p class="text-center"> Click your selection again to 'undo' pick. </p>
+    </h5>
+        {% else %}
+    <h3>
+        <p class="text-center">Current Final Payout: <span style="color: darkgreen;"><strong>{{ final_payout }}</strong></span>           Current Reverse Final Payout: <span style="color: darkgreen;"><strong>{{ rev_payout }}</strong></span></p>
+        {% endif %}
+    </h3>
+    <h4><p class="text-center">{{ num_selection }}</p>
+    <!--
+    <a href="{{ url_for("current_winners", boxid=boxid) }}">Click here for list of current winners</a>
+    -->
+    <!--
+    </br>
+    </br>
+    <a href="{{ url_for("payment_status") }}">Click here for payment status of all users</a>
+    -->
+    
+    <!--
+    <p> Randomize Selection </p> 
+    <form name="randform" id="randform" action="{{ url_for("select_box") }}",  method="POST">
+        <input type="text" name="rand" id="rand" size="5" placeholder="# boxes">
+        <input type="hidden" name="boxid" value="{{ boxid }}">
+        <input type="submit" onClick="return empty()">
+    </form>
+    -->
+    </div>
+    <div class="col-md-4 col-xs-12">
+    </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 col-xs-12">
+        <table id="grid" align="center">
+        <h3>
+        <!--
+        <tr>
+        <td></td>
+        <td></td>
+        {% for n in range(0,10) %}
+            <td>
+                <form action="{{ url_for("select_box") }}", method="POST">
+                <button type="submit" value="{{ loop.index0 }}" name="column">Select Column</button>
+                <input type="hidden" name="boxid" value="{{ boxid }}">
+                </form>
+            </td>
+        {% endfor %}
+        </tr>
+        -->
+        </h3>
+        <h1>
+        <!--
+        <tr><td style="background-color: #aaa" colspan="12"><strong style="font-size:  30px; letter-spacing: 5px">{{ home[0:3] }}</td></tr>
+        -->
+        <tr>
+        <td class="BYG" colspan="2" style="border-bottom: solid blue;"><strong style="font-size: 30px;">BYG</td>
+        <td class="{{ home }}" colspan="10" style="border-bottom: 2px solid black;"><strong style="font-size:  30px; letter-spacing: 5px;">{{ home[0:3] }}</td></tr>
+        <tr>
+        <td class="BYG" colspan="2" style="border-bottom: 1px solid black;">Box: {{ boxid }} </td>
+        {% for num in x %}
+            <h1><td class="{{ home }}"><strong style="font-size: 30px"> {{ x[loop.index0|string] }} </strong></td></h1>
+        {% endfor %}
+        </tr>
+        </h1>
+        <h3>
+        {% for row in grid %}
+        {% set outer_loop = loop %}
+        <tr>
+            <h1><td class="{{ away }}"><strong style="font-size: 30px"> {{ away_team[outer_loop.index0|string] }} </strong></td></h1>
+            <h1><td class="{{ away }}" style="border-bottom: 2px solid black;"><strong style="font-size: 30px"> {{ y[outer_loop.index0|string] }} </strong></td></h1>
+            {% for box in row %}
+                {% if box[1][:6] == 'WINNER' %} 
+                    {% if box[2] == session['username'] %}
+                    <td class="my_winning_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
+                        <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                        <input type="hidden" name="boxid", value="{{ boxid }}">
+                        <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                        {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                        <p class="corner"> {{ bnum }}</p>
+                        {{ box[1] }}<br><br>
+                        </form>
+                    </td>
+                    {% else %}
+                    <td class="winning_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
+                        <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                        <input type="hidden" name="boxid", value="{{ boxid }}">
+                        <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                        {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                        <p class="corner"> {{ bnum }}</p>
+                        {{ box[1] }}<br><br>
+                        </form>
+                    </td>
+                    {% endif %}
+                {% elif box[1] == session['username'] %}
+                <td class="user_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
+                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                    <input type="hidden" name="boxid", value="{{ boxid }}">
+                    <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                    {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                    <p class="corner"> {{ bnum }}</p>
+                    {{- box[1][:10] -}}
+                    </form>
+                </td>
+                {% elif box[1] != 'Available ' %}
+                <td class="taken_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
+                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                    <input type="hidden" name="boxid", value="{{ boxid }}">
+                    <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                    {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                     <p class="corner"> {{ bnum }}</p>
+                    {{- box[1][:10] -}}
+                    </form>
+                </td>
+                {% else %}
+                <td class="box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">    
+                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                    <input type="hidden" name="boxid", value="{{ boxid }}">
+                    <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                    {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                    <p class="corner" style="color: black;"> {{ bnum }}</p>
+                    {{- box[1][:10] -}}
+                    </form>
+                </td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </h3>
+        </table>
+        </div>
+        <div class="col-md-4 col-xs-12">
+        <p class="text-center"> Live IN-Game Updates (Must Refresh) </p>
+        <table class="table table-striped" align="center" style="padding-top: 30px">
+            <th>#</th>
+            <th>TB</th>
+            <th>KC</th>
+            <th>Desc</th>
+            <th>Winner</th>
+            <th>Box</th>
+            {% for score in scores %}
+                {% if score[0] == 100 %}
+                    <tr>
+                    <td style="background-color: blue; color: white;">RF</td>
+                    {% for field in score[1:-1] %}
+                    <td class="revfinal" style="background-color: blue; color: white;">{{ field }}</td>
+                    {% endfor %}
+                    <td style="background-color: blue; color: white;">{{ score[-1]|int  + 1 }}</td>
+                    </tr>
+                {% elif score[0] == 101 %}
+                    <tr>
+                    <td style="background-color: lightblue;">RFT</td>
+                    <td style="background-color: lightblue;">n/a</td>
+                    <td style="background-color: lightblue;">n/a</td>
+                    {% for field in score[3:-1] %}
+                    <td style="background-color: lightblue;">{{ field }}</td>
+                    {% endfor %}
+                    <td style="background-color: lightblue;">{{ score[-1]|int  + 1 }}</td>
+                    </tr>
+                {% elif score[0] == 200 %}
+                    <tr>
+                    <td style="background-color: darkgreen; color: white;">F</td>
+                    {% for field in score[1:-1] %}
+                    <td style="background-color: darkgreen; color: white;">{{ field }}</td>
+                    {% endfor %}
+                    <td style="background-color: darkgreen; color: white;">{{ score[-1]|int  + 1 }}</td>
+                    </tr>
+                {% elif score[0] == 201 %}
+                    <tr>
+                    <td style="background-color: lightgreen;">FT</td>
+                    <td style="background-color: lightgreen;">n/a</td>
+                    <td style="background-color: lightgreen;">n/a</td>
+                    {% for field in score[3:-1] %}
+                    <td style="background-color: lightgreen;">{{ field }}</td>
+                    {% endfor %}
+                    <td style="background-color: lightgreen;">{{ score[-1]|int  + 1 }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                    {% for field in score[:-1] %}
+                        {% if field == None %}
+                        <td>n/a</td>
+                        {% else %}
+                        <td>{{ field }}</td>
+                        {% endif %}
+                    {% endfor %}
+                        <td>{{ score[-1]|int + 1 }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </table>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+

@@ -78,6 +78,29 @@ main table
     border: 8px solid black;
 }
 
+main table.th {
+    vertical-align: top;
+    background-color: white;
+    color: #ccc;
+    width: 80px;
+    height: 80px;
+    padding: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin: 0px;
+    overflow: hidden;
+}
+    
+
+main table.box_table {
+    border-spacing: 1px;
+    border-collapse: collapse;
+    border: 8px solid black;
+    table-layout: fixed;
+}
+
 main td.revfinal {
     background-color: lightgreen;
 }
@@ -90,6 +113,10 @@ main td.final {
 main table.table-striped>tbody>tr:nth-child(odd)>td, 
 .table-striped>tbody>tr:nth-child(odd) {
    background-color: #bbb; // Choose your own color here
+}
+
+main #grid {
+    table-layout: fixed;
 }
 
 main td.team {
@@ -112,10 +139,12 @@ main td.box {
     vertical-align: top;
     background-color: white;
     color: white;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     padding: 0px;
     padding-top: 0px;
+    padding-bottom: 0px;
+    overflow: hidden;
 }
 
 main td.box:hover {
@@ -126,13 +155,15 @@ main td.box:hover {
 
 main td.user_box {
     vertical-align: top;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     background-color: dodgerblue;
     color: black;
     cursor: pointer;
     padding: 0px;
     padding-top: 0px;
+    padding-bottom: 0px;
+    overflow: hidden;
 }
 
 main td.user_box:hover {
@@ -145,12 +176,12 @@ main td.winning_box {
     vertical-align: top;
     background-color: lightgreen;
     color: black;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     padding-top: 0px;
+    padding-bottom: 0px;
     padding: 0px;
-    margin-top: 0px;
-    margin: 0px;
+    overflow: hidden;
 }
 
 main td.my_winning_box {
@@ -158,24 +189,24 @@ main td.my_winning_box {
     background-color: darkgreen;
     color: white;
     font-weight: bold;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     padding-top: 0px;
+    padding-bottom: 0px;
     padding: 0px;
-    margin-top: 0px;
-    margin: 0px;
+    overflow: hidden;
 }
 
 main td.taken_box {
     background-color: grey;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     color: black;
     padding-top: 0px;
+    padding-bottom: 0px;
     padding: 0px;
-    margin-top: 0px;
-    margin: 0px;
     vertical-align: top;
+    overflow: hidden;
 }
 
 .corner {
