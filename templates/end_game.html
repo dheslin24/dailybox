@@ -18,5 +18,9 @@
             </div>
         </fieldset>
     </form>
+    <h4><p> OR - click here to end all games automatically </p></h4>
+    <form action="{{ url_for('end_games') }}" method="POST">
+        <button class="btn btn-default" type="submit">End ALL ES Games</button>
+    </form>
 
 {% endblock %}
