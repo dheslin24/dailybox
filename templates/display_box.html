@@ -1,14 +1,14 @@
 {% extends "layout_uat.html" %}
 
 {% block title %}
-    Index
+    Display Box
 {% endblock %}
 
 {% block main %}
 
     <div class="row">
     {% if scores|length > 0 %}
-    <div class="col-md-8 col-xs-12">
+    <div class="col-lg-8 col-md-12 col-xs-12">
     {% else %}
     <div class="col-md-12">
     {% endif %}
@@ -63,7 +63,7 @@
     -->
     </div>
     {% if scores|length > 0 %}
-    <div class="col-md-4 col-xs-12">
+    <div class="col-lg-4 col-md-12 col-xs-12">
     {% endif %}
     
     </div>
@@ -71,11 +71,11 @@
 
     <div class="row">
         {% if scores|length > 0 %}
-        <div class="col-md-8 col-xs-12">
+        <div class="col-lg-8 col-md-12 col-xs-12">
         {% else %}
         <div class="col-md-12">
         {% endif %}
-        <table id="grid" align="center">
+        <table id="grid" class="box_table" align="center" style="table-layout: fixed;">
         <h3>
         <!--
         <tr>
@@ -172,16 +172,17 @@
         </h3>
         </table>
         </div>
+
         {% if scores|length > 0 %}
-        <div class="col-md-4 col-xs-12">
-        <p class="text-center"> Live IN-Game Updates (Must Refresh) </p>
-        <table class="table table-striped" align="center" style="padding-top: 30px">
-            <th>#</th>
-            <th>TB</th>
-            <th>KC</th>
-            <th>Desc</th>
-            <th>Winner</th>
-            <th>Box</th>
+        <div class="col-lg-4 col-md-6 col-xs-6">
+        <p class="text-center"> Live IN-Game Updates (must refresh) </p>
+        <table class="table table-striped" style="padding-top: 30px; table-layout: fixed;">
+            <th style="width: 5px;">#</th>
+            <th style="width: 10px;">TB</th>
+            <th style="width: 10px;">KC</th>
+            <th style="width: 50px;">Desc</th>
+            <th style="width: 25px;">Winner</th>
+            <th style="width: 10px;">Box</th>
             {% for score in scores %}
                 {% if score[0] == 100 %}
                     <tr>
@@ -234,6 +235,8 @@
             {% endfor %}
         </table>
         </div>
+        <div class="col-md-6 col-xs-6">
+        </div>        
         {% endif %}
     </div>
 {% endblock %}
