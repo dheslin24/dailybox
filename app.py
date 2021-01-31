@@ -1339,6 +1339,89 @@ def end_game():
         return redirect(url_for("enter_every_score"))
     else:
         return render_template("end_game.html")
+
+@app.route("/end_games", methods=["POST", "GET"])
+@login_required
+def end_games():
+    if request.method == "POST":
+        # what games am i ending?
+        g = "SELECT boxid FROM boxes WHERE active = 1 and pay_type = 3;"
+        games = db2(g)
+
+        for box in games:
+            boxid = box[0]
+            b = "SELECT fee, {} FROM boxes WHERE boxid = {};".format(box_string(), boxid)
+            all_boxnum = db(b)[0]
+
+            fee = all_boxnum[0]
+
+            sn = "SELECT max(score_num) FROM everyscore WHERE boxid = {};".format(boxid)
+            max_score_num = db2(sn)[0][0]
+
+            s = "SELECT x_score, y_score FROM everyscore WHERE score_num = {} and boxid = {};".format(max_score_num, boxid)
+            score = db2(s)
+            print("SCORE SCORE {}".format(score))
+            home_score = score[0][0]
+            away_score = score[0][1]
+            
+            if max_score_num <= 23:
+                rev_cash = fee * 10
+                fin_cash = ((24 - max_score_num) * (fee * 3)) + (fee * 10)
+            elif max_score_num == 24:
+                rev_cash = fee * 10
+                fin_cash = fee * 10
+            elif max_score_num == 25:
+                rev_cash = (fee * 10) - (fee * 3)
+                fin_cash = fee * 10
+            elif max_score_num == 26:
+                rev_cash = (fee * 10) - (fee * 6)
+                fin_cash = fee * 10
+            else:
+                rev_cash = fee
+                fin_cash = fee * 10
+
+            box_counter = 0
+            boxnum_dict = {}
+            fee = all_boxnum[0]
+            for userid in all_boxnum[1:]:
+                boxnum_dict[box_counter] = userid
+                box_counter += 1
+
+            print("boxnum_dict")
+            print(boxnum_dict)
+
+            # find the reverse winner - running function with home/away backward
+            rev_box = find_winning_box(boxid, away_score, home_score)
+            rev_boxnum = rev_box[0]
+            rev_winner = rev_box[1]
+            # all reverse score_num are 100
+            s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '100', 'Reverse Final {}', '{}', '{}', '{}', '{}');".format(str(boxid), str(rev_cash), str(away_score), str(home_score), str(rev_winner), str(rev_boxnum))
+            db(s)
+
+            # reverse touch scores are 101
+            rev_boxes = find_touching_boxes(int(rev_boxnum))
+            for box in rev_boxes:
+                r = "INSERT INTO everyscore (boxid, score_num, score_type, winner, winning_box) VALUES (%s, 101, 'Touch Reverse %s', %s, %s);"
+                db2(r, (boxid, fee, boxnum_dict[box], box))
+
+            # find final winner
+            final_box = find_winning_box(boxid, home_score, away_score)
+            final_boxnum = final_box[0]
+            final_winner = final_box[1]
+            # all final score_num are 200
+            s = "INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES('{}', '200', 'Final Score {}', '{}', '{}', '{}', '{}');".format(str(boxid), str(fin_cash), str(home_score), str(away_score), str(final_winner), str(final_boxnum))
+            db(s)
+
+            # final touch scores are 201
+            fin_boxes = find_touching_boxes(int(final_boxnum))
+            for box in fin_boxes:
+                f = "INSERT INTO everyscore (boxid, score_num, score_type, winner, winning_box) VALUES (%s, 201, 'Touch Final %s', %s, %s);"
+                db2(f, (boxid, fee, boxnum_dict[box], box))
+
+        return redirect(url_for("enter_every_score"))
+    else:
+        return render_template("end_game.html")
+
         
 
 @app.route("/enter_custom_scores", methods=["GET", "POST"])

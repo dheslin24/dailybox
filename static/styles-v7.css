@@ -112,7 +112,7 @@ main td.final {
 
 main table.table-striped>tbody>tr:nth-child(odd)>td, 
 .table-striped>tbody>tr:nth-child(odd) {
-   background-color: #bbb; // Choose your own color here
+    background-color: darkgrey;
 }
 
 main #grid {
