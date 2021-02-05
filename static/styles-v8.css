@@ -1,0 +1,676 @@
+.container
+{
+    /* center contents */
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+/* colors for navbar */
+.navbar-default .navbar-brand .blue
+{
+    color: #537fbe;
+}
+.navbar-default .navbar-brand .red
+{
+    color: #ea433b;
+}
+.navbar-default .navbar-brand .yellow
+{
+    color: #f5b82e;
+}
+.navbar-default .navbar-brand .green
+{
+    color: #2e944b;
+}
+
+.floater {
+    margin: 5px;
+    float: right;
+}
+
+main .form-control
+{
+    /* center form controls */
+    display: inline-block;
+
+    /* override Bootstrap's 100% width for form controls */
+    width: auto;
+}
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}
+
+main th
+{
+    padding: 5px;
+    border-spacing: 5px;
+    text-align: center;
+    background-color: #aaa;
+    border: 3px solid black;
+}
+
+main td
+{
+    /* left-align tables' cells */
+    text-align: center;
+    border: 2px solid black;
+    font-size: 12px;
+    padding: 5px 5px 5px 5px;
+    background-color: #ccc;
+}
+
+.bordercell {
+    background-color: #aaa;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #ccc;
+    border-top: #ccc;
+}
+
+main table
+{
+    border-spacing: 1px;
+    border-collapse: collapse;
+    border: 8px solid black;
+}
+
+main table.th {
+    vertical-align: top;
+    background-color: white;
+    color: #ccc;
+    width: 80px;
+    height: 80px;
+    padding: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin: 0px;
+    overflow: hidden;
+}
+    
+
+main table.box_table {
+    border-spacing: 1px;
+    border-collapse: collapse;
+    border: 8px solid black;
+    table-layout: fixed;
+}
+
+main td.revfinal {
+    background-color: lightgreen;
+}
+
+main td.final {
+    background-color: darkgreen;
+    color: white;
+}
+
+main table.table-striped>tbody>tr:nth-child(odd)>td, 
+.table-striped>tbody>tr:nth-child(odd) {
+    background-color: darkgrey;
+}
+
+main #grid {
+    table-layout: fixed;
+}
+
+main td.team {
+    width: 60px;
+    background-color: lightgreen;
+}
+
+main td.locked_team {
+    width: 60px;
+    background-color: #ccc;
+}
+
+main td.team:hover {
+    background-color: black;
+    color: white;
+    cursor: pointer;
+}
+
+main td.box {
+    vertical-align: top;
+    background-color: white;
+    color: white;
+    width: 100px;
+    height: 100px;
+    padding: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    overflow: hidden;
+}
+
+main td.box:hover {
+    background-color: lightblue;
+    color: white;
+    cursor: pointer;
+}
+
+main td.user_box {
+    vertical-align: top;
+    width: 100px;
+    height: 100px;
+    background-color: dodgerblue;
+    color: black;
+    cursor: pointer;
+    padding: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    overflow: hidden;
+}
+
+main td.user_box:hover {
+    background-color: darkred;
+    color: white;
+    cursor: pointer;
+}
+
+main td.winning_box {
+    vertical-align: top;
+    background-color: lightgreen;
+    color: black;
+    width: 100px;
+    height: 100px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding: 0px;
+    overflow: hidden;
+}
+
+main td.my_winning_box {
+    vertical-align: top;
+    background-color: darkgreen;
+    color: white;
+    font-weight: bold;
+    width: 100px;
+    height: 100px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding: 0px;
+    overflow: hidden;
+}
+
+main td.taken_box {
+    background-color: grey;
+    width: 100px;
+    height: 100px;
+    color: black;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding: 0px;
+    vertical-align: top;
+    overflow: hidden;
+}
+
+.corner {
+    vertical-align: top;
+    text-align: left;
+    padding: 3px;
+}
+
+
+main td.ptd {
+    width: 100px;
+    background-color: lightgreen;
+}
+
+main td.locked_ptd {
+    width: 100px;
+    background-color: #ccc;
+}    
+
+main td.BYG {
+    background-color: blue;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: solid black;
+}
+
+
+main td.NFC {
+    background-color: #013369;
+    color: #D50A0A;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #013369;
+    border-top: #013369;
+}
+
+main td.AFC {
+    background-color: #D50A0A;
+    color: #013369;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #D50A0A;
+    border-top: #D50A0A;
+}
+
+main td.KC {
+    background-color: #E31837;
+    color: #FFB81C;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #E31837;
+    border-top: #E31837;
+}
+
+main td.GB {
+    background-color: #203731; 
+    color: #FFB612;
+    border-right: 2px solid black;
+    border-bottom: #203731;
+    border-top: #203731;
+}
+
+main td.TB {
+    background-color: #696158;
+    color: #A6192E;
+    border-right: 2px solid black;
+    border-bottom: #696158;
+    border-top: #696158;
+}
+
+main td.BUF {
+    background-color: #00338D;
+    color: #C60C30;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #00338D; 
+    border-top: #00338D;
+}
+
+main td.ARI {
+    background-color: #97233F;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #97233F;
+    border-top: #97233F;
+}
+
+main td.ATL {
+    background-color: #A71930;
+    color: black;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #A71930;
+    border-top: #A71930;
+}
+
+main td.BAL {
+    background-color: #241773;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #241773;
+    border-top: #241773;
+}
+
+main td.CAR {
+    background-color: #0085CA;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0085CA;
+    border-top: #0085CA;
+}
+
+main td.CHI {
+    background-color: #0B162A;
+    color: #C83803;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0B162A;
+    border-top: #0B162A;
+}
+
+main td.CIN {
+    background-color: #FB4F14;
+    color: black;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #FB4F14;
+    border-top: #FB4F14;
+}
+
+main td.CLE {
+    background-color: #311D00;
+    color: #FF3C00;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #311D00;
+    border-top: #311D00;
+}
+
+main td.DAL {
+    background-color: #041E42;
+    color: #869397;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #041E42;
+    border-top: #041E42;
+}
+
+main td.DEN {
+    background-color: #FB4F14;
+    color: #002244;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #FB4F14;
+    border-top: #FB4F14;
+}
+
+main td.DET {
+    background-color: #0076B6;
+    color: #B0B7BC;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0076B6;
+    border-top: #0076B6;
+}
+
+main td.HOU {
+    background-color: #03202F;
+    color: #A71930;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #03202F;
+    border-top: #03202F;
+}
+
+main td.IND {
+    background-color: #002C5F;
+    color: #A2AAAD;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #002C5F;
+    border-top: #002C5F;
+}
+
+main td.JAX {
+    background-color: #006778;
+    color: #9F792C;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #006778;
+    border-top: #006778;
+}
+
+main td.LAC {
+    background-color: #0080C6;
+    color: #FFC20E;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0080C6;
+    border-top: #0080C6;
+}
+
+main td.LAR {
+    background-color: #003594;
+    color: #FFA300;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #003594;
+    border-top: #003594;
+}
+
+main td.MIA {
+    background-color: #008E97;
+    color: #FC4C02;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #008E97;
+    border-top: #008E97;
+}
+
+
+main td.MIN {
+    background-color: #4F2683;
+    color: #FFC62F;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #4F2683;
+    border-top: #4F2683;
+}
+
+main td.NE {
+    background-color: #002244;
+    color: #C60C30;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #002244;
+    border-top: #002244;
+}
+
+main td.NO {
+    background-color: #D3BC8D;
+    color: #101820;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #D3BC8D;
+    border-top: #D3BC8D;
+}
+
+main td.NYG {
+    background-color: #0B2265;
+    color: #A71930;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0B2265;
+    border-top: #0B2265;
+}
+
+main td.NYJ {
+    background-color: #125740;
+    color: white;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #125740;
+    border-top: #125740;
+}
+
+main td.LV {
+    background-color: #A5ACAF;
+    color: black;
+    border-left: black;
+    border-right: 2px solid black;
+    border-bottom: #A5ACAF;
+    border-top: #A5ACAF;
+}
+
+main td.PHI {
+    background-color: #004C54;
+    color: #A5ACAF;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #004C54;
+    border-top: #004C54;
+}
+
+main td.PIT {
+    background-color: #FFB612;
+    color: #101820;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #FFB612;
+    border-top: #FFB612;
+}
+
+main td.SF {
+    background-color: #AA0000;
+    color: #B3995D;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #AA0000;
+    border-top: #AA0000;
+}
+
+main td.SEA {
+    background-color: #002244;
+    color: #69BE28;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #002244;
+    border-top: #002244;
+}
+
+main td.TEN {
+    background-color: #0C2340;
+    color:  #4B92DB;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #0C2340;
+    border-top: #0C2340;
+}
+
+main td.WAS {
+    background-color: #773141;
+    color:  #FFB612;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #773141;
+    border-top: #773141;
+}
+
+
+
+main td.pick {
+    width: 60px; 
+    background-color: #aaa;
+    border-left-width: thick;
+    font-weight: bold;
+}
+
+main td.locked_pick {
+    width: 60px;
+    background-color: #ccc;
+    border-left-width: thick;
+    font-weight: bold;
+}
+
+main td.eliminated {
+    width: 60px;
+    color: red;
+}
+
+main td.pick > input {
+    width: 60px;
+    background-color: #aaa;
+    font-size: 16px;
+    border: 0px;
+    text-align: center;
+}
+
+main input[type=submit] {
+    background-color: black;
+    border: 1px black;
+    border-radius: 4px;
+    width: 30px;
+    color: white;
+}
+
+main input[type=submit].pick {
+    background-color: black;
+    border: 2px black;
+    border-radius: 25px;
+    width: 200px;
+    color: white;
+    margin: 20px;
+    padding: 20px;
+}
+
+main td.loser {
+    background: lightcoral;
+    font-weight: bold;
+}
+
+main td.winner {
+    background: lightgreen;
+    font-weight: bold;
+}
+ 
+main td.current_user {
+    background: navy;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    font-size: 16px;
+    border-size: 8px;
+}
+
+main td.current_user_elim {
+    background: navy;
+    font-weight: bold;
+    text-align: center;
+    color: red;
+    font-size: 16px;
+    border-size: 8px;
+}
+
+main td.winning_user {
+    background: green;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    font-size: 18px;
+    border-size: 8px;
+}
+
+main td.winner_cu {
+    background: green;
+    font-weight: bold;
+    color: white;
+    font-size: 16px;
+    border-size: 8px;
+}
+
+main td.loser_cu {
+    background: red;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    border-size: 8px;
+}
+
+main td.landing {
+    width: 500px; 
+    height: 500px;
+    background: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+    
+main td.payment {
+    font-size: 24px;
+}
+
+.drowdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content a {
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #ddd
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+div .img {
+    display: inline-block;
+}

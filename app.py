@@ -1138,6 +1138,34 @@ def sanity_checks(boxid_list):
     return check_result_list
     ### END sanity checks ###
 
+@app.route("/es_payout_details", methods=["GET"])
+def es_payout_details():
+    fee = 100
+    payouts = []
+    for i in range(1,31):
+        score = []
+        score.append(i)
+        if i <= 27:
+            score.append(3 * fee * i)
+        else:
+            score.append(3 * fee * 27)
+        score.append(str(fee) + 'x4')
+        score.append(str(fee) + 'x4')
+        if i <= 24:
+            score.append(fee * 10)
+            score.append(((fee * 100) - (fee * 8) - (fee * 10)) - (fee * 3 * i))
+        elif i <=26:
+            score.append((fee * 10) - ((fee * 3) * (i - 24)))
+            score.append(fee * 10)
+        else:
+            score.append(fee)
+            score.append(fee * 10)
+        
+        payouts.append(score)
+        
+    return render_template('es_payout_details.html', payouts=payouts)
+
+
 @app.route("/enter_every_score", methods=["GET", "POST"])
 @login_required
 def enter_every_score():
