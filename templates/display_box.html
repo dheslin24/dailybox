@@ -39,10 +39,12 @@
     <h3>
         {% if scores|length > 0 %}
         <p class="text-center">Current Final Payout: <span style="color: darkgreen;"><strong>{{ final_payout }}</strong></span>           Current Reverse Final Payout: <span style="color: darkgreen;"><strong>{{ rev_payout }}</strong></span></p>
+    </h3>
+    <h5><p class="text-center">Touch Reverse: <span style="color: darkgreen;"><strong>{{ fee }} x4</strong></span> Touch Final: <span style="color: darkgreen;"><strong>{{ fee }} x4</strong></span></p>
+    </h5>
         {% endif %}
 
         {% endif %}
-    </h3>
     <h4><p class="text-center">{{ num_selection }}</p>
     <!--
     <a href="{{ url_for("current_winners", boxid=boxid) }}">Click here for list of current winners</a>
@@ -176,6 +178,7 @@
         {% if scores|length > 0 %}
         <div class="col-lg-4 col-md-6 col-xs-12">
         <p class="text-center"> Live IN-Game Updates (must refresh) </p>
+        <p class="text-center"> Curious about how payouts work??  Click <a href="{{ url_for('es_payout_details') }}"> here</a></p>
         <table class="table table-striped" style="padding-top: 30px; table-layout: fixed;">
             <th style="width: 5px;">#</th>
             <th style="width: 10px;">TB</th>
