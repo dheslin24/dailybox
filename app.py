@@ -1162,6 +1162,8 @@ def es_payout_details():
             score.append(fee * 10)
         
         payouts.append(score)
+
+    logging.info("{} just selected ran payout_details".format(session["username"]))
         
     return render_template('es_payout_details.html', payouts=payouts)
 
