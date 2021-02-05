@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Payout Details
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Detailed View of Payouts 
+        </p>
+    </h1>
+    <h5><p> I mean.. TW's email CLEARLY described the rules.  But for those who can't read a lot of words, this table should help </p>
+        <p> 0-0 is considered the first score </p></h5>
+    
+    <h4>
+        <table align = "center", name="user_table", class="table table-striped", cellpadding = "10">
+            <tr>
+            <th> Number of Scores</th>
+            <th> Every Score Total </th>
+            <th> Touch Reverse </th>
+            <th> Touch Final </th>
+            <th> Reverse Final </th>
+            <th> Final</th>
+            </tr>
+            {% for row  in payouts %}
+            <tr>
+                {% for field in row %}
+                <td style="font-size: 20px">{{ field }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+
+{% endblock %}
+
