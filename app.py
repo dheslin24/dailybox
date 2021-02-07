@@ -1923,6 +1923,10 @@ def pickem_all_picks():
 
     logging.info("{} just ran all_picks".format(session["username"]))
 
+    eliminated_list.append('jzhao8')
+    eliminated_list.append('GC1')
+    eliminated_list.append('Algo_O')
+    eliminated_list.append('rgimbel')
     print("eliminated list: {}".format(eliminated_list))
     
     return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown, eliminated_list=eliminated_list)
