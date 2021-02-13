@@ -1,6 +1,8 @@
 from flask import Flask, flash, redirect, render_template, request, session, url_for, Markup
 from flask_session import Session
 import logging
+
+import requests
 #from flask_sslify import SSLify
 from passlib.apps import custom_app_context as pwd_context
 #from werkzeug.serving import make_ssl_devcert, run_simple
@@ -2283,18 +2285,21 @@ def landing_page():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user."""
-
+    secret = config.captchasecret
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-
+        r = requests.post('https://www.google.com/recaptcha/api/siteverify', data = {'secret' : secret, 'response' : request.form['g-recaptcha-response']})
+        google_response = json.loads(r.text)
+  
         # ensure username was submitted
         if not request.form.get("username"):
             return apology("must provide username")
-
         # ensure password was submitted
         elif not request.form.get("password"):
             return apology("must provide password")
-
+        #Makes sure the user ticked the captcha
+        elif google_response['success'] == False:
+            return apology("must tick captcha")
         # ensure password was confirmed
         elif not request.form.get("password_confirm"):
             return apology("must confirm password")
@@ -2306,7 +2311,7 @@ def register():
         # ensure email was submitted
         elif not request.form.get("first_name"):
             return apology("must enter first name")
-
+        
         # ensure email was submitted
         elif not request.form.get("last_name"):
             return apology("must enter last name")
