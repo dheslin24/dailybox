@@ -2299,7 +2299,7 @@ def register():
             return apology("must provide password")
         #Makes sure the user ticked the captcha
         elif google_response['success'] == False:
-            return apology("must tick captcha")
+            return apology("so - you're a robot then?  did you not see the click here I'm not a robot thing??")
         # ensure password was confirmed
         elif not request.form.get("password_confirm"):
             return apology("must confirm password")
