@@ -25,6 +25,35 @@ logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(me
 
 app = Flask(__name__)
 
+    # mysql> select * from pay_type;
+    # +-------------+--------------------------+
+    # | pay_type_id | description              |
+    # +-------------+--------------------------+
+    # |           1 | 4 Qtr Payout 10/30/10/50 |
+    # |           2 | Single Payout            |
+    # |           3 | Every Score              |
+    # |           4 | Touch Box                |
+    # |           5 | 10-Man                   |
+    # |           6 | Satellite
+    # |           7 | 10-Man Final/Reverse 75/25
+    # +-------------+--------------------------+
+
+PAY_TYPE_ID = {
+    'four_qtr' : 1,
+    'single' : 2,
+    'every_score' : 3,
+    'touch' : 4,
+    'ten_man' : 5, 
+    'satellite' : 6,
+    'ten_man_final_reverse': 7
+}
+
+BOX_TYPE_ID = {
+    'dailybox' : 1,
+    'custom' : 2,
+    'nutcracker' : 3
+}
+
 # ensure responses aren't caches
 if app.config["DEBUG"]:
     @app.after_request
@@ -198,20 +227,20 @@ def payout_calc(pay_type, fee):
     |           7 | 10-Man Final/Reverse 75/25
     +-------------+--------------------------+
     '''
-    if pay_type == 1:
+    if pay_type == PAY_TYPE_ID['four_qtr']:
         a = fee * 10
         b = fee * 30
         c = fee * 50
         s = '1st {} / 2nd {} / 3rd {} / Final {}'.format(a, b, a, c)
-    elif pay_type == 2:
+    elif pay_type == PAY_TYPE_ID['single']:
         s = 'Single Winner: {}'.format(fee * 100)
-    elif pay_type == 5:
+    elif pay_type == PAY_TYPE_ID['ten_man']:
         s = 'Single Winner 10 Man: {}'.format(fee * 10)
-    elif pay_type == 6:
+    elif pay_type == PAY_TYPE_ID['satellite']:
         s = 'Satellite'
-    elif pay_type == 7:
+    elif pay_type == PAY_TYPE_ID['ten_man_final_reverse']:
         s = 'Final: {}  /  Reverse Final: {}'.format(int((fee * 10) *.75), int((fee * 10) *.25))
-    elif pay_type == 3:
+    elif pay_type == PAY_TYPE_ID['every_score']:
         s = Markup('Every score wins {} up to 27 scores.  Final gets remainder after all payouts, min {}.  <br>Reverse final wins min {} / max {} (see TW email).  Anything touching reverse or final wins {}.'.format(fee * 3, fee * 10, fee, fee * 10, fee))
     else:
         s = 'Payouts for Game Type not yet supported' # will add later date
@@ -225,7 +254,7 @@ def calc_winner(boxid):  # all this does is strip all beginning digits from the 
     print(pay_type)
 
     winner_list = []
-    if pay_type == 2 or pay_type == 5 or pay_type == 6 or pay_type == 7:  # final only
+    if pay_type == PAY_TYPE_ID['single'] or pay_type == PAY_TYPE_ID['ten_man'] or pay_type == PAY_TYPE_ID['satellite'] or pay_type == PAY_TYPE_ID['ten_man_final_reverse']:  # final only
         s = "SELECT x4, y4 FROM scores WHERE boxid = {};".format(boxid)
         scores = db(s)# [-1:][0]  # always take the last in list
         if len(scores) == 0:
@@ -241,7 +270,7 @@ def calc_winner(boxid):  # all this does is strip all beginning digits from the 
         else:
             winner_list.append(str(score[1]))
 
-    elif pay_type == 1: # all 4 qtrs
+    elif pay_type == PAY_TYPE_ID['four_qtr']: # all 4 qtrs
         s = "SELECT x1, y1, x2, y2, x3, y3, x4, y4 FROM scores WHERE boxid = {};".format(boxid)
         scores = db(s)
         if len(scores) == 0:
@@ -361,8 +390,18 @@ def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None
     t = "INSERT INTO teams(boxid, home, away) VALUES('{}', '{}', '{}');".format(boxid, home, away)
     db(t)
 
-#@app.route("/start_game", methods=["POST", "GET"])
-def start_game(boxid):
+@app.route("/start_game", methods=["POST", "GET"])
+def start_game():
+    boxid = request.form.get('boxid')
+
+    # check if we've already assigned numbers first
+    check_sql_string = "SELECT boxid FROM boxnums WHERE boxid = %s"
+    already_has_numbers = db2(check_sql_string, (boxid, ))
+
+    if already_has_numbers:
+        return apology("Escalate with tech support, this game has already drawn numbers")
+
+
     avail = count_avail(boxid)
     s = "SELECT box_type, pay_type from boxes WHERE boxid = {};".format(boxid)
     box = db(s)        
@@ -372,7 +411,7 @@ def start_game(boxid):
     print("boxtype in start game {}".format(box_type))
     if avail == 0:
         assign_numbers(boxid) # this assigns the row/col numbers
-        if box_type == 1:  # this is a dailybox, so generate the winning numbers as well
+        if box_type == BOX_TYPE_ID['dailybox']:  # this is a dailybox, so generate the winning numbers as well
             winning_col = random.randint(0,9)
             winning_row = random.randint(0,9)
             scores = "INSERT INTO scores(boxid, x4, y4) VALUES('{}', '{}', '{}');".format(boxid, winning_col, winning_row)
@@ -383,13 +422,15 @@ def start_game(boxid):
             # and... update the db with winner - in scores
             w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid)[0], boxid)
             db(w)
-        if pay_type == 3:  # this is everyscore pool, so set 0, 0 as initial winning score
+        if pay_type == PAY_TYPE_ID['every_score']:  # this is everyscore pool, so set 0, 0 as initial winning score
             winner = find_winning_box(boxid, 0, 0)
             win_box = winner[0]
             win_uid = winner[1]
             
             s = "INSERT INTO everyscore(score_num, score_type, boxid, x_score, y_score, winner, winning_box) VALUES('1', '0/0 Start Game', {}, '0', '0', '{}', '{}');".format(boxid, win_uid, win_box)
             db(s)
+        
+        return redirect(url_for("display_box", boxid=boxid))
 
     else:
         print("tried to start game, but boxes still available")
@@ -443,6 +484,48 @@ def get_games(box_type, active = 1):
         print(game_list)
     
     return game_list
+
+def get_espn_scores():
+    season_type = 2  # 1: preseason, 2: regular, 3: post
+    week = 10 # will make this an input soon
+    espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
+    espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+
+    response = requests.get(espn_url)
+    r = response.json()
+
+    game_dict = {}
+    game_num = 1
+    team_dict = {}
+
+    # print(r.keys())
+    # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
+
+    #print(f"events: {r['events']}")
+    #print("##########################")
+    #print(f"games: {r['events'][0]['competitions']}")
+    
+
+    for team in r['events']:
+        for game in team['competitions']:
+            competitors = []
+            for team in game['competitors']:
+                #print(f"team:  {team['team']['displayName']}")
+                #print("\br \br ################ \br \br")
+                home_away = team['homeAway'].upper()
+                competitors.append((home_away, team['team']['abbreviation'], team['score']))
+                team_dict[team['team']['abbreviation']] = team['score']
+            game_dict[game_num] = {
+                'espn_id': game['id'], 
+                'date': game['date'],
+                'venue': game['venue']['fullName'], 
+                'competitors': competitors,
+                'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
+                }
+            game_num += 1
+
+    #return (game_dict, team_dict)
+    return {"game": game_dict, "team": team_dict}
 
 @app.route("/init_box_db")
 @login_required
@@ -646,16 +729,19 @@ def display_box():
     payout = payout_calc(ptype, fee)
     rev_payout = 0
     #current_user = Session['userid']
-    if ptype != 2 and ptype != 5:
+    # if ptype != 2 and ptype != 5:
+    if ptype == PAY_TYPE_ID['four_qtr']:
+        final_payout = fee * 50
+    elif ptype == PAY_TYPE_ID['single']:
         final_payout = fee * 100
-    elif ptype == 5:
+    elif ptype == PAY_TYPE_ID['ten_man']:
         final_payout = fee * 10
-    elif ptype == 6:
+    elif ptype == PAY_TYPE_ID['satellite']:
         final_payout = "Satellite"
     else:
         final_payout = None
 
-    if box_type != 1:
+    if box_type != BOX_TYPE_ID['dailybox']:
         t = "SELECT home, away FROM teams WHERE boxid = {};".format(boxid)
         teams = db(t)
         home = teams[0][0]
@@ -710,7 +796,14 @@ def display_box():
             if box[1] == 'Open':
                 avail += 1
     '''
-    
+    team_scores = get_espn_scores()['team']
+    print(f"team scores: {team_scores}")
+    print(f"home and away: {home} {away}")
+    if home in team_scores and away in team_scores:
+        print(f"home: {home}:{team_scores[home]} away: {away}:{team_scores[away]}")
+    else:
+        print("one team is most likely on bye")
+
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
         num_selection = "Row/Column numbers will be randomly generated once the last box is selected."
@@ -732,14 +825,16 @@ def display_box():
         y = json.loads(xy[1])
             
         winners = calc_winner(boxid)
-        if len(winners) == 0 and ptype != 3:
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection)
+        # no winners and not an every score (paytype = 3)
+        if len(winners) == 0 and ptype != PAY_TYPE_ID['every_score']:
+
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores)
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
-        if (ptype == 2 or ptype == 5 or ptype == 6 or ptype == 7) and len(winners) == 2:
-            if ptype == 2:
+        if (ptype == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite'] or ptype == PAY_TYPE_ID['ten_man_final_reverse']) and len(winners) == 2:
+            if ptype == PAY_TYPE_ID['single']:
                 final_payment = fee * 100
-            elif ptype == 6:
+            elif ptype == PAY['satellite']:
                 final_payment = "Satellite"
             else:
                 final_payment = fee * 10
@@ -754,10 +849,10 @@ def display_box():
             winner = Markup('WINNER</br>')
             grid[y_winner][x_winner] = (winning_boxnum, winner + winning_username)
         
-        elif (ptype == 2 or ptype == 5 or ptype == 6) and len(winners) != 2:
+        elif (ptype == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite']) and len(winners) != 2:
             return apology("something went wrong with winner calculations")
 
-        if ptype == 7:
+        if ptype == PAY_TYPE_ID['ten_man_final_reverse']:
             pass # TODO NUTX - add reverse final here
             for item in x:
                 if x[item] == int(winners[0]):  # x column == y winner
@@ -771,7 +866,7 @@ def display_box():
             # grid[x_winner][y_winner] = (rev_winning_boxnum, rev_winner + rev_winning_username)
             grid[3][1] = (31, Markup('REVERSE</br>WINNER</br>')+'toddw26')
 
-        if ptype == 1 and len(winners) == 8:
+        if ptype == PAY_TYPE_ID['four_qtr'] and len(winners) == 8:
             final_payment = '' +  str(fee * 10) + ' / ' + str(fee * 30) + ' / ' + str(fee * 10) + ' / ' + str(fee * 50)
             for item in x: 
                 if x[item] == int(winners[0]):
@@ -811,10 +906,10 @@ def display_box():
             q4_winner = Markup('Q4 WINNER</br>')
             grid[q4_y_winner][q4_x_winner] = (q4_winning_boxnum, q4_winner + q4_winning_username)
 
-        elif ptype == 1 and len(winners) != 8:
+        elif ptype == PAY_TYPE_ID['four_qtr'] and len(winners) != 8:
             return apology("something went wrong with winner calculations")
 
-        if ptype == 3:
+        if ptype == PAY_TYPE_ID['every_score']:
             print("paytype == 3 i'm here")
             s = "SELECT score_num, winning_box FROM everyscore where boxid = {};".format(boxid) ## finish
             winners = db(s)
@@ -905,10 +1000,11 @@ def display_box():
         s = "SELECT e.score_num, e.x_score, e.y_score, e.score_type, u.username, e.winning_box FROM everyscore e LEFT JOIN users u ON e.winner = u.userid where e.boxid = {} order by e.score_num, e.score_id;".format(boxid)
         scores = db2(s)
 
+        # final every score (paytype =3)
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
 
 
-    if box_type == 1:
+    if box_type == BOX_TYPE_ID['dailybox']:
         sf = ['' for x in range(10)]
         final_payout = ''
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, sf=sf, home=home, away=away, away_team=away_team)
@@ -916,7 +1012,7 @@ def display_box():
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
         final_payout = 'Current Final Payout: ' + str(final_payout)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores)
 
 
 @app.route("/select_box", methods=["GET", "POST"])
@@ -938,7 +1034,7 @@ def select_box():
     for box in boxes:
         if box == 0 or box == 1:
             rand_list.append(index)
-        if (box_type == 3 or pay_type == 5 or pay_type == 6) and box == session['userid']:
+        if (box_type == BOX_TYPE_ID['nutcracker'] or pay_type == PAY_TYPE_ID['ten_man'] or pay_type == PAY_TYPE_ID['satellite']) and box == session['userid']:
             user_box_count += 1
         index += 1
 
@@ -970,12 +1066,12 @@ def select_box():
         box_num = int(request.form.get('box_num'))
         if box_num in rand_list:
             # 10-man validation
-            if (box_type == 3 or pay_type == 5) and user_box_count >= 10:
+            if (box_type == BOX_TYPE_ID['nutcracker'] or pay_type == PAY_TYPE_ID['ten_man']) and user_box_count >= 10:
                 return apology("Really??  This is a 10-man.  10 boxes max.  100/10 = 10")
-            elif pay_type == 6 and check_box_limit(session['userid']):
+            elif pay_type == PAY_TYPE_ID['satellite'] and check_box_limit(session['userid']):
                 return apology("Really??  You lost count - you're out of boxes.  Double check with TW to make sure he set you up correctly.")
 
-            elif pay_type == 7 and check_box_limit(session['userid']):
+            elif pay_type == PAY_TYPE_ID['ten_man_final_reverse'] and check_box_limit(session['userid']):
                 return apology("Really??  Clearly you lost count.  You didn't win that many satellite boxes.")
 
             else:
@@ -985,7 +1081,7 @@ def select_box():
             # first - if rand_list len == 0, game has started, can't undo
             if len(rand_list) == 0:
                 return apology("Really??  numbers were drawn - can't undo now - too late!!")
-            if box_type != 3:
+            if box_type != BOX_TYPE_ID['nutcracker']:
                 s = "UPDATE boxes SET box{}= 1 WHERE boxid = {};".format(box_num, boxid)
                 db(s)
                 logging.info("user {} just unselected box {} in boxid {}".format(session['username'], box_num, boxid))
@@ -1010,10 +1106,10 @@ def select_box():
     #if balance < fee * len(box_list) and box_type != 3:
         #return apology("Insufficient Funds")
 
-    if user_box_count + len(box_list) > 10 and (box_type == 3 or pay_type == 5):
+    if user_box_count + len(box_list) > 10 and (box_type == BOX_TYPE_ID['nutcracker'] or pay_type == PAY_TYPE_ID['ten_man']):
         return apology("Really?  This is a 10-man.  10 boxes max.  100/10=10")
     
-    elif box_type == 3:
+    elif box_type == BOX_TYPE_ID['nutcracker']:
         g = "SELECT gobbler_id FROM boxes WHERE boxid = {};".format(boxid)
         gobbler_id = db(g)[0][0]
         for b in box_list:
@@ -1025,13 +1121,17 @@ def select_box():
                 s = "UPDATE boxes SET box{}={} WHERE gobbler_id = {};".format(b, session['userid'], gobbler_id)
             db(s)
 
+        ######  DH 11/15/21 ###########################
+        ##     no longer auto starting games per biz ##
+        ###############################################
+
         # are these the last available boxes?  start the game.
-        if len(box_list) == len(rand_list):
-            gobs = "SELECT boxid FROM boxes WHERE gobbler_id = {};".format(gobbler_id)
-            boxids = db(gobs)
-            boxid_list = []
-            for box in boxids:
-                start_game(box[0])
+        # if len(box_list) == len(rand_list):
+        #     gobs = "SELECT boxid FROM boxes WHERE gobbler_id = {};".format(gobbler_id)
+        #     boxids = db(gobs)
+        #     boxid_list = []
+        #     for box in boxids:
+        #         start_game(box[0])
 
         return redirect(url_for("display_box", boxid=boxid))
 
@@ -1048,12 +1148,16 @@ def select_box():
         # bal = "UPDATE users SET balance = {} WHERE userid = {};".format(new_bal, session['userid'])
         # db(bal)
 
+        ######  DH 11/15/21 ###########################
+        ##     no longer auto starting games per biz ##
+        ###############################################
+        
         # are these the last available boxes?  start the game.
-        if len(box_list) == len(rand_list):
-            start_game(boxid)
-            # also, if it's a DB, create a new one
-            if box_type == 1:
-                create_new_game(box_type, 2, fee)
+        # if len(box_list) == len(rand_list):
+        #     start_game(boxid)
+        #     # also, if it's a DB, create a new one
+        #     if box_type == BOX_TYPE_ID['dailybox']:
+        #         create_new_game(box_type, 2, fee)
 
         return redirect(url_for("display_box", boxid=boxid))
 
@@ -1542,6 +1646,22 @@ def enter_custom_scores():
 
     else:
         return render_template("enter_custom_scores.html")
+
+
+# test for displaying/parsing live scores from espn API
+@app.route("/live_scores", methods=["GET", "POST"])
+def live_scores():
+
+    response = get_espn_scores()
+    # game_dict = response[0]
+    # team_dict = response[1]
+    game_dict = response['game']
+    team_dict = response['team']
+    print(f"teamdict: {team_dict}")
+
+    print(f"espn response game dict:")
+    [print(f"game {game}: {game_dict[game]}") for game in game_dict]
+    return render_template("live_scores.html", game_dict = game_dict)
 
 # 'threes' dice game
 @app.route("/threes", methods=["GET", "POST"])

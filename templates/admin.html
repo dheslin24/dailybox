@@ -91,5 +91,10 @@
         <input type="text" name="userid" size="5">
         <input type="submit">
     </form>
+    <form action="{{ url_for('start_game') }}" method="POST">
+        <label for="boxid">Start Game ID</label>
+        <input type="text" name="boxid" size="5">
+        <input type="submit">
+    </form>
 
 {% endblock %}
