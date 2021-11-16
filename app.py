@@ -487,7 +487,7 @@ def get_games(box_type, active = 1):
 
 def get_espn_scores():
     season_type = 2  # 1: preseason, 2: regular, 3: post
-    week = 10 # will make this an input soon
+    week = 12 # will make this an input soon
     espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
     espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
 
