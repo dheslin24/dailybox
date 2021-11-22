@@ -761,7 +761,19 @@ def display_box():
         away_team['4'] = away[0]
         away_team['5'] = away[1]
 
-
+    team_scores = get_espn_scores()['team']
+    print(f"team scores: {team_scores}")
+    print(f"home and away: {home} {away}")
+    home_digit = 0
+    away_digit = 0
+    if home in team_scores and away in team_scores:
+        print(f"home: {home}:{team_scores[home]} away: {away}:{team_scores[away]}")
+        home_digit = team_scores[home][-1]
+        away_digit = team_scores[away][-1]
+        print(home_digit, away_digit)
+    else:
+        print("one team is most likely on bye")
+    
     # create a dict of userid:username
     u = "SELECT userid, username FROM users;"
     user_dict = dict(db(u))
@@ -796,13 +808,7 @@ def display_box():
             if box[1] == 'Open':
                 avail += 1
     '''
-    team_scores = get_espn_scores()['team']
-    print(f"team scores: {team_scores}")
-    print(f"home and away: {home} {away}")
-    if home in team_scores and away in team_scores:
-        print(f"home: {home}:{team_scores[home]} away: {away}:{team_scores[away]}")
-    else:
-        print("one team is most likely on bye")
+
 
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
@@ -823,12 +829,33 @@ def display_box():
         xy = db(xy_string)[0]
         x = json.loads(xy[0])
         y = json.loads(xy[1])
+
+        print(f"xy: {x} -- {y}")
             
         winners = calc_winner(boxid)
         # no winners and not an every score (paytype = 3)
         if len(winners) == 0 and ptype != PAY_TYPE_ID['every_score']:
 
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores)
+            for col in x:   
+                if str(x[col]) == home_digit:
+                    curr_win_col = int(col)
+                    break
+            for row in y:
+                if str(y[row]) == away_digit:
+                    curr_win_row = int(row)
+                    break
+
+            curr_winner_user = grid[curr_win_row][curr_win_col][1]
+            #curr_winner = ['Current', 'WINNER', curr_winner_user]
+            curr_winner = Markup(f'Current</br>WINNER</br>{curr_winner_user}')
+
+            #f"this one here: {grid[curr_win_row][curr_win_col][0]}")
+            curr_winner_boxnum = grid[curr_win_row][curr_win_col][0]
+            print(curr_winner)
+            grid[curr_win_row][curr_win_col] = (curr_winner_boxnum, curr_winner)
+            print(grid)
+
+            return render_template("display_box_espn.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores)
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
         if (ptype == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite'] or ptype == PAY_TYPE_ID['ten_man_final_reverse']) and len(winners) == 2:
@@ -847,9 +874,7 @@ def display_box():
             winning_username = grid[y_winner][x_winner][1]
             winning_boxnum = int(str(y_winner) + str(x_winner))
             winner = Markup('WINNER</br>')
-            grid[y_winner][x_winner] = (winning_boxnum, winner + winning_username)
-        
-        elif (ptype == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite']) and len(winners) != 2:
+            #pe == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite']) and len(winners) != 2:
             return apology("something went wrong with winner calculations")
 
         if ptype == PAY_TYPE_ID['ten_man_final_reverse']:
