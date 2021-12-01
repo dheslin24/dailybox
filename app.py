@@ -436,7 +436,7 @@ def start_game():
         print("tried to start game, but boxes still available")
         return apology("Cannot start game - still boxes available")
     
-
+# takes [box_type, box_type, ...]
 def get_games(box_type, active = 1):
     box_string = ''
     for b in box_type:
@@ -704,10 +704,14 @@ def game_list():
 def custom_game_list():
     game_list = get_games([2,3])
 
+    no_active_games_string = ''
+    if not game_list:
+        no_active_games_string = 'No Active Games'
+
     # sorted(game_list, key=itemgetter(0))
     game_list.sort(key=lambda x: x[0])
 
-    return render_template("custom_game_list.html", game_list = game_list)
+    return render_template("custom_game_list.html", game_list = game_list, no_active_games_string = no_active_games_string)
 
 @app.route("/display_box", methods=["GET", "POST"])
 @login_required
@@ -858,10 +862,11 @@ def display_box():
             return render_template("display_box_espn.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores)
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
+        print(f'dh 1126 paytype {ptype} {winners}')
         if (ptype == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite'] or ptype == PAY_TYPE_ID['ten_man_final_reverse']) and len(winners) == 2:
             if ptype == PAY_TYPE_ID['single']:
                 final_payment = fee * 100
-            elif ptype == PAY['satellite']:
+            elif ptype == PAY_TYPE_ID['satellite']:
                 final_payment = "Satellite"
             else:
                 final_payment = fee * 10
@@ -874,8 +879,9 @@ def display_box():
             winning_username = grid[y_winner][x_winner][1]
             winning_boxnum = int(str(y_winner) + str(x_winner))
             winner = Markup('WINNER</br>')
-            #pe == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite']) and len(winners) != 2:
-            return apology("something went wrong with winner calculations")
+            grid[y_winner][x_winner] = (winning_boxnum, winner + winning_username)
+            if (ptype == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite']) and len(winners) != 2:
+                return apology("something went wrong with winner calculations")
 
         if ptype == PAY_TYPE_ID['ten_man_final_reverse']:
             pass # TODO NUTX - add reverse final here
@@ -1019,20 +1025,22 @@ def display_box():
             else:
                 final_payout = (fee * 100) - (fee * 10) - (fee * 3)  # total pool - reverse - 0/0 
 
-        winner_dict = {}
-        print("home/away2 {} {}".format(home,away))
+            winner_dict = {}
+            print("home/away2 {} {}".format(home,away))
 
-        s = "SELECT e.score_num, e.x_score, e.y_score, e.score_type, u.username, e.winning_box FROM everyscore e LEFT JOIN users u ON e.winner = u.userid where e.boxid = {} order by e.score_num, e.score_id;".format(boxid)
-        scores = db2(s)
+            s = "SELECT e.score_num, e.x_score, e.y_score, e.score_type, u.username, e.winning_box FROM everyscore e LEFT JOIN users u ON e.winner = u.userid where e.boxid = {} order by e.score_num, e.score_id;".format(boxid)
+            scores = db2(s)
 
-        # final every score (paytype =3)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
+            # final every score (paytype =3)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
 
 
     if box_type == BOX_TYPE_ID['dailybox']:
         sf = ['' for x in range(10)]
         final_payout = ''
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, sf=sf, home=home, away=away, away_team=away_team)
+    
+    # display box for all except every score or dailybox
     else:
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
