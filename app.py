@@ -1,7 +1,6 @@
 from flask import Flask, flash, redirect, render_template, request, session, url_for, Markup
 from flask_session import Session
 import logging
-
 import requests
 #from flask_sslify import SSLify
 from passlib.apps import custom_app_context as pwd_context
@@ -15,15 +14,18 @@ from operator import itemgetter, attrgetter
 import mysql.connector
 from mysql.connector import errorcode
 from functools import wraps
-from sportsreference.nfl.boxscore import Boxscores, Boxscore
-from sportsreference.nfl.schedule import Schedule
+# from sportsreference.nfl.boxscore import Boxscores, Boxscore
+# from sportsreference.nfl.schedule import Schedule
+print('dh0')
 #import weasyprint
 #from weasyprint import HTML
 #from flask_weasyprint import HTML, render_pdf
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
+print('dh1')
 app = Flask(__name__)
+print('dh2')
 
     # mysql> select * from pay_type;
     # +-------------+--------------------------+
@@ -486,12 +488,16 @@ def get_games(box_type, active = 1):
     return game_list
 
 def get_espn_scores():
-    season_type = 2  # 1: preseason, 2: regular, 3: post
-    week = 12 # will make this an input soon
+    season_type = 3  # 1: preseason, 2: regular, 3: post
+    week = 1 # will make this an input soon
+    league = 'nfl'
     espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
     espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+    #espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
+    espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 
-    response = requests.get(espn_url)
+    #response = requests.get(espn_url)
+    response = requests.get(espn_ncaa_url)
     r = response.json()
 
     game_dict = {}
@@ -499,7 +505,10 @@ def get_espn_scores():
     team_dict = {}
 
     # print(r.keys())
+    # print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
     # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
+    # print(r)
+    #print(r['events'][0]['competitions'])
 
     #print(f"events: {r['events']}")
     #print("##########################")
@@ -509,17 +518,25 @@ def get_espn_scores():
     for team in r['events']:
         for game in team['competitions']:
             competitors = []
+            headline = ''
+            if 'notes' in game:
+                if len(game['notes']) > 0:
+                    if 'headline' in game['notes'][0]:
+                        headline = game['notes'][0]['headline']
+
             for team in game['competitors']:
                 #print(f"team:  {team['team']['displayName']}")
                 #print("\br \br ################ \br \br")
                 home_away = team['homeAway'].upper()
                 competitors.append((home_away, team['team']['abbreviation'], team['score']))
                 team_dict[team['team']['abbreviation']] = team['score']
+                
             game_dict[game_num] = {
                 'espn_id': game['id'], 
                 'date': game['date'],
                 'venue': game['venue']['fullName'], 
                 'competitors': competitors,
+                'headline': headline,
                 'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
                 }
             game_num += 1
@@ -2795,5 +2812,5 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
 

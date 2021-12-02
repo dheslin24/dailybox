@@ -16,21 +16,28 @@
     <h4>
         <table align = "center", cellpadding = "10">
         <tr>
-            <th> Game Number </th>
+            <th> Game </th>
             <th> H/A </th>
             <th> Team </th>
             <th> Score </th>
         </tr>
             {% for game in game_dict %}
+                {% if game_dict[game]['headline']|length > 0 %}
+                <tr>
+                    <td colspan="4">{{ game_dict[game]['headline'] }}</td>
+                </tr>
+                {% endif %}
                 {% for team in game_dict[game]['competitors'] %}
                 <tr>
-                    <td> {{ game }} </td>
+                    {% if loop.index == 1 %}
+                    <td rowspan="2">{{ game }}</td>
+                    {% endif %}
                     <td>{{ team[0] }}</td>
                     <td>{{ team[1] }}</td>
                     <td>{{ team[2] }}</td>
                 </tr>
                 {% endfor %}
-            <tr><td class="scores"></td><td class="scores"></td><td class="scores"></td><td class="scores"></td></tr>
+            <tr><td colspan="4" style="background-color:black;"></td></tr>
             {% endfor %}
         </table>
     </h4>
