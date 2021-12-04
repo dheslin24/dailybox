@@ -9,6 +9,7 @@ import sys
 import random
 import json
 import config
+from datetime import datetime, timedelta
 import re
 from operator import itemgetter, attrgetter
 import mysql.connector
@@ -16,7 +17,6 @@ from mysql.connector import errorcode
 from functools import wraps
 # from sportsreference.nfl.boxscore import Boxscores, Boxscore
 # from sportsreference.nfl.schedule import Schedule
-print('dh0')
 #import weasyprint
 #from weasyprint import HTML
 #from flask_weasyprint import HTML, render_pdf
@@ -487,7 +487,7 @@ def get_games(box_type, active = 1):
     
     return game_list
 
-def get_espn_scores():
+def get_espn_scores(abbrev = True):
     season_type = 3  # 1: preseason, 2: regular, 3: post
     week = 1 # will make this an input soon
     league = 'nfl'
@@ -504,6 +504,7 @@ def get_espn_scores():
     game_num = 1
     team_dict = {}
 
+    # <<<<<<<<<TESTING>>>>>>>>
     # print(r.keys())
     # print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
     # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
@@ -518,6 +519,7 @@ def get_espn_scores():
     for team in r['events']:
         for game in team['competitions']:
             competitors = []
+            abbreviations = {}
             headline = ''
             if 'notes' in game:
                 if len(game['notes']) > 0:
@@ -528,14 +530,26 @@ def get_espn_scores():
                 #print(f"team:  {team['team']['displayName']}")
                 #print("\br \br ################ \br \br")
                 home_away = team['homeAway'].upper()
-                competitors.append((home_away, team['team']['abbreviation'], team['score']))
+                if abbrev:
+                    competitors.append((home_away, team['team']['abbreviation'], team['score']))
+                else:
+                    competitors.append((home_away, team['team']['displayName'] + ' ' + team['team']['name'], team['score']))
+                    abbreviations[home_away] = team['team']['abbreviation']
+
                 team_dict[team['team']['abbreviation']] = team['score']
                 
+            # convert string to datetime e.g.:  
+            # 'date': '2022-01-01T17:00Z'
+            game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
+            game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
+
             game_dict[game_num] = {
-                'espn_id': game['id'], 
-                'date': game['date'],
+                'espn_id': int(game['id']), 
+                'date': game_date,
+                'datetime': game_datetime,
                 'venue': game['venue']['fullName'], 
                 'competitors': competitors,
+                'abbreviations': abbreviations,
                 'headline': headline,
                 'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
                 }
@@ -1702,16 +1716,62 @@ def enter_custom_scores():
 @app.route("/live_scores", methods=["GET", "POST"])
 def live_scores():
 
-    response = get_espn_scores()
-    # game_dict = response[0]
-    # team_dict = response[1]
+    response = get_espn_scores(False)
     game_dict = response['game']
     team_dict = response['team']
     print(f"teamdict: {team_dict}")
 
     print(f"espn response game dict:")
     [print(f"game {game}: {game_dict[game]}") for game in game_dict]
-    return render_template("live_scores.html", game_dict = game_dict)
+
+    # get users picks
+    p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
+    picks = db2(p, (session['userid'],))
+    print(f"dict picks: {dict(picks)}")
+    now = datetime.utcnow() - timedelta(hours=5)
+
+    return render_template("live_scores.html", game_dict = game_dict, picks=dict(picks), now=now)
+
+@app.route("/display_bowl_games", methods=["GET", "POST"])
+def display_bowl_games():
+
+    response = get_espn_scores(False)
+    game_dict = response['game']
+    team_dict = response['team']
+    print(f"teamdict: {team_dict}")
+
+    print(f"espn response game dict:")
+    [print(f"game {game}: {game_dict[game]}") for game in game_dict]
+
+    # get users picks
+    p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
+    picks = db2(p, (session['userid'],))
+    print(f"dict picks: {dict(picks)}")
+    now = datetime.utcnow() - timedelta(hours=5)
+
+    return render_template("display_bowl_games.html", game_dict = game_dict, picks=dict(picks), now=now)
+
+@app.route("/select_bowl_games", methods=["GET", "POST"])
+def select_bowl_games():
+
+    # TODO
+    # get list of active espn ids
+    game_dict = get_espn_scores(False)['game']
+    print(game_dict)
+
+    # iterate through them, getting the pick value
+    # insert picks into bowlpicks table
+    for game in game_dict:
+        if request.form.get(str(game_dict[game]['espn_id'])) and request.form.get(str(game_dict[game]['espn_id'])) != "TBD":
+            #s = "INSERT INTO bowlpicks (userid, espnid, pick, datetime) VALUES (%s, %s, %s, convert_tz(now(), '-00:00', '+05:00'));"  # convert to utc
+            s = "INSERT INTO bowlpicks (userid, espnid, pick, datetime) VALUES (%s, %s, %s, now());"  # local time, EST
+            db2(s, (session['userid'], game_dict[game]['espn_id'], request.form.get(str(game_dict[game]['espn_id']))))
+    
+
+    print(f"{session['username']} just selected bowl picks")
+    logging.info("{} just selected bowl picks".format(session["username"]))
+ 
+    return redirect(url_for('live_scores'))
 
 # 'threes' dice game
 @app.route("/threes", methods=["GET", "POST"])
@@ -2306,57 +2366,57 @@ def pickem_rules():
     return render_template("pickem_rules.html")
 
 ## test stuff for auto download of scores
-@app.route("/get_scores", methods=["GET", "POST"])
-def get_scores():
-    week = 17
-    year = 2020
+# @app.route("/get_scores", methods=["GET", "POST"])
+# def get_scores():
+#     week = 17
+#     year = 2020
 
-    team_dict = sref_to_pickem()
+#     team_dict = sref_to_pickem()
 
-    # get list of game ids
-    game_list = []
-    game_data = Boxscores(week, year)
-    for game in game_data.games[str(week) + '-' + str(year)]:
-        game_list.append(game['boxscore'])
+#     # get list of game ids
+#     game_list = []
+#     game_data = Boxscores(week, year)
+#     for game in game_data.games[str(week) + '-' + str(year)]:
+#         game_list.append(game['boxscore'])
 
-    # get boxscore objects for each game id
-    game_dict = {}
-    for game in game_list:
-        b = Boxscore(game)
-        print(b.home_abbreviation, b.home_points, b.away_abbreviation, b.away_points, b.summary)
-        game_dict[game] = b
+#     # get boxscore objects for each game id
+#     game_dict = {}
+#     for game in game_list:
+#         b = Boxscore(game)
+#         print(b.home_abbreviation, b.home_points, b.away_abbreviation, b.away_points, b.summary)
+#         game_dict[game] = b
 
-        gameid = game
-        # hometeam = game_data.games[str(week) + '-' + str(year)][gameid]['home_name']
-        home_abbr = b.home_abbreviation
-        home_score = b.home_points
-        # awayteam = game_data.games[str(week) + '-' + str(year)][gameid]['away_name']
-        away_abbr = b.away_abbreviation
-        away_score = b.away_points
-        if len(b.summary['home']) > 0:
-            home_q1 = b.summary['home'][0] 
-            home_q2 = b.summary['home'][1]
-            home_q3 = b.summary['home'][2]
-            home_q4 = b.summary['home'][3]
-            away_q1 = b.summary['away'][0]
-            away_q2 = b.summary['away'][1]
-            away_q3 = b.summary['away'][2]
-            away_q4 = b.summary['away'][3]
-        else:
-            home_q1 = 0 
-            home_q2 = 0 
-            home_q3 = 0
-            home_q4 = 0
-            away_q1 = 0
-            away_q2 = 0
-            away_q3 = 0
-            away_q4 = 0
+#         gameid = game
+#         # hometeam = game_data.games[str(week) + '-' + str(year)][gameid]['home_name']
+#         home_abbr = b.home_abbreviation
+#         home_score = b.home_points
+#         # awayteam = game_data.games[str(week) + '-' + str(year)][gameid]['away_name']
+#         away_abbr = b.away_abbreviation
+#         away_score = b.away_points
+#         if len(b.summary['home']) > 0:
+#             home_q1 = b.summary['home'][0] 
+#             home_q2 = b.summary['home'][1]
+#             home_q3 = b.summary['home'][2]
+#             home_q4 = b.summary['home'][3]
+#             away_q1 = b.summary['away'][0]
+#             away_q2 = b.summary['away'][1]
+#             away_q3 = b.summary['away'][2]
+#             away_q4 = b.summary['away'][3]
+#         else:
+#             home_q1 = 0 
+#             home_q2 = 0 
+#             home_q3 = 0
+#             home_q4 = 0
+#             away_q1 = 0
+#             away_q2 = 0
+#             away_q3 = 0
+#             away_q4 = 0
 
-    s = "INSERT INTO pickem.pickem_scores_sref (gameid, home_abbr, home_score, away_abbr, away_score, home_q1, home_q2, home_q3, home_q4, away_q1, away_q2, away_q3, away_q4) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+#     s = "INSERT INTO pickem.pickem_scores_sref (gameid, home_abbr, home_score, away_abbr, away_score, home_q1, home_q2, home_q3, home_q4, away_q1, away_q2, away_q3, away_q4) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
 
-    db2(s, (gameid, team_dict[home_abbr], home_score, team_dict[away_abbr], away_score, home_q1, home_q2, home_q3, home_q4, away_q1, away_q2, away_q3, away_q4))
+#     db2(s, (gameid, team_dict[home_abbr], home_score, team_dict[away_abbr], away_score, home_q1, home_q2, home_q3, home_q4, away_q1, away_q2, away_q3, away_q4))
 
-    return render_template('get_scores.html', game_list=game_list, game_dict=game_dict, team_dict=team_dict)
+#     return render_template('get_scores.html', game_list=game_list, game_dict=game_dict, team_dict=team_dict)
 
 
 # LOGIN routine

@@ -135,6 +135,12 @@ main td.team:hover {
     cursor: pointer;
 }
 
+main td.headline {
+    width: 60px;
+    background-color: lightgreen;
+    color: black;
+}
+
 main td.box {
     vertical-align: top;
     background-color: white;
