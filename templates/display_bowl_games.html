@@ -7,15 +7,17 @@
 {% block main %}
     <h1>
         <p>
-            Display Bowl Games
+            Bowl Games
         </p>
     </h1>
 
-    <a href="{{ url_for('live_scores') }}">Refresh</a>
+    <a href="{{ url_for('select_bowl_games') }}">Refresh</a>
     </br>
+    <p> Click team name to select.  Be sure to click submit when done.</p>
     <h4>
         <form action="{{ url_for('select_bowl_games') }}" method="POST">
-        <input class="pick" type="submit" value="Submit Picks">
+        <input class="pick" type="submit" value="Submit Picks"></br>
+        <img src="https://media2.giphy.com/media/3og0IR5hF5th7bVV9C/giphy.gif?cid=ecf05e47fpokmng5vdpy714k1eb9l27peb9bsz4bws176og4&rid=giphy.gif&ct=g"></br>
         <table align = "center", cellpadding = "10">
         <tr>
             <th> Game </th>
@@ -72,6 +74,8 @@
         <input class="pick" type="submit" value="Submit Picks">
         </form>
     </h4>
+
+    <img src="https://media3.giphy.com/media/3ohzdIuqJoo8QdKlnW/giphy.gif?cid=ecf05e47fpokmng5vdpy714k1eb9l27peb9bsz4bws176og4&rid=giphy.gif&ct=g" style="display: block; width: 120%; height: auto;">
 
     <script type="text/javascript">
         function change(value, id, locked) {
