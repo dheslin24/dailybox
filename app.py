@@ -1783,7 +1783,7 @@ def select_bowl_games():
     print(f"{session['username']} just selected bowl picks")
     logging.info("{} just selected bowl picks".format(session["username"]))
  
-    return redirect(url_for('live_scores'))
+    return redirect(url_for('display_bowl_games'))
 
 # 'threes' dice game
 @app.route("/threes", methods=["GET", "POST"])
