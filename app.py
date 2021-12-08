@@ -510,6 +510,8 @@ def get_espn_scores(abbrev = True):
     # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
     # print(r)
     #print(r['events'][0]['competitions'])
+    print(r['events'][0]['competitions'][0]['odds'][0]['details'])
+    print(r['events'][0]['competitions'][0]['odds'][0]['overUnder'])
 
     #print(f"events: {r['events']}")
     #print("##########################")
@@ -521,6 +523,14 @@ def get_espn_scores(abbrev = True):
             competitors = []
             abbreviations = {}
             headline = ''
+            if 'odds' in game:
+                line = game['odds'][0]['details'].split(' ')
+                over_under = game['odds'][0]['overUnder']
+            else:
+                line = 'TBD'
+                over_under = 'TBD'
+
+            print(f"line:  {line}  o/u: {over_under}")
             if 'notes' in game:
                 if len(game['notes']) > 0:
                     if 'headline' in game['notes'][0]:
@@ -550,6 +560,8 @@ def get_espn_scores(abbrev = True):
                 'venue': game['venue']['fullName'], 
                 'competitors': competitors,
                 'abbreviations': abbreviations,
+                'line': line,
+                'over_under': over_under,
                 'headline': headline,
                 'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
                 }

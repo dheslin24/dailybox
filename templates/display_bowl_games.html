@@ -21,7 +21,7 @@
         <table align = "center", cellpadding = "10">
         <tr>
             <th> Game </th>
-            <th> H/A </th>
+            <th> Line </th>
             <th> Team </th>
             <th> Score </th>
             <th> Pick </th>
@@ -39,7 +39,14 @@
                         {% if loop.index == 1 %}
                         <td rowspan="2" class="ptd" style="width: 60px;">{{ game }}</td>
                         {% endif %}
-                        <td class="ptd" style="width: 60px;">{{ team[0] }}</td>
+                        <!-- <td class="ptd" style="width: 60px;">{{ team[0] }}</td> -->
+                        {% if game_dict[game]['abbreviations'][team[0]] == game_dict[game]['line'][0] %}
+                            <td class="ptd" style="width: 60px;">{{ game_dict[game]['line'][1] }}</td>
+                        {% elif game_dict[game]['line'][0] == 'EVEN' %}
+                        <td class="ptd" style="width: 60px;">{{ game_dict[game]['line'][0] }}</td>
+                        {% else %}
+                            <td class="ptd" style="width: 60px;"></td>
+                        {% endif %}
                         <td class="team" style="width:250px; text-align: left;" onClick="change('{{ game_dict[game]['abbreviations'][team[0]] }}', {{ game_dict[game]['espn_id'] }}, 0)"> {{ team[1] }} </td>
                         <td class="ptd" style="width: 60px;">{{ team[2] }}</td>
                         {% if loop.index == 1 %}
