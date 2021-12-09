@@ -1,0 +1,88 @@
+{% extends "layout_bowls.html" %}
+
+{% block title %}
+    Bowl Games Payment Status
+{% endblock %}
+
+{% block main %}
+    <h1>
+        <p>
+            Payment Status for all Bowl Game Users (public shaming)
+        </p>
+    </h1>
+        <p> Total users in pool:  {{ total_users }}  </p>
+        <p> Total Prize Pool:  {{ prize_pool }} </p>
+    
+    <img src="https://media4.giphy.com/media/4jOqk3ChYjQSk/giphy.gif?cid=ecf05e47tsykcqwnvf74qwpec6y4tc92xfadc6ukr4kfp635&rid=giphy.gif&ct=g">
+    </br>
+
+    {% if session['userid'] in admins %}
+    <h4>
+        <table align = "center", name="user_table", class="user_table", cellpadding = "10">
+            <tr>
+            <th> userid </th>
+            <th> username </th>
+            <th> paid? </th>
+            <th> mark paid </th>
+            </tr>
+            {% for user in display_list %}
+            <tr>
+                {% for field in user %}
+                <td class="payment"> {{ field }} </td>
+                {% endfor %}
+                <td><form action="{{ url_for('bowl_mark_paid') }}" method="POST">
+                    <input type="submit" value="{{ user[0] }}" name="userid">
+                    <input type="hidden" value="True" name="paid"></form></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </h4>
+    {% else %}
+
+    <h4>
+        <table align = "center", name="user_table", class="user_table", cellpadding = "10">
+            <tr>
+            <th> userid </th>
+            <th> username </th>
+            <th> paid? </th>
+            </tr>
+            {% for user in display_list %}
+            <tr>
+                {% for field in user %}
+                <td class="payment"> {{ field }} </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </h4>
+
+    {% endif %}
+
+<script>
+var allTableCells = document.getElementsByTagName("td");
+
+for(var i = 0, max = allTableCells.length; i < max; i++) {
+    var node = allTableCells[i];
+
+    //get the value of fee and paid column
+    var fee = node.childNodes[5].nodeValue; 
+    var paid = node.childNodes[6].nodeValue;
+
+    //check for 'one' and assign this table cell's background color accordingly 
+    if (fee != paid)
+        node.style.backgroundColor = "red";
+}
+</script>
+
+<script>
+$('.user_table .f').each(function() {
+    var val = parseInt( $(this).text(), 10),
+        dd = parseInt( $('#'d).text(), 10);
+    if (val != dd) {
+        $(this).css('background-color', 'red');
+    }
+});
+</script>
+
+{% endblock %}
+

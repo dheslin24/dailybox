@@ -524,6 +524,7 @@ def get_espn_scores(abbrev = True):
             abbreviations = {}
             headline = ''
             if 'odds' in game:
+                #print(f"len odds: {len(game['odds'])}")
                 line = game['odds'][0]['details'].split(' ')
                 over_under = game['odds'][0]['overUnder']
             else:
@@ -555,8 +556,8 @@ def get_espn_scores(abbrev = True):
 
             game_dict[game_num] = {
                 'espn_id': int(game['id']), 
-                'date': game_date,
-                'datetime': game_datetime,
+                'date': game_date, # date string for printing
+                'datetime': game_datetime, # datetime object for comparison
                 'venue': game['venue']['fullName'], 
                 'competitors': competitors,
                 'abbreviations': abbreviations,
@@ -1766,7 +1767,6 @@ def display_bowl_games():
 @app.route("/select_bowl_games", methods=["GET", "POST"])
 def select_bowl_games():
 
-    # TODO
     # get list of active espn ids
     game_dict = get_espn_scores(False)['game']
     print(game_dict)
@@ -1784,6 +1784,112 @@ def select_bowl_games():
     logging.info("{} just selected bowl picks".format(session["username"]))
  
     return redirect(url_for('display_bowl_games'))
+
+@app.route("/view_all_bowl_picks", methods=["GET", "POST"])
+def view_all_bowl_picks():
+
+    # get list of active games first
+    game_dict = get_espn_scores(False)['game']
+
+    # get dict of userid: username for display
+    u = "SELECT userid, username FROM users WHERE active = 1;"
+    user_dict = dict(db2(u))
+
+    # create set of locked games to hide in view all screen for non user
+    locked_games = set()
+    for game in game_dict:
+        if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5):
+            locked_games.add(game_dict[game]['espn_id'])
+
+    print(f"locked games {locked_games}")
+
+    # get user picks
+    s = "SELECT userid, espnid, pick FROM bowlpicks ORDER BY pick_id ASC;"
+    all_picks = db2(s)
+    print(all_picks)
+
+    # dict of {userid:  {espnid: pick}}
+    d = {}
+    for pick in all_picks:
+        if pick[0] not in d:
+            d[pick[0]] = {pick[1]: pick[2]}
+        else:
+            d[pick[0]][pick[1]] = pick[2]
+
+    print(f"dddddddd {d}")
+
+    # for now.. just to test
+    return render_template("view_all_bowl_picks.html", game_dict=game_dict, d=d, locked_games=locked_games, user_dict=user_dict)
+
+@app.route("/bowl_payment_status", methods=["GET", "POST"])
+def bowl_payment_status():
+    #season = 2021 
+    # find users that have a pickem entry
+    u = "SELECT DISTINCT up.userid, u.username FROM bowlpicks up LEFT JOIN users u ON up.userid = u.userid;"
+    bowl_users = dict(db2(u))
+
+    p = "SELECT * FROM bowl_payment;"
+    payment_dict = dict(db2(p))
+
+    # add users who are in but haven't made picks yet
+    # uid = "SELECT userid, username FROM users WHERE is_pickem_user = 1"
+    # empty_users = db2(uid)
+    # if len(empty_users) > 0:
+    #     for user in empty_users:
+    #         pickem_users[user[0]] = user[1]
+    
+    entry = 50
+    prize_pool = 50 * len(bowl_users)
+
+    # find list of admins who can update status
+    s = "SELECT userid FROM users WHERE is_admin = 1;"
+    a = db2(s)
+    admins = []
+    for admin in a:
+        admins.append(admin[0])
+    print(admins)
+
+    thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    middle_finger = '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    check = '\u2714'
+    ex = '\u274c'
+
+    
+    display_list = []
+    for user in bowl_users:
+        if user not in payment_dict:
+            display_list.append((user, bowl_users[user], ex))
+        else:
+            if user == 113:
+                display_list.append((user, bowl_users[user], middle_finger))
+            elif payment_dict[user] == True:
+                display_list.append((user, bowl_users[user], check))
+            else:
+                display_list.append((user, bowl_users[user], ex))
+    print("payment stuff")
+    print(bowl_users)
+    print(payment_dict)
+    print(display_list)
+                
+    return render_template("bowl_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list), prize_pool=prize_pool) 
+
+@app.route("/bowl_mark_paid", methods=["GET", "POST"])
+def bowl_mark_paid():
+    userid = int(request.form.get("userid"))
+    paid = request.form.get("paid")
+
+    s = "SELECT * FROM bowl_payment;"
+    paid_status = dict(db2(s))
+
+    if userid not in paid_status:
+        s = "INSERT INTO bowl_payment (userid, payment_status) VALUES (%s, %s);"
+        db2(s, (userid, True))
+    else:
+        s = "UPDATE bowl_payment SET payment_status = %s WHERE userid = %s;"
+        db2(s, (True, userid))
+
+    return redirect(url_for('bowl_payment_status')) 
 
 # 'threes' dice game
 @app.route("/threes", methods=["GET", "POST"])

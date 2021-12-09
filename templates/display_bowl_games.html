@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "layout_bowls.html" %}
 
 {% block title %}
     Display Bowl Games
@@ -39,6 +39,7 @@
                         {% if loop.index == 1 %}
                         <td rowspan="2" class="ptd" style="width: 60px;">{{ game }}</td>
                         {% endif %}
+                        <!-- change this below to display home/away instead of line -->
                         <!-- <td class="ptd" style="width: 60px;">{{ team[0] }}</td> -->
                         {% if game_dict[game]['abbreviations'][team[0]] == game_dict[game]['line'][0] %}
                             <td class="ptd" style="width: 60px;">{{ game_dict[game]['line'][1] }}</td>
@@ -62,7 +63,14 @@
                         {% if loop.index == 1 %}
                         <td rowspan="2" class="locked_ptd" style="width: 60px;">{{ game }}</td>
                         {% endif %}
-                        <td class="locked_ptd" style="width: 60px;">{{ team[0] }}</td>
+                        <!-- <td class="locked_ptd" style="width: 60px;">{{ team[0] }}</td> -->
+                        {% if game_dict[game]['abbreviations'][team[0]] == game_dict[game]['line'][0] %}
+                            <td class="locked_ptd" style="width: 60px;">{{ game_dict[game]['line'][1] }}</td>
+                        {% elif game_dict[game]['line'][0] == 'EVEN' %}
+                        <td class="locked_ptd" style="width: 60px;">{{ game_dict[game]['line'][0] }}</td>
+                        {% else %}
+                            <td class="locked_ptd" style="width: 60px;"></td>
+                        {% endif %}
                         <td class="locked_team" style="width:200px; text-align: left;">{{ team[1] }} </td>
                         <td class="locked_ptd" style="width: 60px;">{{ team[2] }}</td>
                         {% if loop.index == 1 %}
