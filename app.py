@@ -1894,8 +1894,8 @@ def bowl_payment_status():
     #     for user in empty_users:
     #         pickem_users[user[0]] = user[1]
     
-    entry = 50
-    prize_pool = 50 * len(bowl_users)
+    entry = 25
+    prize_pool = 25 * len(bowl_users)
 
     # find list of admins who can update status
     s = "SELECT userid FROM users WHERE is_admin = 1;"
