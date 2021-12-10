@@ -9,7 +9,7 @@ import sys
 import random
 import json
 import config
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import re
 from operator import itemgetter, attrgetter
 import mysql.connector
@@ -1745,6 +1745,8 @@ def live_scores():
 
     return render_template("live_scores.html", game_dict = game_dict, picks=dict(picks), now=now)
 
+#global last_db_update
+last_db_update = datetime(2021, 12, 8, 0, 0, 0)
 @app.route("/display_bowl_games", methods=["GET", "POST"])
 def display_bowl_games():
 
@@ -1759,6 +1761,10 @@ def display_bowl_games():
 
     # save latest line
     # espnid, fav, spread
+    #last_db_update = datetime(2021, 12, 10, 0, 0, 0)
+
+    global last_db_update
+    print(f"last_db_update {last_db_update}")
     for game in game_dict:
         fav = ''
         dog = ''
@@ -1766,7 +1772,8 @@ def display_bowl_games():
         fav_score = 0
         dog_score = 0
         game_dict[game]['current_winner'] = ''
-        if game_dict[game]['line'] != 'TBD':
+        if game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1:
+            last_db_update = now
             espnid = game_dict[game]['espn_id']
             fav = game_dict[game]['line'][0]
             if len(game_dict[game]['line']) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
@@ -1776,7 +1783,7 @@ def display_bowl_games():
             line_query = "INSERT INTO latest_lines (espnid, fav, spread) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s;"
             db2(line_query, (espnid, fav, spread, espnid, fav, spread))
 
-        else:
+        elif game_dict[game]['line'] == 'TBD':
             line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
             line = db2(line_query, (game_dict[game]['espn_id'], ))
             if line:
