@@ -25,14 +25,15 @@
             <th> Team </th>
             <th> Score </th>
             <th> Pick </th>
+            <th> W/L </th>
         </tr>
             {% for game in game_dict %}
                 {% if game_dict[game]['headline']|length > 0 %}
                 <tr>
-                    <td colspan="5" class="headline" style="border-bottom-color: lightgreen; font-weight: bold; font-size: large;">{{ game_dict[game]['headline'] }}</td>
+                    <td colspan="6" class="headline" style="border-bottom-color: lightgreen; font-weight: bold; font-size: large;">{{ game_dict[game]['headline'] }}</td>
                 </tr>
                 {% endif %}
-                <tr><td colspan="5" class="headline">{{ game_dict[game]['date'] }}</td></tr>
+                <tr><td colspan="6" class="headline">{{ game_dict[game]['date'] }}</td></tr>
                 {% for team in game_dict[game]['competitors'] %}
                     {% if game_dict[game]['datetime'] > now %}
                     <tr>
@@ -76,14 +77,22 @@
                         {% if loop.index == 1 %}
                             {% if game_dict[game]['espn_id'] in picks %}
                             <td rowspan="2" class="pick">{{ picks[game_dict[game]['espn_id']] }}</td>
+                                {% if game_dict[game]['current_winner'] == picks[game_dict[game]['espn_id']] %}
+                                <td rowspan="2" class="pick"> W </td>
+                                {% elif game_dict[game]['current_winner'] == 'PUSH' %}
+                                <td rowspan="2" class="pick"> P </td>
+                                {% else %}
+                                <td rowspan="2" class="pick"> L </td>
+                                {% endif %}
                             {% else %}
                             <td rowspan="2" class="pick">TBD</td>
+                            <td rowspan="2" class="pick"></td>
                             {% endif %}
                         {% endif %}
                     </tr>
                     {% endif %}
                 {% endfor %}
-            <tr><td colspan="5" style="background-color:black;"></td></tr>
+            <tr><td colspan="6" style="background-color:black;"></td></tr>
             {% endfor %}
         </table>
         <input class="pick" type="submit" value="Submit Picks">

@@ -509,9 +509,9 @@ def get_espn_scores(abbrev = True):
     # print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
     # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
     # print(r)
-    #print(r['events'][0]['competitions'])
-    print(r['events'][0]['competitions'][0]['odds'][0]['details'])
-    print(r['events'][0]['competitions'][0]['odds'][0]['overUnder'])
+    print(r['events'][0]['competitions'][0])
+    # print(r['events'][0]['competitions'][0]['odds'][0]['details'])
+    # print(r['events'][0]['competitions'][0]['odds'][0]['overUnder'])
 
     #print(f"events: {r['events']}")
     #print("##########################")
@@ -1748,19 +1748,75 @@ def live_scores():
 @app.route("/display_bowl_games", methods=["GET", "POST"])
 def display_bowl_games():
 
+    now = datetime.utcnow() - timedelta(hours=5)
     response = get_espn_scores(False)
     game_dict = response['game']
     team_dict = response['team']
     print(f"teamdict: {team_dict}")
 
-    print(f"espn response game dict:")
+    # print(f"espn response game dict:")
     [print(f"game {game}: {game_dict[game]}") for game in game_dict]
+
+    # save latest line
+    # espnid, fav, spread
+    for game in game_dict:
+        fav = ''
+        dog = ''
+        spread = 0
+        fav_score = 0
+        dog_score = 0
+        game_dict[game]['current_winner'] = ''
+        if game_dict[game]['line'] != 'TBD':
+            espnid = game_dict[game]['espn_id']
+            fav = game_dict[game]['line'][0]
+            if len(game_dict[game]['line']) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
+                spread = game_dict[game]['line'][1]
+            else:
+                spread = ''
+            line_query = "INSERT INTO latest_lines (espnid, fav, spread) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s;"
+            db2(line_query, (espnid, fav, spread, espnid, fav, spread))
+
+        else:
+            line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
+            line = db2(line_query, (game_dict[game]['espn_id'], ))
+            if line:
+                print(f"line! {line}")
+                game_dict[game]['line'] = line[0]
+
+        # who is winning?
+        if game_dict[game]['datetime'] < now:
+            #print(f"even check {game_dict[game]['line']}")
+            if game_dict[game]['line'][0] == 'EVEN':
+                fav = game_dict['abbreviations']['HOME']
+                fav_score = team_dict[fav]
+                dog = game_dict['abbreviations']['AWAY']
+                dog_score = team_dict[dog]
+            elif game_dict[game]['line'] != 'TBD':
+                for team in game_dict[game]['abbreviations'].values():
+                    print(f"team: {team}")
+                    if team == game_dict[game]['line'][0]:
+                        spread = game_dict[game]['line'][1]
+                        fav = team
+                        fav_score = int(team_dict[team]) + float(spread)
+                    else:
+                        dog_score = float(team_dict[team])
+                        dog = team
+            if fav_score != 0 and dog_score != 0:
+                print(f"favdogscores 1{fav} 2{dog} 3{fav_score} 4{dog_score}")
+                if fav_score > dog_score:
+                    game_dict[game]['current_winner'] = fav
+                elif dog_score > fav_score:
+                    game_dict[game]['current_winner'] = dog
+                else:
+                    game_dict[game]['current_winner'] = 'PUSH'
+                print(f"curr winner {game_dict[game]['current_winner']}")
+        
 
     # get users picks
     p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
     picks = db2(p, (session['userid'],))
     print(f"dict picks: {dict(picks)}")
-    now = datetime.utcnow() - timedelta(hours=5)
+    #now = datetime.utcnow() - timedelta(hours=5)
 
     return render_template("display_bowl_games.html", game_dict = game_dict, picks=dict(picks), now=now)
 
