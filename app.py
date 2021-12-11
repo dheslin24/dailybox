@@ -1936,7 +1936,7 @@ def view_all_bowl_picks():
     locked_games = set()
     winning_teams = set()
     for game in game_dict:
-        if game_dict[game]['datetime'] < datetime.utcnow() - timedelta(hours=5):
+        if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5):
             locked_games.add(game_dict[game]['espn_id'])
             game_dict[game]['winner'] = 'TBD'
         else:  # game winner calcs here.. if in prog, winner is just 'current winner'
