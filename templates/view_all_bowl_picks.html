@@ -71,13 +71,14 @@
             {% endfor %}
         </tr>
         
-            {% for user in d %}
+            {% for user, picks in d.items() %}
         <tr>
             {% if user_dict[user] == session['username'] %}
                 <td class="current_user">{{ user_dict[user] }}</td>
-            {% else %}
+            {% elif user != 'key' and user != 'reverse' %}
                 <td>{{ user_dict[user] }}</td>
             {% endif %}
+            {% if user != 'key' and user != 'reverse' %}
                 {% for game in game_dict %}
                     {% if game_dict[game]['espn_id'] in locked_games and user != session['userid'] %}
                         <td> XXX </td>
@@ -110,6 +111,7 @@
                 {% endif %}
                 
         </tr>
+            {% endif %}
             {% endfor %}
         
         <tr>

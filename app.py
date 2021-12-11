@@ -1937,7 +1937,7 @@ def view_all_bowl_picks():
     locked_games = set()
     winning_teams = set()
     for game in game_dict:
-        if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5):
+        if game_dict[game]['datetime'] < datetime.utcnow() - timedelta(hours=5):
             locked_games.add(game_dict[game]['espn_id'])
             game_dict[game]['winner'] = 'TBD'
         else:  # game winner calcs here.. if in prog, winner is just 'current winner'
@@ -1997,7 +1997,7 @@ def view_all_bowl_picks():
     tb_dict = dict(db2(t))
     print(f"tb_dict {tb_dict}")
 
-    return render_template("view_all_bowl_picks.html", game_dict=game_dict, d=d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict)
+    return render_template("view_all_bowl_picks.html", game_dict=game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 def bowl_payment_status():
