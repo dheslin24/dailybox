@@ -56,6 +56,9 @@ BOX_TYPE_ID = {
     'nutcracker' : 3
 }
 
+#global last_db_update
+last_db_update = datetime(2021, 12, 8, 0, 0, 0)
+
 # ensure responses aren't caches
 if app.config["DEBUG"]:
     @app.after_request
@@ -503,20 +506,19 @@ def get_espn_scores(abbrev = True):
     game_dict = {}
     game_num = 1
     team_dict = {}
+    now = datetime.utcnow() - timedelta(hours=5)
 
     # <<<<<<<<<TESTING>>>>>>>>
     # print(r.keys())
     # print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
     # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
     # print(r)
-    print(r['events'][0]['competitions'][0])
+    # print(r['events'][0]['competitions'][0])
     # print(r['events'][0]['competitions'][0]['odds'][0]['details'])
     # print(r['events'][0]['competitions'][0]['odds'][0]['overUnder'])
-
     #print(f"events: {r['events']}")
     #print("##########################")
     #print(f"games: {r['events'][0]['competitions']}")
-    
 
     for team in r['events']:
         for game in team['competitions']:
@@ -567,6 +569,61 @@ def get_espn_scores(abbrev = True):
                 'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
                 }
             game_num += 1
+    
+    global last_db_update
+    print(f"last_db_update {last_db_update}")
+    for game in game_dict:
+        fav = ''
+        dog = ''
+        spread = 0
+        fav_score = 0
+        dog_score = 0
+        game_dict[game]['current_winner'] = ''
+        if game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1:
+            last_db_update = now
+            espnid = game_dict[game]['espn_id']
+            fav = game_dict[game]['line'][0]
+            if len(game_dict[game]['line']) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
+                spread = game_dict[game]['line'][1]
+            else:
+                spread = ''
+            line_query = "INSERT INTO latest_lines (espnid, fav, spread) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s;"
+            db2(line_query, (espnid, fav, spread, espnid, fav, spread))
+
+        elif game_dict[game]['line'] == 'TBD':
+            line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
+            line = db2(line_query, (game_dict[game]['espn_id'], ))
+            if line:
+                print(f"line! {line}")
+                game_dict[game]['line'] = line[0]
+
+        # who is winning?
+        if game_dict[game]['datetime'] < now:
+            #print(f"even check {game_dict[game]['line']}")
+            if game_dict[game]['line'][0] == 'EVEN':
+                fav = game_dict['abbreviations']['HOME']
+                fav_score = team_dict[fav]
+                dog = game_dict['abbreviations']['AWAY']
+                dog_score = team_dict[dog]
+            elif game_dict[game]['line'] != 'TBD':
+                for team in game_dict[game]['abbreviations'].values():
+                    print(f"team: {team}")
+                    if team == game_dict[game]['line'][0]:
+                        spread = game_dict[game]['line'][1]
+                        fav = team
+                        fav_score = int(team_dict[team]) + float(spread)
+                    else:
+                        dog_score = float(team_dict[team])
+                        dog = team
+            if fav_score != 0 and dog_score != 0:
+                print(f"favdogscores 1{fav} 2{dog} 3{fav_score} 4{dog_score}")
+                if fav_score > dog_score:
+                    game_dict[game]['current_winner'] = fav
+                elif dog_score > fav_score:
+                    game_dict[game]['current_winner'] = dog
+                else:
+                    game_dict[game]['current_winner'] = 'PUSH'
+                print(f"curr winner {game_dict[game]['current_winner']}")
 
     #return (game_dict, team_dict)
     return {"game": game_dict, "team": team_dict}
@@ -1745,8 +1802,7 @@ def live_scores():
 
     return render_template("live_scores.html", game_dict = game_dict, picks=dict(picks), now=now)
 
-#global last_db_update
-last_db_update = datetime(2021, 12, 8, 0, 0, 0)
+
 @app.route("/display_bowl_games", methods=["GET", "POST"])
 def display_bowl_games():
 
@@ -1754,6 +1810,7 @@ def display_bowl_games():
     response = get_espn_scores(False)
     game_dict = response['game']
     team_dict = response['team']
+    season = 2021
     print(f"teamdict: {team_dict}")
 
     # print(f"espn response game dict:")
@@ -1763,60 +1820,60 @@ def display_bowl_games():
     # espnid, fav, spread
     #last_db_update = datetime(2021, 12, 10, 0, 0, 0)
 
-    global last_db_update
-    print(f"last_db_update {last_db_update}")
-    for game in game_dict:
-        fav = ''
-        dog = ''
-        spread = 0
-        fav_score = 0
-        dog_score = 0
-        game_dict[game]['current_winner'] = ''
-        if game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1:
-            last_db_update = now
-            espnid = game_dict[game]['espn_id']
-            fav = game_dict[game]['line'][0]
-            if len(game_dict[game]['line']) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
-                spread = game_dict[game]['line'][1]
-            else:
-                spread = ''
-            line_query = "INSERT INTO latest_lines (espnid, fav, spread) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s;"
-            db2(line_query, (espnid, fav, spread, espnid, fav, spread))
+    # global last_db_update
+    # print(f"last_db_update {last_db_update}")
+    # for game in game_dict:
+    #     fav = ''
+    #     dog = ''
+    #     spread = 0
+    #     fav_score = 0
+    #     dog_score = 0
+    #     game_dict[game]['current_winner'] = ''
+    #     if game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1:
+    #         last_db_update = now
+    #         espnid = game_dict[game]['espn_id']
+    #         fav = game_dict[game]['line'][0]
+    #         if len(game_dict[game]['line']) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
+    #             spread = game_dict[game]['line'][1]
+    #         else:
+    #             spread = ''
+    #         line_query = "INSERT INTO latest_lines (espnid, fav, spread) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s;"
+    #         db2(line_query, (espnid, fav, spread, espnid, fav, spread))
 
-        elif game_dict[game]['line'] == 'TBD':
-            line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
-            line = db2(line_query, (game_dict[game]['espn_id'], ))
-            if line:
-                print(f"line! {line}")
-                game_dict[game]['line'] = line[0]
+    #     elif game_dict[game]['line'] == 'TBD':
+    #         line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
+    #         line = db2(line_query, (game_dict[game]['espn_id'], ))
+    #         if line:
+    #             print(f"line! {line}")
+    #             game_dict[game]['line'] = line[0]
 
-        # who is winning?
-        if game_dict[game]['datetime'] < now:
-            #print(f"even check {game_dict[game]['line']}")
-            if game_dict[game]['line'][0] == 'EVEN':
-                fav = game_dict['abbreviations']['HOME']
-                fav_score = team_dict[fav]
-                dog = game_dict['abbreviations']['AWAY']
-                dog_score = team_dict[dog]
-            elif game_dict[game]['line'] != 'TBD':
-                for team in game_dict[game]['abbreviations'].values():
-                    print(f"team: {team}")
-                    if team == game_dict[game]['line'][0]:
-                        spread = game_dict[game]['line'][1]
-                        fav = team
-                        fav_score = int(team_dict[team]) + float(spread)
-                    else:
-                        dog_score = float(team_dict[team])
-                        dog = team
-            if fav_score != 0 and dog_score != 0:
-                print(f"favdogscores 1{fav} 2{dog} 3{fav_score} 4{dog_score}")
-                if fav_score > dog_score:
-                    game_dict[game]['current_winner'] = fav
-                elif dog_score > fav_score:
-                    game_dict[game]['current_winner'] = dog
-                else:
-                    game_dict[game]['current_winner'] = 'PUSH'
-                print(f"curr winner {game_dict[game]['current_winner']}")
+    #     # who is winning?
+    #     if game_dict[game]['datetime'] < now:
+    #         #print(f"even check {game_dict[game]['line']}")
+    #         if game_dict[game]['line'][0] == 'EVEN':
+    #             fav = game_dict['abbreviations']['HOME']
+    #             fav_score = team_dict[fav]
+    #             dog = game_dict['abbreviations']['AWAY']
+    #             dog_score = team_dict[dog]
+    #         elif game_dict[game]['line'] != 'TBD':
+    #             for team in game_dict[game]['abbreviations'].values():
+    #                 print(f"team: {team}")
+    #                 if team == game_dict[game]['line'][0]:
+    #                     spread = game_dict[game]['line'][1]
+    #                     fav = team
+    #                     fav_score = int(team_dict[team]) + float(spread)
+    #                 else:
+    #                     dog_score = float(team_dict[team])
+    #                     dog = team
+    #         if fav_score != 0 and dog_score != 0:
+    #             print(f"favdogscores 1{fav} 2{dog} 3{fav_score} 4{dog_score}")
+    #             if fav_score > dog_score:
+    #                 game_dict[game]['current_winner'] = fav
+    #             elif dog_score > fav_score:
+    #                 game_dict[game]['current_winner'] = dog
+    #             else:
+    #                 game_dict[game]['current_winner'] = 'PUSH'
+    #             print(f"curr winner {game_dict[game]['current_winner']}")
         
 
     # get users picks
@@ -1825,7 +1882,15 @@ def display_bowl_games():
     print(f"dict picks: {dict(picks)}")
     #now = datetime.utcnow() - timedelta(hours=5)
 
-    return render_template("display_bowl_games.html", game_dict = game_dict, picks=dict(picks), now=now)
+    # get tiebreaks
+    t = "SELECT tiebreak FROM bowl_tiebreaks WHERE userid = %s and season = %s ORDER BY tiebreak_id DESC LIMIT 1;"
+    tb = db2(t, (session['userid'], season))  
+    if tb:
+        tiebreak = tb[0][0]
+    else:
+        tiebreak = ''
+
+    return render_template("display_bowl_games.html", game_dict = game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
 
 @app.route("/select_bowl_games", methods=["GET", "POST"])
 def select_bowl_games():
@@ -1842,6 +1907,13 @@ def select_bowl_games():
             s = "INSERT INTO bowlpicks (userid, espnid, pick, datetime) VALUES (%s, %s, %s, now());"  # local time, EST
             db2(s, (session['userid'], game_dict[game]['espn_id'], request.form.get(str(game_dict[game]['espn_id']))))
     
+    tiebreak = request.form.get('tb')
+    print(f"tiebreak:  {tiebreak}")
+
+    season = 2021
+    if tiebreak != None and len(tiebreak) != 0:
+        t = "INSERT INTO bowl_tiebreaks (season, userid, tiebreak, datetime) VALUES (%s, %s, %s, now());"
+        db2(t, (season, session['userid'], tiebreak))
 
     print(f"{session['username']} just selected bowl picks")
     logging.info("{} just selected bowl picks".format(session["username"]))
@@ -1851,6 +1923,7 @@ def select_bowl_games():
 @app.route("/view_all_bowl_picks", methods=["GET", "POST"])
 def view_all_bowl_picks():
 
+    season = 2021
     # get list of active games first
     game_dict = get_espn_scores(False)['game']
 
@@ -1859,15 +1932,40 @@ def view_all_bowl_picks():
     user_dict = dict(db2(u))
 
     # create set of locked games to hide in view all screen for non user
+    # and if unlocked, calc winner
     locked_games = set()
+    winning_teams = set()
     for game in game_dict:
-        if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5):
+        if game_dict[game]['datetime'] < datetime.utcnow() - timedelta(hours=5):
             locked_games.add(game_dict[game]['espn_id'])
+            game_dict[game]['winner'] = 'TBD'
+        else:  # game winner calcs here.. if in prog, winner is just 'current winner'
+            # get current score
+            home_score = float(game_dict[game]['competitors'][0][2])
+            away_score = float(game_dict[game]['competitors'][1][2])
+            
+            # is home or away fav?  or 'EVEN' do nothing?
+            if game_dict[game]['line'][0] == game_dict[game]['abbreviations']['HOME']:  # home team is fav
+                home_score += float(game_dict[game]['line'][1])
+            elif game_dict[game]['line'][0] == game_dict[game]['abbreviations']['AWAY']:  # away is fav
+                away_score += float(game_dict[game]['line'][1])
+
+            # who is winning (or won)?  home or away?
+            if home_score > away_score:
+                game_dict[game]['winner'] = game_dict[game]['abbreviations']['HOME']
+                winning_teams.add(game_dict[game]['abbreviations']['HOME'])
+            elif away_score > home_score:
+                game_dict[game]['winner'] = game_dict[game]['abbreviations']['AWAY']
+                winning_teams.add(game_dict[game]['abbreviations']['AWAY'])
+            else:  #pushing
+                game_dict[game]['winner'] = 'PUSH'
 
     print(f"locked games {locked_games}")
 
     # get user picks
-    s = "SELECT userid, espnid, pick FROM bowlpicks ORDER BY pick_id ASC;"
+    #           |pick0| |pick1||pick2|
+    #s = "SELECT userid, espnid, pick FROM bowlpicks ORDER BY pick_id ASC;"
+    s = "SELECT userid, espnid, pick FROM bowlpicks WHERE pick_id in (SELECT max(pick_id) from bowlpicks GROUP BY userid, espnid);"
     all_picks = db2(s)
     print(all_picks)
 
@@ -1876,30 +1974,33 @@ def view_all_bowl_picks():
     for pick in all_picks:
         if pick[0] not in d:
             d[pick[0]] = {pick[1]: pick[2]}
+            if pick[2] in winning_teams:
+                d[pick[0]]['wins'] = 1
+            else:
+                d[pick[0]]['wins'] = 0
         else:
             d[pick[0]][pick[1]] = pick[2]
+            if pick[2] in winning_teams:
+                d[pick[0]]['wins'] += 1
 
     print(f"dddddddd {d}")
 
-    # for now.. just to test
-    return render_template("view_all_bowl_picks.html", game_dict=game_dict, d=d, locked_games=locked_games, user_dict=user_dict)
+    # get tiebreaks
+    t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
+    tb_dict = dict(db2(t))
+    print(f"tb_dict {tb_dict}")
+
+    return render_template("view_all_bowl_picks.html", game_dict=game_dict, d=d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 def bowl_payment_status():
     #season = 2021 
-    # find users that have a pickem entry
+    # find users that have a bowl entry
     u = "SELECT DISTINCT up.userid, u.username FROM bowlpicks up LEFT JOIN users u ON up.userid = u.userid;"
     bowl_users = dict(db2(u))
 
     p = "SELECT * FROM bowl_payment;"
     payment_dict = dict(db2(p))
-
-    # add users who are in but haven't made picks yet
-    # uid = "SELECT userid, username FROM users WHERE is_pickem_user = 1"
-    # empty_users = db2(uid)
-    # if len(empty_users) > 0:
-    #     for user in empty_users:
-    #         pickem_users[user[0]] = user[1]
     
     entry = 25
     prize_pool = 25 * len(bowl_users)

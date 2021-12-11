@@ -54,8 +54,10 @@
                         {% if loop.index == 1 %}
                             {% if game_dict[game]['espn_id'] in picks %}
                             <td rowspan="2" class="pick"> <input class="pick" type="text" id="{{ game_dict[game]['espn_id'] }}" name="{{ game_dict[game]['espn_id'] }}" value="{{ picks[game_dict[game]['espn_id']] }}" readonly> </td>
+                            <td rowspan="2" class="pick"></td>
                             {% else %}
                             <td rowspan="2" class="pick"> <input class="pick" type="text" id="{{ game_dict[game]['espn_id'] }}" name="{{ game_dict[game]['espn_id'] }}" value="TBD" readonly></td>
+                            <td rowspan="2" class="pick"></td>  
                             {% endif %}
                         {% endif %}
                     </tr>
@@ -85,8 +87,8 @@
                                 <td rowspan="2" class="pick"> L </td>
                                 {% endif %}
                             {% else %}
-                            <td rowspan="2" class="pick">TBD</td>
-                            <td rowspan="2" class="pick"></td>
+                            <td rowspan="2" class="locked_ptd">TBD</td>
+                            <td rowspan="2" class="locked_ptd"></td>
                             {% endif %}
                         {% endif %}
                     </tr>
@@ -94,6 +96,18 @@
                 {% endfor %}
             <tr><td colspan="6" style="background-color:black;"></td></tr>
             {% endfor %}
+
+            {% if game_dict[43]['datetime'] > now %}
+            <tr>
+                <td colspan="5" class="pick">Tie Breaker:  CFP Championship Overall Score</td>
+                <td><input class="pick" type="text" id="tb" name="tb" value="{{ tiebreak }}" style="background-color: white; width: 30px;"></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="pick">Tie Breaker:  CFP Championship Overall Score</td>
+                <td><input class="pick" type="text" id="tb" name="tb" value="{{ tiebreak }}" style="background-color: white; width: 30px;" readonly></td>
+            </tr>
+            {% endif %}
         </table>
         <input class="pick" type="submit" value="Submit Picks">
         </form>
