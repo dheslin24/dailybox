@@ -605,10 +605,10 @@ main td.winner {
  
 main td.current_user {
     background: navy;
-    font-weight: bold;
+    /* font-weight: bold; */
     text-align: center;
     color: white;
-    font-size: 16px;
+    /* font-size: 16px; */
     border-size: 8px;
 }
 

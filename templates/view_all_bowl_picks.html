@@ -73,12 +73,16 @@
         
             {% for user in d %}
         <tr>
-            <td>{{ user_dict[user] }}</td>
+            {% if user_dict[user] == session['username'] %}
+                <td class="current_user">{{ user_dict[user] }}</td>
+            {% else %}
+                <td>{{ user_dict[user] }}</td>
+            {% endif %}
                 {% for game in game_dict %}
                     {% if game_dict[game]['espn_id'] in locked_games and user != session['userid'] %}
                         <td> XXX </td>
                     {% elif game_dict[game]['espn_id'] in locked_games %}
-                        <td> {{ d[user][game_dict[game]['espn_id']] }} </td>
+                        <td class="current_user"> {{ d[user][game_dict[game]['espn_id']] }} </td>
                     {% else %}
                         {% if d[user][game_dict[game]['espn_id']] == game_dict[game]['winner'] %}
                             {% if user == session['userid'] %}
@@ -99,10 +103,12 @@
                 {% endfor %}
                 {% if user != session['userid'] %}
                     <td> X </td>
+                    <td> {{ d[user]['wins'] }}</td>
                 {% else %}
-                    <td>{{ tb_dict[user] }}</td>
+                    <td class="current_user">{{ tb_dict[user] }}</td>
+                    <td class="current_user"> {{ d[user]['wins'] }}</td>
                 {% endif %}
-                <td> {{ d[user]['wins'] }}</td>
+                
         </tr>
             {% endfor %}
         
