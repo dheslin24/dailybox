@@ -9,6 +9,7 @@ import sys
 import random
 import json
 import config
+from collections import OrderedDict
 from datetime import datetime, timedelta, date
 import re
 from operator import itemgetter, attrgetter
@@ -1984,6 +1985,12 @@ def view_all_bowl_picks():
                 d[pick[0]]['wins'] += 1
 
     print(f"dddddddd {d}")
+
+    sorted_d = OrderedDict(d.items(), key=lambda x: x[1]['wins'], reverse=True)
+
+    print(f"sorted d: {sorted_d}")
+
+
 
     # get tiebreaks
     t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
