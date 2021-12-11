@@ -1937,7 +1937,7 @@ def view_all_bowl_picks():
     locked_games = set()
     winning_teams = set()
     for game in game_dict:
-        if game_dict[game]['datetime'] < datetime.utcnow() - timedelta(hours=5):
+        if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5):
             locked_games.add(game_dict[game]['espn_id'])
             game_dict[game]['winner'] = 'TBD'
         else:  # game winner calcs here.. if in prog, winner is just 'current winner'
@@ -1986,7 +1986,7 @@ def view_all_bowl_picks():
 
     print(f"dddddddd {d}")
 
-    sorted_d = OrderedDict(d.items(), key=lambda x: x[1]['wins'])
+    sorted_d = OrderedDict(d.items(), key=lambda x: x[1]['wins'], reverse=True)
 
     print(f"sorted d: {sorted_d}")
 
