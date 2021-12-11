@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block main %}
+<!-- <div class="col-md-8 col-xs-12"> -->
     <h1>
         <p>
             All Users Bowl Picks <br>
@@ -33,20 +34,37 @@
         
     <h4>
         <table class="pickem_table" align="center">
+
+        <!-- Game Numbers - Column Headings -->
         <tr>
-            <th rowspan="3"> User </th>
+            <th rowspan="4"> User </th>
             {% for game in game_dict %}
             <th> {{ game }} </th>
             {% endfor %}
-            <th rowspan="3"> T<br>B </th>
-            <th rowspan="3"> W<br>I<br>N<br>S</th>
+            <th rowspan="4"> T<br>B </th>
+            <th rowspan="4"> W<br>I<br>N<br>S</th>
         </tr>
+
+        <!-- Home vs Away -->
         <tr>
             {% for game in game_dict %}
             <th style="font-size: 9px;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} </th>
             {% endfor %}
         </tr>
 
+        <!-- Current Line -->
+        <tr> 
+            {% for game in game_dict %}
+                
+                <th style="font-size: 8px;"> 
+                    {% for elem in game_dict[game]['line'] %}
+                        {{ elem }}
+                    {% endfor %}
+                </th>
+            {% endfor %}
+        </tr>
+
+        <!-- Current Score -->
         <tr>
             {% for game in game_dict %}
                 <th style="font-size: 9px;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
@@ -59,8 +77,24 @@
                 {% for game in game_dict %}
                     {% if game_dict[game]['espn_id'] in locked_games and user != session['userid'] %}
                         <td> XXX </td>
+                    {% elif game_dict[game]['espn_id'] in locked_games %}
+                        <td> {{ d[user][game_dict[game]['espn_id']] }} </td>
                     {% else %}
-                       <td>{{ d[user][game_dict[game]['espn_id']] }}</td>
+                        {% if d[user][game_dict[game]['espn_id']] == game_dict[game]['winner'] %}
+                            {% if user == session['userid'] %}
+                               <td class="winner_cu">{{ d[user][game_dict[game]['espn_id']] }}</td>
+                            {% else %}
+                                <td class="winner">{{ d[user][game_dict[game]['espn_id']] }}</td>
+                            {% endif %}
+                        {% elif game_dict[game]['winner'] == 'PUSH' %}
+                            <td>{{ d[user][game_dict[game]['espn_id']] }}</td>
+                        {% else %}
+                            {% if user == session['userid'] %}
+                                <td class="loser_cu">{{ d[user][game_dict[game]['espn_id']] }}</td>
+                            {% else %}
+                                <td class="loser">{{ d[user][game_dict[game]['espn_id']] }}</td>
+                            {% endif %}
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
                 {% if user != session['userid'] %}
@@ -73,6 +107,9 @@
             {% endfor %}
         
         <tr>
+        </table>
+    <!-- </div> -->
+
         <!-- {% for col in game_details %} 
             <th class="all_picks" style="width: 200px; font-size: 12px">{{ col }} </th>
         {% endfor %}
