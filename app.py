@@ -529,12 +529,18 @@ def get_espn_scores(abbrev = True):
             if 'odds' in game:
                 #print(f"len odds: {len(game['odds'])}")
                 line = game['odds'][0]['details'].split(' ')
+
+                # get rid of the -10.0 float to int.  only show float when it's a .5 spread
+                if line != 'TBD' and line[1][-1] == '0':
+                    line[1] = line[1][:-2]
                 over_under = game['odds'][0]['overUnder']
+                if over_under % 2 == 0:
+                    over_under = int(over_under)
             else:
                 line = 'TBD'
                 over_under = 'TBD'
 
-            print(f"line:  {line}  o/u: {over_under}")
+            print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
             if 'notes' in game:
                 if len(game['notes']) > 0:
                     if 'headline' in game['notes'][0]:
@@ -585,7 +591,10 @@ def get_espn_scores(abbrev = True):
             espnid = game_dict[game]['espn_id']
             fav = game_dict[game]['line'][0]
             if len(game_dict[game]['line']) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
-                spread = game_dict[game]['line'][1]
+                if game_dict[game]['line'][1][-1] == '0':  # get rid of the -10.0 float to int.  only show float when it's a .5 spread
+                    spread = game_dict[game]['line'][1][:-2]
+                else:
+                    spread = game_dict[game]['line'][1]
             else:
                 spread = ''
             line_query = "INSERT INTO latest_lines (espnid, fav, spread) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s;"
@@ -595,7 +604,7 @@ def get_espn_scores(abbrev = True):
             line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
             line = db2(line_query, (game_dict[game]['espn_id'], ))
             if line:
-                print(f"line! {line}")
+                print(f"line! {line} {type(line[0])} {type(line[1])}")
                 game_dict[game]['line'] = line[0]
 
         # who is winning?
@@ -1925,7 +1934,6 @@ def view_all_bowl_picks():
                 d[pick[0]]['wins'] += 1
 
     # add users who are in but haven't picked yet, with 0 wins
-
     bu = "SELECT userid FROM users WHERE is_bowl_user = 1;"
     bowl_users = db2(bu)
     print(f"bowl users: {bowl_users}")
@@ -1936,12 +1944,8 @@ def view_all_bowl_picks():
                 d[user[0]] = {'wins': 0}
 
     print(f"dddddddd {d}")
-
     sorted_d = OrderedDict(sorted(d.items(), key=lambda x:x[1]['wins'], reverse=True))
-
     print(f"sorted d: {sorted_d}")
-
-
 
     # get tiebreaks
     t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
