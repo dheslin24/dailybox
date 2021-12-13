@@ -1817,66 +1817,6 @@ def display_bowl_games():
     # print(f"espn response game dict:")
     [print(f"game {game}: {game_dict[game]}") for game in game_dict]
 
-    # save latest line
-    # espnid, fav, spread
-    #last_db_update = datetime(2021, 12, 10, 0, 0, 0)
-
-    # global last_db_update
-    # print(f"last_db_update {last_db_update}")
-    # for game in game_dict:
-    #     fav = ''
-    #     dog = ''
-    #     spread = 0
-    #     fav_score = 0
-    #     dog_score = 0
-    #     game_dict[game]['current_winner'] = ''
-    #     if game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1:
-    #         last_db_update = now
-    #         espnid = game_dict[game]['espn_id']
-    #         fav = game_dict[game]['line'][0]
-    #         if len(game_dict[game]['line']) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
-    #             spread = game_dict[game]['line'][1]
-    #         else:
-    #             spread = ''
-    #         line_query = "INSERT INTO latest_lines (espnid, fav, spread) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s;"
-    #         db2(line_query, (espnid, fav, spread, espnid, fav, spread))
-
-    #     elif game_dict[game]['line'] == 'TBD':
-    #         line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
-    #         line = db2(line_query, (game_dict[game]['espn_id'], ))
-    #         if line:
-    #             print(f"line! {line}")
-    #             game_dict[game]['line'] = line[0]
-
-    #     # who is winning?
-    #     if game_dict[game]['datetime'] < now:
-    #         #print(f"even check {game_dict[game]['line']}")
-    #         if game_dict[game]['line'][0] == 'EVEN':
-    #             fav = game_dict['abbreviations']['HOME']
-    #             fav_score = team_dict[fav]
-    #             dog = game_dict['abbreviations']['AWAY']
-    #             dog_score = team_dict[dog]
-    #         elif game_dict[game]['line'] != 'TBD':
-    #             for team in game_dict[game]['abbreviations'].values():
-    #                 print(f"team: {team}")
-    #                 if team == game_dict[game]['line'][0]:
-    #                     spread = game_dict[game]['line'][1]
-    #                     fav = team
-    #                     fav_score = int(team_dict[team]) + float(spread)
-    #                 else:
-    #                     dog_score = float(team_dict[team])
-    #                     dog = team
-    #         if fav_score != 0 and dog_score != 0:
-    #             print(f"favdogscores 1{fav} 2{dog} 3{fav_score} 4{dog_score}")
-    #             if fav_score > dog_score:
-    #                 game_dict[game]['current_winner'] = fav
-    #             elif dog_score > fav_score:
-    #                 game_dict[game]['current_winner'] = dog
-    #             else:
-    #                 game_dict[game]['current_winner'] = 'PUSH'
-    #             print(f"curr winner {game_dict[game]['current_winner']}")
-        
-
     # get users picks
     p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
     picks = db2(p, (session['userid'],))
@@ -1984,6 +1924,17 @@ def view_all_bowl_picks():
             if pick[2] in winning_teams:
                 d[pick[0]]['wins'] += 1
 
+    # add users who are in but haven't picked yet, with 0 wins
+
+    bu = "SELECT userid FROM users WHERE is_bowl_user = 1;"
+    bowl_users = db2(bu)
+    print(f"bowl users: {bowl_users}")
+
+    if bowl_users:
+        for user in bowl_users:
+            if user[0] not in d:
+                d[user[0]] = {'wins': 0}
+
     print(f"dddddddd {d}")
 
     sorted_d = OrderedDict(sorted(d.items(), key=lambda x:x[1]['wins'], reverse=True))
@@ -2005,6 +1956,14 @@ def bowl_payment_status():
     # find users that have a bowl entry
     u = "SELECT DISTINCT up.userid, u.username FROM bowlpicks up LEFT JOIN users u ON up.userid = u.userid;"
     bowl_users = dict(db2(u))
+
+    # or ones that are in and haven't picked yet
+    bu = "SELECT userid, username FROM users WHERE is_bowl_user = 1"
+    no_picks_users = db2(bu)
+
+    for user in no_picks_users:
+        if user[0] not in bowl_users:
+            bowl_users[user[0]] = user[1]
 
     p = "SELECT * FROM bowl_payment;"
     payment_dict = dict(db2(p))
@@ -2044,6 +2003,15 @@ def bowl_payment_status():
     print(display_list)
                 
     return render_template("bowl_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list), prize_pool=prize_pool) 
+
+@app.route("/add_bowl_user", methods=["GET", "POST"])
+def add_bowl_user():
+    userid = int(request.form.get('userid'))
+
+    s = "UPDATE users SET is_bowl_user = 1 WHERE userid = %s;"
+    db2(s, (userid,))
+
+    return redirect(url_for('bowl_payment_status'))
 
 @app.route("/bowl_mark_paid", methods=["GET", "POST"])
 def bowl_mark_paid():
