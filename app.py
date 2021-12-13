@@ -1986,7 +1986,7 @@ def view_all_bowl_picks():
 
     print(f"dddddddd {d}")
 
-    sorted_d = OrderedDict(d.items(), key=lambda x: x[1]['wins'])
+    sorted_d = OrderedDict(sorted(d.items(), key=lambda x:x[1]['wins'], reverse=True))
 
     print(f"sorted d: {sorted_d}")
 
