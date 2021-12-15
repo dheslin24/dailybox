@@ -542,7 +542,10 @@ def get_espn_scores(abbrev = True):
                 line = 'TBD'
                 over_under = 'TBD'
 
-            print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
+            if line[0] != 'EVEN':
+                print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
+            else:
+                print(f"line: EVEN EVEN {line}")
             if 'notes' in game:
                 if len(game['notes']) > 0:
                     if 'headline' in game['notes'][0]:
