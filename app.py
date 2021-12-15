@@ -531,6 +531,7 @@ def get_espn_scores(abbrev = True):
                 line = game['odds'][0]['details'].split(' ')
 
                 # get rid of the -10.0 float to int.  only show float when it's a .5 spread
+                print(f"line line {line}")
                 if line != 'TBD' and len(line[1]) > 2:
                     if line[1][-2:] == '.0':
                         line[1] = line[1][:-2]
