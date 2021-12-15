@@ -531,8 +531,9 @@ def get_espn_scores(abbrev = True):
                 line = game['odds'][0]['details'].split(' ')
 
                 # get rid of the -10.0 float to int.  only show float when it's a .5 spread
-                if line != 'TBD' and line[1][-2:] == '.0':
-                    line[1] = line[1][:-2]
+                if line != 'TBD' and len(line[1]) > 2:
+                    if line[1][-2:] == '.0':
+                        line[1] = line[1][:-2]
                 over_under = game['odds'][0]['overUnder']
                 if over_under % 2 == 0:
                     over_under = int(over_under)
