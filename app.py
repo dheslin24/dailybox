@@ -531,7 +531,7 @@ def get_espn_scores(abbrev = True):
                 line = game['odds'][0]['details'].split(' ')
 
                 # get rid of the -10.0 float to int.  only show float when it's a .5 spread
-                if line != 'TBD' and line[1][-1] == '0':
+                if line != 'TBD' and line[1][-2:] == '.0':
                     line[1] = line[1][:-2]
                 over_under = game['odds'][0]['overUnder']
                 if over_under % 2 == 0:
@@ -590,9 +590,10 @@ def get_espn_scores(abbrev = True):
             last_db_update = now
             espnid = game_dict[game]['espn_id']
             fav = game_dict[game]['line'][0]
-            if len(game_dict[game]['line']) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
-                if game_dict[game]['line'][1][-1] == '0':  # get rid of the -10.0 float to int.  only show float when it's a .5 spread
-                    spread = game_dict[game]['line'][1][:-2]
+            if len(game_dict[game]['line']) > 1 and len(game_dict[game]['line'][1]) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
+                if game_dict[game]['line'][1][-2:] == '.0':  # get rid of the -10.0 float to int.  only show float when it's a .5 spread
+                    game_dict[game]['line'][1] = game_dict[game]['line'][1][:-2]
+                    spread = game_dict[game]['line'][1]
                 else:
                     spread = game_dict[game]['line'][1]
             else:
@@ -1868,7 +1869,7 @@ def select_bowl_games():
     print(f"{session['username']} just selected bowl picks")
     logging.info("{} just selected bowl picks".format(session["username"]))
  
-    return redirect(url_for('display_bowl_games'))
+    return redirect(url_for('view_all_bowl_picks'))
 
 @app.route("/view_all_bowl_picks", methods=["GET", "POST"])
 def view_all_bowl_picks():
