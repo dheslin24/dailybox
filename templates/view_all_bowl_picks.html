@@ -77,11 +77,11 @@
             {% if user_dict[user]['username'] == session['username'] %}
                 <!-- <td class="current_user">{{ user_dict[user]['username'] }}</td> -->
                 <!-- <td class="current_user" style="width: 200px;">{{ user_dict[user]['first_name'] }} {{ user_dict[user]['last_name'] }}</td> -->
-                <td class="current_user" style="white-space: nowrap;">{{ user_dict[user]['name'] }}</td>
+                <td class="current_user" style="white-space: nowrap; text-align: left;">{{ user_dict[user]['name'] }}</td>
             {% elif user != 'key' and user != 'reverse' %}
                 <!-- <td>{{ user_dict[user]['username'] }}</td> -->
                 <!-- <td style="width: 200px;">{{ user_dict[user]['first_name'] }} {{ user_dict[user]['last_name'] }}</td> -->
-                <td style="white-space: nowrap;">{{ user_dict[user]['name'] }}</td>
+                <td style="white-space: nowrap; text-align: left;">{{ user_dict[user]['name'] }}</td>
             {% endif %}
             {% if user != 'key' and user != 'reverse' %}
                 {% for game in game_dict %}
