@@ -1879,8 +1879,14 @@ def view_all_bowl_picks():
     game_dict = get_espn_scores(False)['game']
 
     # get dict of userid: username for display
-    u = "SELECT userid, username FROM users WHERE active = 1;"
-    user_dict = dict(db2(u))
+    u = "SELECT userid, username, first_name, last_name FROM users WHERE active = 1;"
+    user_info = db2(u)
+    print(f"user info: {user_info}")
+
+    # user0:  userid   user1:  username   user2: first name  user3: last name
+    user_dict = {}
+    for user in user_info:
+        user_dict[user[0]] = {'username': user[1], 'first_name': user[2], 'last_name': user[3]}
 
     # create set of locked games to hide in view all screen for non user
     # and if unlocked, calc winner

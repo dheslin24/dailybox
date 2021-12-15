@@ -37,7 +37,7 @@
 
         <!-- Game Numbers - Column Headings -->
         <tr>
-            <th rowspan="4"> User </th>
+            <th rowspan="4" colspan="3"> User </th>
             {% for game in game_dict %}
             <th> {{ game }} </th>
             {% endfor %}
@@ -71,12 +71,17 @@
             {% endfor %}
         </tr>
         
+        <!-- User Picks  -->
             {% for user, picks in d.items() %}
         <tr>
-            {% if user_dict[user] == session['username'] %}
-                <td class="current_user">{{ user_dict[user] }}</td>
+            {% if user_dict[user]['username'] == session['username'] %}
+                <td class="current_user">{{ user_dict[user]['username'] }}</td>
+                <td class="current_user">{{ user_dict[user]['first_name'] }}</td>
+                <td class="current_user">{{ user_dict[user]['last_name'] }}</td>
             {% elif user != 'key' and user != 'reverse' %}
-                <td>{{ user_dict[user] }}</td>
+                <td>{{ user_dict[user]['username'] }}</td>
+                <td>{{ user_dict[user]['first_name'] }}</td>
+                <td>{{ user_dict[user]['last_name'] }}</td>
             {% endif %}
             {% if user != 'key' and user != 'reverse' %}
                 {% for game in game_dict %}
