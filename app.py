@@ -569,8 +569,8 @@ def get_espn_scores(abbrev = True, insert_mode = False):
             game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
             game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
 
-            if game_num == 1:
-                line = ['TOL', '-10.5']
+            # if game_num == 1:
+            #     line = ['TOL', '-10.5']
 
             game_dict[game_num] = {
                 'espn_id': int(game['id']), 
@@ -614,7 +614,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
             line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
             line = db2(line_query, (game_dict[game]['espn_id'], ))
             if line:
-                print(f"line! {line} {type(line[0])} {type(line[1])}")
+                print(f"line! {line}")
                 game_dict[game]['line'] = line[0]
 
         # who is winning?
@@ -635,16 +635,17 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                     else:
                         dog_score = float(team_dict[team])
                         dog = team
-            if fav_score != 0 and dog_score != 0:
-                print(f"favdogscores 1{fav} 2{dog} 3{fav_score} 4{dog_score}")
-                if fav_score > dog_score:
-                    game_dict[game]['current_winner'] = fav
-                elif dog_score > fav_score:
-                    game_dict[game]['current_winner'] = dog
-                else:
-                    game_dict[game]['current_winner'] = 'PUSH'
-                print(f"curr winner {game_dict[game]['current_winner']}")
-
+            # if fav_score != 0 or dog_score != 0:
+            print(f"favdogscores 1{fav} 2{dog} 3{fav_score} 4{dog_score}")
+            if fav_score > dog_score:
+                game_dict[game]['current_winner'] = fav
+            elif dog_score > fav_score:
+                game_dict[game]['current_winner'] = dog
+            else:
+                game_dict[game]['current_winner'] = 'PUSH'
+            print(f"curr winner {game_dict[game]['current_winner']}")
+            # else:
+                
     #return (game_dict, team_dict)
     return {"game": game_dict, "team": team_dict}
 
