@@ -9,6 +9,7 @@ import sys
 import random
 import json
 import config
+import sched, time
 from collections import OrderedDict
 from datetime import datetime, timedelta, date
 import re
@@ -491,7 +492,7 @@ def get_games(box_type, active = 1):
     
     return game_list
 
-def get_espn_scores(abbrev = True):
+def get_espn_scores(abbrev = True, insert_mode = False):
     season_type = 3  # 1: preseason, 2: regular, 3: post
     week = 1 # will make this an input soon
     league = 'nfl'
@@ -568,6 +569,9 @@ def get_espn_scores(abbrev = True):
             game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
             game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
 
+            if game_num == 1:
+                line = ['TOL', '-10.5']
+
             game_dict[game_num] = {
                 'espn_id': int(game['id']), 
                 'date': game_date, # date string for printing
@@ -591,7 +595,7 @@ def get_espn_scores(abbrev = True):
         fav_score = 0
         dog_score = 0
         game_dict[game]['current_winner'] = ''
-        if game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1:
+        if (game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1) or insert_mode == True:
             last_db_update = now
             espnid = game_dict[game]['espn_id']
             fav = game_dict[game]['line'][0]
@@ -643,6 +647,10 @@ def get_espn_scores(abbrev = True):
 
     #return (game_dict, team_dict)
     return {"game": game_dict, "team": team_dict}
+
+def auto_check_lines():
+    print("checking espn lines automatically")
+    pass
 
 @app.route("/init_box_db")
 @login_required
