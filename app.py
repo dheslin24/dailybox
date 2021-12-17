@@ -569,8 +569,6 @@ def get_espn_scores(abbrev = True, insert_mode = False):
             game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
             game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
 
-            if game_num == 1:
-                line = ['TOL', '-10.5']
 
             game_dict[game_num] = {
                 'espn_id': int(game['id']), 
