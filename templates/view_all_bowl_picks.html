@@ -37,7 +37,7 @@
 
         <!-- Game Numbers - Column Headings -->
         <tr>
-            <th rowspan="4" style="width: 200px;"> User </th>
+            <th rowspan="3" style="width: 200px;"> The<br>Funnel </th>
             {% for game in game_dict %}
             <th> {{ game }} </th>
             {% endfor %}
@@ -66,6 +66,7 @@
 
         <!-- Current Score -->
         <tr>
+            <th style="font-size: 12px;">Live Scoring</th>
             {% for game in game_dict %}
                 <th style="font-size: 9px;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
             {% endfor %}
