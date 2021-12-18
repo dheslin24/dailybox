@@ -547,6 +547,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                 print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
             else:
                 print(f"line: EVEN EVEN {line}")
+                print(f"game with even {game}")
             if 'notes' in game:
                 if len(game['notes']) > 0:
                     if 'headline' in game['notes'][0]:
@@ -607,7 +608,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                     spread = game_dict[game]['line'][1]
             else:
                 spread = ''
-            line_query = "INSERT INTO latest_lines (espnid, fav, spread) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s;"
+            line_query = "INSERT INTO latest_lines (espnid, fav, spread, datetime) VALUES (%s, %s, %s, now()) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s, datetime = now();"
             db2(line_query, (espnid, fav, spread, espnid, fav, spread))
 
         elif game_dict[game]['line'] == 'TBD':
