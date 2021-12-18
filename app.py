@@ -522,6 +522,19 @@ def get_espn_scores(abbrev = True, insert_mode = False):
     #print("##########################")
     #print(f"games: {r['events'][0]['competitions']}")
 
+    espn_q = "SELECT espnid, fav, spread FROM latest_lines"
+    espn_db = db2(espn_q)
+    print(f"espndb: {espn_db}")
+
+    espn_dict = {}
+    for game in espn_db:
+        if len(game) == 3:
+            espn_dict[str(game[0])] = {'fav': game[1], 'spread': game[2]}
+        else:
+            espn_dict[str(game[0])] = {'fav': game[1], 'spread': ''}
+
+    print(f"espn dict: {espn_dict}")
+
     for team in r['events']:
         for game in team['competitions']:
             competitors = []
@@ -529,19 +542,35 @@ def get_espn_scores(abbrev = True, insert_mode = False):
             headline = ''
             if 'odds' in game:
                 #print(f"len odds: {len(game['odds'])}")
-                line = game['odds'][0]['details'].split(' ')
+                # line = game['odds'][0]['details'].split(' ')
 
                 # get rid of the -10.0 float to int.  only show float when it's a .5 spread
-                print(f"line line {line}")
-                if line != 'TBD' and line[0] != 'EVEN':
-                    if line[1][-2:] == '.0':
-                        line[1] = line[1][:-2]
+                # print(f"line line {line}")
+                # if line != 'TBD' and line[0] != 'EVEN':
+                #     if line[1][-2:] == '.0':
+                #         line[1] = line[1][:-2]
                 over_under = game['odds'][0]['overUnder']
                 if over_under % 2 == 0:
                     over_under = int(over_under)
             else:
-                line = 'TBD'
+                # line = 'TBD'
                 over_under = 'TBD'
+
+            if game['id'] in espn_dict:
+                if espn_dict[game['id']]['fav'] != 'EVEN':
+                    espn_fav = espn_dict[game['id']]['fav']
+                    espn_spread = espn_dict[game['id']]['spread']
+                    if len(espn_spread) > 2 and espn_spread[-2:] == '.0':
+                        espn_spread = espn_spread[:-2]
+                    line = [espn_fav, espn_spread]
+                else:
+                    espn_fav = 'EVEN'
+                    espn_spread = ''
+                    line = [espn_fav]
+            else:
+                line = 'TBD'
+
+                    
 
             if line[0] != 'EVEN':
                 print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
@@ -587,6 +616,8 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                 }
             game_num += 1
     
+    
+    #### replaced by espn_dict above ####
     global last_db_update
     print(f"last_db_update {last_db_update}")
     for game in game_dict:
@@ -596,29 +627,30 @@ def get_espn_scores(abbrev = True, insert_mode = False):
         fav_score = 0
         dog_score = 0
         game_dict[game]['current_winner'] = ''
-        if (game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1) or insert_mode == True:
-            last_db_update = now
-            espnid = game_dict[game]['espn_id']
-            fav = game_dict[game]['line'][0]
-            if len(game_dict[game]['line']) > 1 and len(game_dict[game]['line'][1]) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
-                if game_dict[game]['line'][1][-2:] == '.0':  # get rid of the -10.0 float to int.  only show float when it's a .5 spread
-                    game_dict[game]['line'][1] = game_dict[game]['line'][1][:-2]
-                    spread = game_dict[game]['line'][1]
-                else:
-                    spread = game_dict[game]['line'][1]
-            else:
-                spread = ''
-            line_query = "INSERT INTO latest_lines (espnid, fav, spread, datetime) VALUES (%s, %s, %s, now()) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s, datetime = now();"
-            db2(line_query, (espnid, fav, spread, espnid, fav, spread))
+        # if (game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1) or insert_mode == True:
+        #     last_db_update = now
+        #     espnid = game_dict[game]['espn_id']
+        #     fav = game_dict[game]['line'][0]
+        #     if len(game_dict[game]['line']) > 1 and len(game_dict[game]['line'][1]) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
+        #         if game_dict[game]['line'][1][-2:] == '.0':  # get rid of the -10.0 float to int.  only show float when it's a .5 spread
+        #             game_dict[game]['line'][1] = game_dict[game]['line'][1][:-2]
+        #             spread = game_dict[game]['line'][1]
+        #         else:
+        #             spread = game_dict[game]['line'][1]
+        #     else:
+        #         spread = ''
+        #     line_query = "INSERT INTO latest_lines (espnid, fav, spread, datetime) VALUES (%s, %s, %s, now()) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s, datetime = now();"
+        #     db2(line_query, (espnid, fav, spread, espnid, fav, spread))
 
-        elif game_dict[game]['line'] == 'TBD':
-            line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
-            line = db2(line_query, (game_dict[game]['espn_id'], ))
-            if line:
-                print(f"line! {line}")
-                game_dict[game]['line'] = line[0]
+        # elif game_dict[game]['line'] == 'TBD':
+        #     line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
+        #     line = db2(line_query, (game_dict[game]['espn_id'], ))
+        #     if line:
+        #         print(f"line! {line}")
+        #         game_dict[game]['line'] = line[0]
 
         # who is winning?
+        #print(f"line 654 {game_dict[game]}")
         if game_dict[game]['datetime'] < now:
             #print(f"even check {game_dict[game]['line']}")
             if game_dict[game]['line'][0] == 'EVEN':
@@ -637,7 +669,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                         dog_score = float(team_dict[team])
                         dog = team
             # if fav_score != 0 or dog_score != 0:
-            print(f"favdogscores 1{fav} 2{dog} 3{fav_score} 4{dog_score}")
+            print(f"favdogscores 1 {fav} 2 {dog} 3 {fav_score} 4 {dog_score}")
             if fav_score > dog_score:
                 game_dict[game]['current_winner'] = fav
             elif dog_score > fav_score:
