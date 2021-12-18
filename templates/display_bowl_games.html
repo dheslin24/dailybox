@@ -20,7 +20,7 @@
         <img src="https://media2.giphy.com/media/3og0IR5hF5th7bVV9C/giphy.gif?cid=ecf05e47fpokmng5vdpy714k1eb9l27peb9bsz4bws176og4&rid=giphy.gif&ct=g"></br>
         <table align = "center", cellpadding = "10">
         <tr>
-            <th> Game </th>
+            <!-- <th> Game </th> -->
             <th> Line </th>
             <th> Team </th>
             <th> Score </th>
@@ -30,16 +30,16 @@
             {% for game in game_dict %}
                 {% if game_dict[game]['headline']|length > 0 %}
                 <tr>
-                    <td colspan="6" class="headline" style="border-bottom-color: lightgreen; font-weight: bold; font-size: large;">{{ game_dict[game]['headline'] }}</td>
+                    <td colspan="5" class="headline" style="border-bottom-color: lightgreen; font-weight: bold; font-size: large;">{{ game_dict[game]['headline'] }}</td>
                 </tr>
                 {% endif %}
-                <tr><td colspan="6" class="headline">{{ game_dict[game]['date'] }}</td></tr>
+                <tr><td colspan="5" class="headline">{{ game_dict[game]['date'] }}</td></tr>
                 {% for team in game_dict[game]['competitors'] %}
                     {% if game_dict[game]['datetime'] > now %}
                     <tr>
-                        {% if loop.index == 1 %}
+                        <!-- {% if loop.index == 1 %}
                         <td rowspan="2" class="ptd" style="width: 60px;">{{ game }}</td>
-                        {% endif %}
+                        {% endif %} -->
                         <!-- change this below to display home/away instead of line -->
                         <!-- <td class="ptd" style="width: 60px;">{{ team[0] }}</td> -->
                         {% if game_dict[game]['abbreviations'][team[0]] == game_dict[game]['line'][0] %}
@@ -63,9 +63,9 @@
                     </tr>
                     {% else %}
                     <tr>
-                        {% if loop.index == 1 %}
+                        <!-- {% if loop.index == 1 %}
                         <td rowspan="2" class="locked_ptd" style="width: 60px;">{{ game }}</td>
-                        {% endif %}
+                        {% endif %} -->
                         <!-- <td class="locked_ptd" style="width: 60px;">{{ team[0] }}</td> -->
                         {% if game_dict[game]['abbreviations'][team[0]] == game_dict[game]['line'][0] %}
                             <td class="locked_ptd" style="width: 60px;">{{ game_dict[game]['line'][1] }}</td>
@@ -94,17 +94,17 @@
                     </tr>
                     {% endif %}
                 {% endfor %}
-            <tr><td colspan="6" style="background-color:black;"></td></tr>
+            <tr><td colspan="5" style="background-color:black;"></td></tr>
             {% endfor %}
 
             {% if game_dict[43]['datetime'] > now %}
             <tr>
-                <td colspan="5" class="pick">Tie Breaker:  CFP Championship Overall Score</td>
+                <td colspan="4" class="pick">Tie Breaker:  CFP Championship Overall Score</td>
                 <td><input class="pick" type="text" id="tb" name="tb" value="{{ tiebreak }}" style="background-color: white; width: 30px;"></td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="5" class="pick">Tie Breaker:  CFP Championship Overall Score</td>
+                <td colspan="4" class="pick">Tie Breaker:  CFP Championship Overall Score</td>
                 <td><input class="pick" type="text" id="tb" name="tb" value="{{ tiebreak }}" style="background-color: white; width: 30px;" readonly></td>
             </tr>
             {% endif %}

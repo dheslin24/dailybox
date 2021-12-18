@@ -1836,10 +1836,11 @@ def display_bowl_games():
     game_dict = response['game']
     team_dict = response['team']
     season = 2021
-    print(f"teamdict: {team_dict}")
+    sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
+    # print(f"teamdict: {team_dict}")
 
     # print(f"espn response game dict:")
-    [print(f"game {game}: {game_dict[game]}") for game in game_dict]
+    # [print(f"game {game}: {game_dict[game]}") for game in game_dict]
 
     # get users picks
     p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
@@ -1855,7 +1856,7 @@ def display_bowl_games():
     else:
         tiebreak = ''
 
-    return render_template("display_bowl_games.html", game_dict = game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
+    return render_template("display_bowl_games.html", game_dict = sorted_game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
 
 @app.route("/select_bowl_games", methods=["GET", "POST"])
 def select_bowl_games():
@@ -1968,12 +1969,14 @@ def view_all_bowl_picks():
     sorted_d = OrderedDict(sorted(d.items(), key=lambda x:x[1]['wins'], reverse=True))
     print(f"sorted d: {sorted_d}")
 
+    sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
+
     # get tiebreaks
     t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
     tb_dict = dict(db2(t))
     print(f"tb_dict {tb_dict}")
 
-    return render_template("view_all_bowl_picks.html", game_dict=game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict)
+    return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 def bowl_payment_status():
