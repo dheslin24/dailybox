@@ -509,6 +509,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
     game_num = 1
     team_dict = {}
     now = datetime.utcnow() - timedelta(hours=5)
+    print(now)
 
     # <<<<<<<<<TESTING>>>>>>>>
     # print(r.keys())
