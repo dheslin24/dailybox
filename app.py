@@ -694,7 +694,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                 game_dict[game]['current_winner'] = 'PUSH'
             print(f"curr winner {game_dict[game]['current_winner']}")
             # else:
-    print(f"GAME DICT {game_dict}")
+    #print(f"GAME DICT {game_dict}")
                 
     #return (game_dict, team_dict)
     return {"game": game_dict, "team": team_dict}
@@ -1989,7 +1989,7 @@ def view_all_bowl_picks():
     #s = "SELECT userid, espnid, pick FROM bowlpicks ORDER BY pick_id ASC;"
     s = "SELECT userid, espnid, pick FROM bowlpicks WHERE pick_id in (SELECT max(pick_id) from bowlpicks GROUP BY userid, espnid);"
     all_picks = db2(s)
-    print(all_picks)
+    #print(all_picks)
 
     # dict of {userid:  {espnid: pick}}
     d = {}
