@@ -516,7 +516,8 @@ def get_espn_scores(abbrev = True, insert_mode = False):
     # print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
     # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
     # print(r)
-    # print(r['events'][0]['competitions'][0])
+    print("dh test")
+    print(r['events'][0]['competitions'][0]['status'])
     # print(r['events'][0]['competitions'][0]['odds'][0]['details'])
     # print(r['events'][0]['competitions'][0]['odds'][0]['overUnder'])
     #print(f"events: {r['events']}")
@@ -541,6 +542,20 @@ def get_espn_scores(abbrev = True, insert_mode = False):
             competitors = []
             abbreviations = {}
             headline = ''
+            status = {}
+            if 'status' in game:
+                print(f"status! {game['status']}")
+                game_status = game['status']['type']['description']  # 1: scheduled, 2: inprogress, 3: final
+                if game_status == 'Scheduled':
+                    status['status'] = game_status
+
+                elif game_status != 'Final':
+                    status['status'] = game['status']['type']['description']
+                    status['quarter'] = game['status']['period']
+                    status['clock'] = game['status']['displayClock']
+                else:
+                    status['status'] = 'Final'
+                
             if 'odds' in game:
                 #print(f"len odds: {len(game['odds'])}")
                 # line = game['odds'][0]['details'].split(' ')
@@ -571,13 +586,11 @@ def get_espn_scores(abbrev = True, insert_mode = False):
             else:
                 line = 'TBD'
 
-                    
-
             if line[0] != 'EVEN':
                 print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
             else:
                 print(f"line: EVEN EVEN {line}")
-                print(f"game with even {game}")
+                #print(f"game with even {game}")
             if 'notes' in game:
                 if len(game['notes']) > 0:
                     if 'headline' in game['notes'][0]:
@@ -613,7 +626,8 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                 'line': line,
                 'over_under': over_under,
                 'headline': headline,
-                'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
+                'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state'],
+                'status': status
                 }
             game_num += 1
     
@@ -679,6 +693,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                 game_dict[game]['current_winner'] = 'PUSH'
             print(f"curr winner {game_dict[game]['current_winner']}")
             # else:
+    print(f"GAME DICT {game_dict}")
                 
     #return (game_dict, team_dict)
     return {"game": game_dict, "team": team_dict}
