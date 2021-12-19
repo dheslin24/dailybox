@@ -2015,7 +2015,7 @@ def view_all_bowl_picks():
             if user[0] not in d:
                 d[user[0]] = {'wins': 0}
 
-    print(f"dddddddd {d}")
+    #print(f"dddddddd {d}")
     sorted_d = OrderedDict(sorted(d.items(), key=lambda x:x[1]['wins'], reverse=True))
     print(f"sorted d: {sorted_d}")
 
