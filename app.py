@@ -551,8 +551,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
 
                 elif game_status != 'Final':
                     status['status'] = game['status']['type']['description']
-                    status['quarter'] = game['status']['period']
-                    status['clock'] = game['status']['displayClock']
+                    status['detail'] = game['status']['type']['detail']
                 else:
                     status['status'] = 'Final'
                 

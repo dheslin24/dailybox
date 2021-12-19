@@ -35,9 +35,11 @@
                 {% endif %}
 
                 {% if game_dict[game]['datetime'] > now %}
-                <tr><td colspan="5" class="headline">{{ game_dict[game]['date'] }}</td></tr>
+                    <tr><td colspan="5" class="headline">{{ game_dict[game]['date'] }}</td></tr>
+                {% elif game_dict[game]['status']['status'] != 'Final' %}
+                    <tr><td colspan="5" class="headline">{{ game_dict[game]['date'] }} -- {{ game_dict[game]['status']['detail'] }}</td></tr>
                 {% else %}
-                <tr><td colspan="5" class="headline">{{ game_dict[game]['date'] }} -- {{ game_dict[game]['status']['status'] }}</td></tr>
+                    <tr><td colspan="5" class="headline">{{ game_dict[game]['date'] }} -- {{ game_dict[game]['status']['status'] }}</td></tr>
                 <!-- <tr><td colspan="5" class="headline">{{ game_dict[game]['status']['status'] }}</td></tr> -->
                 {% endif %}
                 
