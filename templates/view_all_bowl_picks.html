@@ -13,6 +13,7 @@
     </h1>
         <p> User picks remain hidden until game locks at scheduled kickoff </p>
         <p> Spreads not final until 1 hr before scheduled kickoff </p>
+        <p> In-Progress games are in <em style="background: navy; color: white">BLUE</em>.  Win/Loss reflects current score</p>
         {% if eliminated_list|length > 0 %}
             <p> If your name is in <em style="color: red">RED</em>, see you next year... </p>
         {% endif %}
@@ -35,22 +36,15 @@
     <h4>
         <table class="pickem_table" align="center">
 
-        <!-- Game Numbers - Column Headings -->
-        <!-- <tr>
-            <th rowspan="3" style="width: 200px;"> The<br>Funnel </th>
-            {% for game in game_dict %}
-            <th> {{ game }} </th>
-            {% endfor %}
-            <th rowspan="4"> T<br>B </th>
-            <th rowspan="4"> W<br>I<br>N<br>S</th>
-        </tr> -->
-        
-
         <!-- Home vs Away -->
         <tr>
             <th rowspan="3" style="width: 200px;"> The<br>Funnel </th>
             {% for game in game_dict %}
-            <th style="font-size: 9px;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} </th>
+                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
+                    <th style="font-size: 9px;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} </th>
+                {% else %}
+                    <th class="current_user" style="font-size: 9px;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} </th>
+                {% endif %}
             {% endfor %}
             <th rowspan="4"> T<br>B </th>
             <th rowspan="4"> W<br>I<br>N<br>S</th>
@@ -59,21 +53,38 @@
         <!-- Current Line -->
         <tr> 
             {% for game in game_dict %}
-                
-                <th style="font-size: 8px; white-space: nowrap;"> 
-                    {% for elem in game_dict[game]['line'] %}
-                        {{ elem }}
-                    {% endfor %}
-                </th>
+                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
+                    <th style="font-size: 8px; white-space: nowrap;"> 
+                        {% for elem in game_dict[game]['line'] %}
+                            {{ elem }}
+                        {% endfor %}
+                    </th>
+                {% else %}
+                    <th class="current_user" style="font-size: 8px; white-space: nowrap;"> 
+                        {% for elem in game_dict[game]['line'] %}
+                            {{ elem }}
+                        {% endfor %}
+                    </th>
+                {% endif %}
             {% endfor %}
         </tr>
 
         <!-- display game start date/time -->
         <tr>
             {% for game in game_dict %}
-            <th style="font-size: 9px;">
-                {{ game_dict[game]['date_short']}}
-            </th>
+                {% if game_dict[game]['datetime'] > now %}
+                    <th style="font-size: 9px;">
+                        {{ game_dict[game]['date_short']}}
+                    </th>
+                {% elif game_dict[game]['status']['status'] == 'Final' %}
+                    <th style="font-size: 9px;">
+                        Final
+                    </th>  
+                {% else %}
+                    <th class="current_user" style="font-size: 9px;">
+                        QTR{{ game_dict[game]['status']['quarter'] }}<br>{{ game_dict[game]['status']['displayClock']}}
+                    </th>
+                {% endif %}
             {% endfor %}
         </tr>
 
@@ -81,7 +92,11 @@
         <tr>
             <th style="font-size: 12px; white-space: nowrap;">Live Scoring</th>
             {% for game in game_dict %}
-                <th style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
+                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
+                    <th style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
+                {% else %}
+                   <th class="current_user" style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
+                {% endif %}
             {% endfor %}
         </tr>
         

@@ -59,7 +59,7 @@ BOX_TYPE_ID = {
 }
 
 #global last_db_update
-last_db_update = datetime(2021, 12, 8, 0, 0, 0)
+#last_db_update = datetime(2021, 12, 8, 0, 0, 0)
 
 # ensure responses aren't caches
 if app.config["DEBUG"]:
@@ -552,6 +552,8 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                 elif game_status != 'Final':
                     status['status'] = game['status']['type']['description']
                     status['detail'] = game['status']['type']['detail']
+                    status['displayClock'] = game['status']['displayClock']
+                    status['quarter'] = game['status']['period']
                 else:
                     status['status'] = 'Final'
                 
@@ -634,8 +636,8 @@ def get_espn_scores(abbrev = True, insert_mode = False):
     
     
     #### replaced by espn_dict above ####
-    global last_db_update
-    print(f"last_db_update {last_db_update}")
+    #global last_db_update
+    #print(f"last_db_update {last_db_update}")
     for game in game_dict:
         fav = ''
         dog = ''
@@ -1940,6 +1942,7 @@ def select_bowl_games():
 def view_all_bowl_picks():
 
     season = 2021
+    now = datetime.utcnow() - timedelta(hours=5)
     # get list of active games first
     game_dict = get_espn_scores(False)['game']
 
@@ -2026,7 +2029,7 @@ def view_all_bowl_picks():
     tb_dict = dict(db2(t))
     print(f"tb_dict {tb_dict}")
 
-    return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict)
+    return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 def bowl_payment_status():
