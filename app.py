@@ -1946,7 +1946,7 @@ def view_all_bowl_picks():
     # get dict of userid: username for display
     u = "SELECT userid, username, first_name, last_name FROM users WHERE active = 1;"
     user_info = db2(u)
-    print(f"user info: {user_info}")
+    #print(f"user info: {user_info}")
 
     # user0:  userid   user1:  username   user2: first name  user3: last name
     user_dict = {}
@@ -2017,7 +2017,7 @@ def view_all_bowl_picks():
 
     #print(f"dddddddd {d}")
     sorted_d = OrderedDict(sorted(d.items(), key=lambda x:x[1]['wins'], reverse=True))
-    print(f"sorted d: {sorted_d}")
+    #print(f"sorted d: {sorted_d}")
 
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
 
