@@ -56,15 +56,6 @@
             <th rowspan="4"> W<br>I<br>N<br>S</th>
         </tr>
 
-        <!-- display game start date/time -->
-        <tr>
-            {% for game in game_dict %}
-            <th style="font-size: 9px;">
-                {{ game_dict[game]['date_short']}}
-            </th>
-            {% endfor %}
-        </tr>
-
         <!-- Current Line -->
         <tr> 
             {% for game in game_dict %}
@@ -74,6 +65,15 @@
                         {{ elem }}
                     {% endfor %}
                 </th>
+            {% endfor %}
+        </tr>
+
+        <!-- display game start date/time -->
+        <tr>
+            {% for game in game_dict %}
+            <th style="font-size: 9px;">
+                {{ game_dict[game]['date_short']}}
+            </th>
             {% endfor %}
         </tr>
 

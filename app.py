@@ -611,7 +611,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
             # 'date': '2022-01-01T17:00Z'
             game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
             game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
-            game_date_short = game_datetime.strftime('%m-%d %I:%M')
+            game_date_short = game_datetime.strftime('%m-%d %H:%M')
 
             # if game_num == 1:
             #     line = ['TOL', '-10.5']
