@@ -1908,6 +1908,7 @@ def display_bowl_games():
     else:
         tiebreak = ''
 
+    logging.info(f"user {session['username']} selected display all bowls")
     return render_template("display_bowl_games.html", game_dict = sorted_game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
 
 @app.route("/select_bowl_games", methods=["GET", "POST"])
@@ -2028,6 +2029,8 @@ def view_all_bowl_picks():
     t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
     tb_dict = dict(db2(t))
     print(f"tb_dict {tb_dict}")
+
+    logging.info(f"{session['username']} just selected view all bowl picks")
 
     return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now)
 
