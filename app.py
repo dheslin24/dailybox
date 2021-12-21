@@ -1907,8 +1907,10 @@ def display_bowl_games():
         tiebreak = tb[0][0]
     else:
         tiebreak = ''
-
-    logging.info(f"user {session['username']} selected display all bowls")
+    if session:
+        logging.info(f"user {session['username']} just hit display all bowls")
+    else:
+        logging.info("someone just hit display all bowls but isn't logged in")
     return render_template("display_bowl_games.html", game_dict = sorted_game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
 
 @app.route("/select_bowl_games", methods=["GET", "POST"])
@@ -1935,7 +1937,7 @@ def select_bowl_games():
         db2(t, (season, session['userid'], tiebreak))
 
     print(f"{session['username']} just selected bowl picks")
-    logging.info("{} just selected bowl picks".format(session["username"]))
+    logging.info("{} just actually selected bowl picks".format(session["username"]))
  
     return redirect(url_for('view_all_bowl_picks'))
 
@@ -2030,7 +2032,10 @@ def view_all_bowl_picks():
     tb_dict = dict(db2(t))
     print(f"tb_dict {tb_dict}")
 
-    logging.info(f"{session['username']} just selected view all bowl picks")
+    if session:
+        logging.info(f"{session['username']} just hit view all bowl picks")
+    else:
+        logging.infof("someone hit view all bowl picks but isn't logged in")
 
     return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now)
 
@@ -2842,7 +2847,7 @@ def index():
     print("***")
     print("*******************")
 
-    logging.info("{} logged in".format(session["username"]))
+    logging.info("{} just logged in".format(session["username"]))
 
     return render_template("landing_page.html", grid=grid, x=x_nums, y=y_nums)
 
