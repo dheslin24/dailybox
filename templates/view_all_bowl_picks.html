@@ -131,21 +131,21 @@
                     {% if game_dict[game]['espn_id'] in locked_games and user != session['userid'] %}
                         <td> XXX </td>
                     {% elif game_dict[game]['espn_id'] in locked_games %}
-                        <td class="current_user"> {{ d[user][game_dict[game]['espn_id']] }} </td>
+                        <td class="current_user" style="white-space: nowrap;"> {{ d[user][game_dict[game]['espn_id']] }} </td>
                     {% else %}
                         {% if d[user][game_dict[game]['espn_id']] == game_dict[game]['winner'] %}
                             {% if user == session['userid'] %}
-                               <td class="winner_cu">{{ d[user][game_dict[game]['espn_id']] }}</td>
+                               <td class="winner_cu" style="white-space: nowrap;">{{ d[user][game_dict[game]['espn_id']] }}</td>
                             {% else %}
-                                <td class="winner">{{ d[user][game_dict[game]['espn_id']] }}</td>
+                                <td class="winner" style="white-space: nowrap;">{{ d[user][game_dict[game]['espn_id']] }}</td>
                             {% endif %}
                         {% elif game_dict[game]['winner'] == 'PUSH' %}
-                            <td>{{ d[user][game_dict[game]['espn_id']] }}</td>
+                            <td style="white-space: nowrap;">{{ d[user][game_dict[game]['espn_id']] }}</td>
                         {% else %}
                             {% if user == session['userid'] %}
-                                <td class="loser_cu">{{ d[user][game_dict[game]['espn_id']] }}</td>
+                                <td class="loser_cu" style="white-space: nowrap;">{{ d[user][game_dict[game]['espn_id']] }}</td>
                             {% else %}
-                                <td class="loser">{{ d[user][game_dict[game]['espn_id']] }}</td>
+                                <td class="loser" style="white-space: nowrap;">{{ d[user][game_dict[game]['espn_id']] }}</td>
                             {% endif %}
                         {% endif %}
                     {% endif %}
