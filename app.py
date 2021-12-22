@@ -1881,6 +1881,7 @@ def live_scores():
 
 
 @app.route("/display_bowl_games", methods=["GET", "POST"])
+@login_required
 def display_bowl_games():
 
     now = datetime.utcnow() - timedelta(hours=5)
@@ -1914,6 +1915,7 @@ def display_bowl_games():
     return render_template("display_bowl_games.html", game_dict = sorted_game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
 
 @app.route("/select_bowl_games", methods=["GET", "POST"])
+@login_required
 def select_bowl_games():
 
     # get list of active espn ids
@@ -1942,6 +1944,7 @@ def select_bowl_games():
     return redirect(url_for('view_all_bowl_picks'))
 
 @app.route("/view_all_bowl_picks", methods=["GET", "POST"])
+@login_required
 def view_all_bowl_picks():
 
     season = 2021
@@ -2041,6 +2044,7 @@ def view_all_bowl_picks():
     return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
+@login_required
 def bowl_payment_status():
     #season = 2021 
     # find users that have a bowl entry
