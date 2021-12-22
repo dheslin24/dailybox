@@ -129,7 +129,11 @@
             {% if user != 'key' and user != 'reverse' %}
                 {% for game in game_dict %}
                     {% if game_dict[game]['espn_id'] in locked_games and user != session['userid'] %}
+                        {% if d[user][game_dict[game]['espn_id']] is defined %}
                         <td> XXX </td>
+                        {% else %}
+                        <td></td>
+                        {% endif %}
                     {% elif game_dict[game]['espn_id'] in locked_games %}
                         <td class="current_user" style="white-space: nowrap;"> {{ d[user][game_dict[game]['espn_id']] }} </td>
                     {% else %}
