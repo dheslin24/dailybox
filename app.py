@@ -71,7 +71,7 @@ if app.config["DEBUG"]:
         return response
 
 # configure session to use filesystem (instead of signed cookies)
-app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
@@ -2035,7 +2035,8 @@ def view_all_bowl_picks():
     if session:
         logging.info(f"{session['username']} just hit view all bowl picks")
     else:
-        logging.infof("someone hit view all bowl picks but isn't logged in")
+        logging.info("someone hit view all bowl picks but isn't logged in")
+        return apology("Sorry - please re-login.")
 
     return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now)
 
