@@ -1968,7 +1968,7 @@ def view_all_bowl_picks():
     l = "SELECT datetime FROM latest_lines WHERE datetime IS NOT NULL ORDER BY datetime DESC LIMIT 1"
     ll = db2(l)
     
-    last_line_time = ll[0][0]
+    last_line_time = ll[0][0] - timedelta(hours=5)
 
     # create set of locked games to hide in view all screen for non user
     # and if unlocked, calc winner
