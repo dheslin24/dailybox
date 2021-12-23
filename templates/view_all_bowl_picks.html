@@ -11,6 +11,14 @@
             All Users Bowl Picks <br>
         </p>
     </h1>
+        
+        {% if user_dict[session['userid']]['is_admin'] == 1 %}
+        <h3>
+        <p style="color: green; font-weight: bold"> Only admins can see this line below! </p>
+        </h3>
+        <p style="color: green; font-weight: bold"> Last line update in DB is: {{ last_line_time }}  and should never be more than 15 min old! </p>
+
+        {% endif %}
         <p> User picks remain hidden until game locks at scheduled kickoff </p>
         <p> Spreads not final until 1 hr before scheduled kickoff </p>
         <p> In-Progress games are in <em style="background: navy; color: white">BLUE</em> - Win/Loss reflects current score</p>

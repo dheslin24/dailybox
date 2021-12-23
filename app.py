@@ -1953,14 +1953,22 @@ def view_all_bowl_picks():
     game_dict = get_espn_scores(False)['game']
 
     # get dict of userid: username for display
-    u = "SELECT userid, username, first_name, last_name FROM users WHERE active = 1;"
+    u = "SELECT userid, username, first_name, last_name, is_admin FROM users WHERE active = 1;"
     user_info = db2(u)
     #print(f"user info: {user_info}")
 
-    # user0:  userid   user1:  username   user2: first name  user3: last name
+    # user0:  userid   user1:  username   user2: first name  user3: last name   user4: is_admin (1 or 0)
     user_dict = {}
     for user in user_info:
-        user_dict[user[0]] = {'username': user[1], 'name': user[2] + ' ' + user[3]}
+        user_dict[user[0]] = {'username': user[1], 'name': user[2] + ' ' + user[3], 'is_admin': user[4]}
+
+    print(user_dict)
+
+    # get last update in latest_liens table - display to admins
+    l = "SELECT datetime FROM latest_lines WHERE datetime IS NOT NULL ORDER BY datetime DESC LIMIT 1"
+    ll = db2(l)
+    
+    last_line_time = ll[0][0]
 
     # create set of locked games to hide in view all screen for non user
     # and if unlocked, calc winner
@@ -2041,7 +2049,7 @@ def view_all_bowl_picks():
         logging.info("someone hit view all bowl picks but isn't logged in")
         return apology("Sorry - please re-login.")
 
-    return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now)
+    return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now, last_line_time=last_line_time)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 @login_required
