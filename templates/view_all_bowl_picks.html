@@ -25,7 +25,7 @@
         <p> In-Progress games are in <em style="background: navy; color: white">BLUE</em> - Win/Loss reflects current score</p>
         {% endif %}
         {% if eliminated_list|length > 0 %}
-            <p> If your name is in <em style="color: red">RED</em>, as of this moment you are DONE!</p>
+            <p> If your name is in <em style="color: maroon">RED</em>, as of this moment you are DONE!</p>
             <p> If there are no games in progress... see you next year...</p>
         {% endif %}
         <!-- <p> HOME team in CAPS </p> -->
@@ -44,7 +44,7 @@
             <p style="color: green; margin: 0; padding: 0"> {{ log }} </p>
         {% endfor %}
         {% for log in tb_log[1:] %}
-            <p style="color: red; margin: 0; padding: 0"> {{ log }} </p>
+            <p style="color: maroon; margin: 0; padding: 0"> {{ log }} </p>
         {% endfor %}
     {% endif %}
         
@@ -53,7 +53,7 @@
 
         <!-- Home vs Away -->
         <tr>
-            <th rowspan="3" style="width: 200px; background-color: gray;"> The<br>Funnel </th>
+            <th rowspan="3" colspan="2" style="width: 200px; background-color: gray;"> The<br>Funnel </th>
             {% for game in game_dict %}
                 {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' or game_dict[game]['status']['status'] == 'Canceled' %}
                     <th style="font-size: 9px; background-color: gray;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} </th>
@@ -111,6 +111,7 @@
 
         <!-- Current Score -->
         <tr>
+            <th style="font-size: 10px; background-color: gray;">Wins</th>
             <th style="font-size: 12px; white-space: nowrap;">Live Scoring</th>
             {% for game in game_dict %}
                 {% if game_dict[game]['status']['status'] == 'Canceled' %}
@@ -128,6 +129,11 @@
             {% for user, picks in d.items() %}
         <tr>
             <!-- Username Column -->
+            {% if user == session['userid'] %}
+                <td class="current_user">{{ d[user]['wins'] }}</td>
+            {% else %}
+                <td style="font-size: 12px; background-color: gray;"> {{ d[user]['wins'] }}</td>
+            {% endif %}
             {% if user_dict[user]['username'] == session['username'] %}
                 {% if user in winner %}
                 <td class="winning_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}  {{ emojis['crown'] }}</td>
