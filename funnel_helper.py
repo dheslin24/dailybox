@@ -1,6 +1,7 @@
 def elimination_check(game_dict, d, user_dict):
 
     games_left = 0
+    total_games = 0 # can no longer rely on length of game dict with canceled games - thank you covid
     total_users = len(d)
     eliminated_list = []
     curr_most_wins = next(iter(d.items()))[1]['wins']
@@ -8,14 +9,20 @@ def elimination_check(game_dict, d, user_dict):
     winner = []
     tb_log = []
 
+    # calculcate games left.. anything not scheduled doesn't count (ie canceled)
     for k, game in game_dict.items():
         if game['status']['status'] == 'Scheduled':
             games_left += 1
+            total_games += 1
+        elif game['status']['status'] != 'Canceled':
+            total_games += 1
 
     print(f"games left: {games_left}")
     print(f"curr_winner from helper!!!: {curr_most_wins}")
-    print(f"length which is total games {len(game_dict)}")
+    print(f"total games: {total_games}")
 
+    # compare most with user wins vs games left to calc elim
+    # and also prepare a list of users with the most wins
     for user, picks in d.items():
         print(f"user {user}: wins: {picks['wins']}  behind: {curr_most_wins - picks['wins']}")
         if curr_most_wins - picks['wins'] > games_left:

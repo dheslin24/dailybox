@@ -58,9 +58,13 @@ def get_espn_scores(abbrev = True, insert_mode = False):
             status = {}
             if 'status' in game:
                 print(f"status! {game['status']}")
-                game_status = game['status']['type']['description']  # 1: scheduled, 2: inprogress, 3: final
+                game_status = game['status']['type']['description']  # 1: scheduled, 2: inprogress, 3: final, 5: canceled
                 if game_status == 'Scheduled':
                     status['status'] = game_status
+
+                elif game_status == 'Canceled':
+                    status['status'] = game_status
+                    status['detail'] = game_status
 
                 elif game_status != 'Final':
                     status['status'] = game['status']['type']['description']
