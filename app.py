@@ -1844,6 +1844,8 @@ def bowl_payment_status():
     print(bowl_users)
     print(payment_dict)
     print(display_list)
+
+    logging.info(f"{session['username']} just hit view all bowl picks")
                 
     return render_template("bowl_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list), prize_pool=prize_pool) 
 

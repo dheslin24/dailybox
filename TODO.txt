@@ -34,3 +34,11 @@ mysql> desc tiebreak;
 game 1: {'espn_id': 401331164, 'date': '2021-12-17 12:00 PM EST', 'datetime': datetime.datetime(2021, 12, 17, 12, 0), 
     'venue': 'Thomas A. Robinson National Stadium', 'competitors': [('HOME', 'Toledo Rockets', '0'), ('AWAY', 'Middle Tennessee Blue Raiders', '0')], 
     'abbreviations': {'HOME': 'TOL', 'AWAY': 'MTSU'}, 'line': ['TOL', '-10.0'], 'over_under': 52.0, 'headline': 'Bahamas Bowl', 'location': 'Nassau, NP'}
+
+
+elimination checks
+
+winner = [list of winning userids]  # the actual winner if clinched
+eliminated_list = [list of userids mathematically eliminated]
+
+

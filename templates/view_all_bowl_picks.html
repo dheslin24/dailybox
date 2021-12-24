@@ -53,10 +53,10 @@
 
         <!-- Home vs Away -->
         <tr>
-            <th rowspan="3" style="width: 200px;"> The<br>Funnel </th>
+            <th rowspan="3" style="width: 200px; background-color: gray;"> The<br>Funnel </th>
             {% for game in game_dict %}
-                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
-                    <th style="font-size: 9px;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} </th>
+                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' or game_dict[game]['status']['status'] == 'Canceled' %}
+                    <th style="font-size: 9px; background-color: gray;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} </th>
                 {% else %}
                     <th class="current_user" style="font-size: 9px;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} </th>
                 {% endif %}
@@ -68,7 +68,9 @@
         <!-- Current Line -->
         <tr> 
             {% for game in game_dict %}
-                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
+                {% if game_dict[game]['status']['status'] == 'Canceled' %}
+                    <th style="font-size: 8px; white-space: nowrap; background-color: gray;">Canceled</th>
+                {% elif game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
                     <th style="font-size: 8px; white-space: nowrap;"> 
                         {% for elem in game_dict[game]['line'] %}
                             {{ elem }}
@@ -87,13 +89,17 @@
         <!-- display game start date/time -->
         <tr>
             {% for game in game_dict %}
-                {% if game_dict[game]['datetime'] > now %}
+                {% if game_dict[game]['status']['status'] == 'Canceled' %}
+                    <th style="font-size: 8px; background-color: gray;">
+                        {{ game_dict[game]['status']['status'] }}
+                    </th>
+                {% elif game_dict[game]['datetime'] > now %}
                     <th style="font-size: 9px;">
                         {{ game_dict[game]['date_short']}}
                     </th>
                 {% elif game_dict[game]['status']['status'] == 'Final' %}
                     <th style="font-size: 9px;">
-                        Final
+                        {{ game_dict[game]['status']['status'] }}
                     </th>  
                 {% else %}
                     <th class="current_user" style="font-size: 9px;">
@@ -107,10 +113,12 @@
         <tr>
             <th style="font-size: 12px; white-space: nowrap;">Live Scoring</th>
             {% for game in game_dict %}
-                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
+                {% if game_dict[game]['status']['status'] == 'Canceled' %}
+                    <th style="font-size: 8px; white-space: nowrap; background-color: gray;">Canceled</th>
+                {% elif game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
                     <th style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
                 {% else %}
-                   <th class="current_user" style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
+                    <th class="current_user" style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
                 {% endif %}
             {% endfor %}
         </tr>
@@ -119,12 +127,11 @@
         <!-- d = {user: { espnid: user's pick} }-->
             {% for user, picks in d.items() %}
         <tr>
+            <!-- Username Column -->
             {% if user_dict[user]['username'] == session['username'] %}
                 {% if user in winner %}
                 <td class="winning_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}  {{ emojis['crown'] }}</td>
                 {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'ruffruss13') and user not in eliminated_list %}
-                <!-- <td class="current_user">{{ user_dict[user]['username'] }}</td> -->
-                <!-- <td class="current_user" style="width: 200px;">{{ user_dict[user]['first_name'] }} {{ user_dict[user]['last_name'] }}</td> -->
                 <td class="current_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }} {{ emojis['middle_finger'] }}
                 <span class="CellComment">
                     Hi - My name is Pete.  I call myself RuffRuss.  I'm an asshole.
@@ -135,8 +142,6 @@
                 <td class="current_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}</td>
                 {% endif %}
             {% elif user != 'key' and user != 'reverse' %}
-                <!-- <td>{{ user_dict[user]['username'] }}</td> -->
-                <!-- <td style="width: 200px;">{{ user_dict[user]['first_name'] }} {{ user_dict[user]['last_name'] }}</td> -->
                 {% if user in winner %}
                 <td class="winning_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}  {{ emojis['crown'] }}</td>
                 {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'ruffruss13') and user not in eliminated_list %}
@@ -150,9 +155,19 @@
                 <td style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}</td>
                 {% endif %}
             {% endif %}
+
+            <!-- Actual user picks, tie breaks and win totals -->
             {% if user != 'key' and user != 'reverse' %}
+                <!-- User picks  -->
                 {% for game in game_dict %}
-                    {% if game_dict[game]['espn_id'] in locked_games and user != session['userid'] %}
+                    <!-- locked games  -->
+                    {% if game_dict[game]['status']['status'] == 'Canceled' %}
+                        {% if user == session['userid'] %}
+                            <td style="background-color: gray;"></td>
+                        {% else %}
+                            <td style="background-color: darkgray;"></td>
+                        {% endif %}
+                    {% elif game_dict[game]['espn_id'] in locked_games and user != session['userid'] %}
                         {% if d[user][game_dict[game]['espn_id']] is defined %}
                         <td> XXX </td>
                         {% else %}
@@ -160,8 +175,16 @@
                         {% endif %}
                     {% elif game_dict[game]['espn_id'] in locked_games %}
                         <td class="current_user" style="white-space: nowrap;"> {{ d[user][game_dict[game]['espn_id']] }} </td>
+                    
+                    <!-- unlocked games -->
                     {% else %}
-                        {% if d[user][game_dict[game]['espn_id']] == game_dict[game]['winner'] %}
+                        {% if game_dict[game]['status']['status'] == 'Canceled' %}
+                            {% if user == session['userid'] %}
+                                <td style="background-color: gray;"></td>
+                            {% else %}
+                                <td style="background-color: darkgray;"></td>
+                            {% endif %}
+                        {% elif d[user][game_dict[game]['espn_id']] == game_dict[game]['winner'] %}
                             {% if user == session['userid'] %}
                                <td class="winner_cu" style="white-space: nowrap;">{{ d[user][game_dict[game]['espn_id']] }}</td>
                             {% else %}
@@ -178,6 +201,8 @@
                         {% endif %}
                     {% endif %}
                 {% endfor %}
+
+                <!-- tie break and win totals -->
                 {% if user != session['userid'] %}
                     <th style="font-size: 12px;"> X </td>
                     <th style="font-size: 12px;"> {{ d[user]['wins'] }}</td>
