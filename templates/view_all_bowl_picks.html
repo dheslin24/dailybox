@@ -11,32 +11,39 @@
             All Users Bowl Picks <br>
         </p>
     </h1>
-        
-        {% if user_dict[session['userid']]['is_admin'] == 1 %}
-        <h3>
-        <p style="color: green; font-weight: bold"> Only admins can see this line below! </p>
-        </h3>
-        <p style="color: green; font-weight: bold"> Last line update in DB is: {{ last_line_time }}  and should never be more than 15 min old! </p>
+        {% if not winner %}
+            {% if user_dict[session['userid']]['is_admin'] == 1 %}
+            <h3>
+            <p style="color: green; font-weight: bold"> Only admins can see this line below! </p>
+            </h3>
+            <p style="color: green; font-weight: bold"> Last line update in DB is: {{ last_line_time }}  and should never be more than 15 min old! </p>
 
-        {% endif %}
+            {% endif %}
+        
         <p> User picks remain hidden until game locks at scheduled kickoff </p>
         <p> Spreads not final until 1 hr before scheduled kickoff </p>
         <p> In-Progress games are in <em style="background: navy; color: white">BLUE</em> - Win/Loss reflects current score</p>
+        {% endif %}
         {% if eliminated_list|length > 0 %}
-            <p> If your name is in <em style="color: red">RED</em>, see you next year... </p>
+            <p> If your name is in <em style="color: red">RED</em>, as of this moment you are DONE!</p>
+            <p> If there are no games in progress... see you next year...</p>
         {% endif %}
         <!-- <p> HOME team in CAPS </p> -->
+        {% if not winner %}
         <a href="{{ url_for('display_bowl_games') }}">Jump to enter your picks</a>
+        {% endif %}
     </br>
-    {% if winning_user|length > 0 %}
-        <h2 style="color: green; font-weight: bold"> {{ winning_user }} </h2>
+    {% if winner|length > 0 %}
+        {% for winning_user in winner %}
+        <h2 style="color: green; font-weight: bold">{{ emojis['crown'] }} {{ user_dict[winning_user]['username'] }} {{ emojis['crown'] }}</h2>
+        {% endfor %}
     {% endif %}
-    {% if tie_break_log|length > 0 %}
+    {% if tb_log|length > 0 %}
         Tie Break Details: </br>
-        {% for log in tie_break_log[:1] %}
+        {% for log in tb_log[:1] %}
             <p style="color: green; margin: 0; padding: 0"> {{ log }} </p>
         {% endfor %}
-        {% for log in tie_break_log[1:] %}
+        {% for log in tb_log[1:] %}
             <p style="color: red; margin: 0; padding: 0"> {{ log }} </p>
         {% endfor %}
     {% endif %}
@@ -109,27 +116,36 @@
         </tr>
         
         <!-- User Picks  -->
+        <!-- d = {user: { espnid: user's pick} }-->
             {% for user, picks in d.items() %}
         <tr>
             {% if user_dict[user]['username'] == session['username'] %}
-                {% if user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'ruffruss13' %}
+                {% if user in winner %}
+                <td class="winning_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}  {{ emojis['crown'] }}</td>
+                {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'ruffruss13') and user not in eliminated_list %}
                 <!-- <td class="current_user">{{ user_dict[user]['username'] }}</td> -->
                 <!-- <td class="current_user" style="width: 200px;">{{ user_dict[user]['first_name'] }} {{ user_dict[user]['last_name'] }}</td> -->
-                <td class="current_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}
+                <td class="current_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }} {{ emojis['middle_finger'] }}
                 <span class="CellComment">
                     Hi - My name is Pete.  I call myself RuffRuss.  I'm an asshole.
                 </span></td>
+                {% elif user in elminated_list %}
+                <td class="current_user_elim" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}</td>
                 {% else %}
                 <td class="current_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}</td>
                 {% endif %}
             {% elif user != 'key' and user != 'reverse' %}
                 <!-- <td>{{ user_dict[user]['username'] }}</td> -->
                 <!-- <td style="width: 200px;">{{ user_dict[user]['first_name'] }} {{ user_dict[user]['last_name'] }}</td> -->
-                {% if user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'ruffruss13' %}
-                <td class="CellWithComment" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }} 
+                {% if user in winner %}
+                <td class="winning_user" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}  {{ emojis['crown'] }}</td>
+                {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'ruffruss13') and user not in eliminated_list %}
+                <td class="CellWithComment" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }} {{ emojis['middle_finger'] }}
                     <span class="CellComment">
                         Hi - My name is Pete.  I call myself RuffRuss.  I'm an asshole.
                     </span></td>
+                {% elif user in eliminated_list %}
+                <td class="eliminated" style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}</td>
                 {% else %}
                 <td style="white-space: nowrap; text-align: left; border-right: 15px;">{{ user_dict[user]['username'] }}</td>
                 {% endif %}

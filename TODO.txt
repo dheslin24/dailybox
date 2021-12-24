@@ -1,0 +1,36 @@
+FUNNEL Go Live:
+
+X  - display user picks page
+X  - display all picks page
+X    - ability to see other picks dependent on now() vs gamestart time
+X  - add spread to display page - done
+X  - standings
+X    - calc winners!
+  - audit log of picks and spread changes
+  - elimination calcs
+X  - sort by total wins on view all
+
+
+datebase for games
+X - if gamestart < now:
+XX   - if espn_id not in table:
+XX     - add espn_id, home, away, line, home_score, away_score, winner against spread
+X   - else if in table and game is over:
+X     - update home_score, away_score, winner (calculated)
+X   - else (game in prog):
+X     - do nothing
+
+mysql> desc tiebreak;
++-------------+----------+------+-----+---------+----------------+
+| Field       | Type     | Null | Key | Default | Extra          |
++-------------+----------+------+-----+---------+----------------+
+| tiebreak_id | int      | NO   | PRI | NULL    | auto_increment |
+| season      | int      | YES  |     | NULL    |                |
+| userid      | int      | YES  |     | NULL    |                |
+| tiebreak    | int      | YES  |     | NULL    |                |
+| datetime    | datetime | YES  |     | NULL    |                |
++-------------+----------+------+-----+---------+----------------+
+
+game 1: {'espn_id': 401331164, 'date': '2021-12-17 12:00 PM EST', 'datetime': datetime.datetime(2021, 12, 17, 12, 0), 
+    'venue': 'Thomas A. Robinson National Stadium', 'competitors': [('HOME', 'Toledo Rockets', '0'), ('AWAY', 'Middle Tennessee Blue Raiders', '0')], 
+    'abbreviations': {'HOME': 'TOL', 'AWAY': 'MTSU'}, 'line': ['TOL', '-10.0'], 'over_under': 52.0, 'headline': 'Bahamas Bowl', 'location': 'Nassau, NP'}

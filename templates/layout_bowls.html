@@ -83,6 +83,9 @@
                                 <li><a href="{{ url_for('bowl_payment_status') }}">Payment Status</a></li>
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
+                                {% if session['is_admin'] == 1 %}
+                                <li><a href="{{ url_for('bygzomo') }}">BYGZomo</a></li>
+                                {% endif %}
                                 <li><a href="{{ url_for('user_details') }}">User {{ session['username'] }}</a></li>
                                 <li><a href="{{ url_for('admin') }}">Admin</a></li>
                                 <li><a href="{{ url_for('logout') }}">Log Out</a></li>

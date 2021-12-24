@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    BYGZomo
+{% endblock %}
+
+{% block main %}
+    <form action="{{ url_for('bygzomo') }}" method="post">
+        <fieldset>
+            <div class="form-group">
+                <!-- <input autocomplete="off" autofocus class="form-control" name="query" placeholder="Query" type="text"/> -->
+                <label for="query">Enter query:</label><br>
+                <textarea id="query" name="query" rows="5" cols="50"></textarea>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-default" type="submit">Submit Query</button>
+            </div>
+        </fieldset>
+    </form>
+
+    
+        <h3>
+            Result:
+        </h3>
+    <p style="text-align: left; text-anchor: start;">
+        {{ result }}
+    </p>
+
+{% endblock %}

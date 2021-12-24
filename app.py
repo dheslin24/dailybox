@@ -2,46 +2,43 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 from flask_session import Session
 import logging
 import requests
-#from flask_sslify import SSLify
 from passlib.apps import custom_app_context as pwd_context
-#from werkzeug.serving import make_ssl_devcert, run_simple
 import sys
 import random
 import json
-import config
+#import config  ## moved to db_accessor
+from db_accessor.db_accessor import db, db2
 import sched, time
 from collections import OrderedDict
 from datetime import datetime, timedelta, date
 import re
 from operator import itemgetter, attrgetter
-import mysql.connector
-from mysql.connector import errorcode
 from functools import wraps
-# from sportsreference.nfl.boxscore import Boxscores, Boxscore
-# from sportsreference.nfl.schedule import Schedule
-#import weasyprint
-#from weasyprint import HTML
-#from flask_weasyprint import HTML, render_pdf
+from espnapi import get_espn_scores
+from funnel_helper import elimination_check
+
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
-print('dh1')
 app = Flask(__name__)
-print('dh2')
 
-    # mysql> select * from pay_type;
-    # +-------------+--------------------------+
-    # | pay_type_id | description              |
-    # +-------------+--------------------------+
-    # |           1 | 4 Qtr Payout 10/30/10/50 |
-    # |           2 | Single Payout            |
-    # |           3 | Every Score              |
-    # |           4 | Touch Box                |
-    # |           5 | 10-Man                   |
-    # |           6 | Satellite
-    # |           7 | 10-Man Final/Reverse 75/25
-    # +-------------+--------------------------+
+# ensure responses aren't caches
+if app.config["DEBUG"]:
+    print("in app.config debug")
+    @app.after_request
+    def after_request(response):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Expires"] = 0
+        response.headers["Pragma"] = "no-cache"
+        return response
 
+# configure session to use filesystem (instead of signed cookies)
+app.config["SESSION_PERMANENT"] = True
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+
+
+# Global variables
 PAY_TYPE_ID = {
     'four_qtr' : 1,
     'single' : 2,
@@ -58,22 +55,28 @@ BOX_TYPE_ID = {
     'nutcracker' : 3
 }
 
-#global last_db_update
-#last_db_update = datetime(2021, 12, 8, 0, 0, 0)
+EMOJIS = {
+    'thumbs_up': '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16'),
+    'thumbs_down': '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16'),
+    'middle_finger': '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16'),
+    'check': '\u2714',
+    'ex': '\u274c',
+    'crown': '\uD83C\uDFC6'.encode('utf-16', 'surrogatepass').decode('utf-16')
+}
 
-# ensure responses aren't caches
-if app.config["DEBUG"]:
-    @app.after_request
-    def after_request(response):
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        response.headers["Expires"] = 0
-        response.headers["Pragma"] = "no-cache"
-        return response
 
-# configure session to use filesystem (instead of signed cookies)
-app.config["SESSION_PERMANENT"] = True
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
+    # mysql> select * from pay_type;
+    # +-------------+--------------------------+
+    # | pay_type_id | description              |
+    # +-------------+--------------------------+
+    # |           1 | 4 Qtr Payout 10/30/10/50 |
+    # |           2 | Single Payout            |
+    # |           3 | Every Score              |
+    # |           4 | Touch Box                |
+    # |           5 | 10-Man                   |
+    # |           6 | Satellite
+    # |           7 | 10-Man Final/Reverse 75/25
+    # +-------------+--------------------------+
 
 def apology(message, code=400):
     """Renders message as an apology to user."""
@@ -88,76 +91,13 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# imported config
-db_config = {'user':config.user, 'password':config.password, 'host':config.host, 'database':config.database}
-# print(db_config)
-
-def db(s, db_config=db_config):
-    try:
-        cnx = mysql.connector.connect(**db_config)
-        #print("try succeeded")
-
-    except mysql.connector.Error as err:
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            print("Invalid Username or Password")
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            print("Database does not exist")
-        else:
-            print(err)
-    #else:
-        #print("try failed")
-        #cnx.close()
-
-    cursor = cnx.cursor()
-    print(s)
-    cursor.execute(s)
-    rv = ()
-    if s[:6] == "SELECT":
-        rv = cursor.fetchall()
-        cursor.close()
-        cnx.close()
-        return rv
-    else:
-        cnx.commit()
-        cursor.close()
-        cnx.close()
-
-def db2(s, params=(), db_config=db_config):
-    try:
-        cnx = mysql.connector.connect(**db_config)
-        #print("try succeeded")
-
-    except mysql.connector.Error as err:
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            print("Invalid Username or Password")
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            print("Database does not exist")
-        else:
-            print(err)
-    #else:
-        #print("try failed")
-        #cnx.close()
-
-    if len(params) == 0:
-        cursor = cnx.cursor()
-        print(s)
-        cursor.execute(s)
-    else:
-        cursor = cnx.cursor()
-        print("db2 executing")
-        print(s, params)
-        cursor.execute(s, params)
-
-    rv = ()
-    if s[:6] == "SELECT":
-        rv = cursor.fetchall()
-        cursor.close()
-        cnx.close()
-        return rv
-    else:
-        cnx.commit()
-        cursor.close()
-        cnx.close()
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("is_admin") == 0:
+            return redirect("/")
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 def init_grid():
@@ -492,214 +432,7 @@ def get_games(box_type, active = 1):
     
     return game_list
 
-def get_espn_scores(abbrev = True, insert_mode = False):
-    season_type = 3  # 1: preseason, 2: regular, 3: post
-    week = 1 # will make this an input soon
-    league = 'nfl'
-    espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
-    espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
-    #espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
-    espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 
-    #response = requests.get(espn_url)
-    response = requests.get(espn_ncaa_url)
-    r = response.json()
-
-    game_dict = {}
-    game_num = 1
-    team_dict = {}
-    now = datetime.utcnow() - timedelta(hours=5)
-    print(now)
-
-    # <<<<<<<<<TESTING>>>>>>>>
-    # print(r.keys())
-    # print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
-    # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
-    # print(r)
-    print("dh test")
-    print(r['events'][0]['competitions'][0]['status'])
-    # print(r['events'][0]['competitions'][0]['odds'][0]['details'])
-    # print(r['events'][0]['competitions'][0]['odds'][0]['overUnder'])
-    #print(f"events: {r['events']}")
-    #print("##########################")
-    #print(f"games: {r['events'][0]['competitions']}")
-
-    espn_q = "SELECT espnid, fav, spread FROM latest_lines"
-    espn_db = db2(espn_q)
-    print(f"espndb: {espn_db}")
-
-    espn_dict = {}
-    for game in espn_db:
-        if len(game) == 3:
-            espn_dict[str(game[0])] = {'fav': game[1], 'spread': game[2]}
-        else:
-            espn_dict[str(game[0])] = {'fav': game[1], 'spread': ''}
-
-    print(f"espn dict: {espn_dict}")
-
-    for team in r['events']:
-        for game in team['competitions']:
-            competitors = []
-            abbreviations = {}
-            headline = ''
-            status = {}
-            if 'status' in game:
-                print(f"status! {game['status']}")
-                game_status = game['status']['type']['description']  # 1: scheduled, 2: inprogress, 3: final
-                if game_status == 'Scheduled':
-                    status['status'] = game_status
-
-                elif game_status != 'Final':
-                    status['status'] = game['status']['type']['description']
-                    status['detail'] = game['status']['type']['detail']
-                    status['displayClock'] = game['status']['displayClock']
-                    status['quarter'] = game['status']['period']
-                else:
-                    status['status'] = 'Final'
-                
-            if 'odds' in game:
-                #print(f"len odds: {len(game['odds'])}")
-                # line = game['odds'][0]['details'].split(' ')
-
-                # get rid of the -10.0 float to int.  only show float when it's a .5 spread
-                # print(f"line line {line}")
-                # if line != 'TBD' and line[0] != 'EVEN':
-                #     if line[1][-2:] == '.0':
-                #         line[1] = line[1][:-2]
-                over_under = game['odds'][0]['overUnder']
-                if over_under % 2 == 0:
-                    over_under = int(over_under)
-            else:
-                # line = 'TBD'
-                over_under = 'TBD'
-
-            if game['id'] in espn_dict:
-                if espn_dict[game['id']]['fav'] != 'EVEN':
-                    espn_fav = espn_dict[game['id']]['fav']
-                    espn_spread = espn_dict[game['id']]['spread']
-                    if len(espn_spread) > 2 and espn_spread[-2:] == '.0':
-                        espn_spread = espn_spread[:-2]
-                    line = [espn_fav, espn_spread]
-                else:
-                    espn_fav = 'EVEN'
-                    espn_spread = ''
-                    line = [espn_fav]
-            else:
-                line = 'TBD'
-
-            if line[0] != 'EVEN':
-                print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
-            else:
-                print(f"line: EVEN EVEN {line}")
-                #print(f"game with even {game}")
-            if 'notes' in game:
-                if len(game['notes']) > 0:
-                    if 'headline' in game['notes'][0]:
-                        headline = game['notes'][0]['headline']
-
-            for team in game['competitors']:
-                #print(f"team:  {team['team']['displayName']}")
-                #print("\br \br ################ \br \br")
-                home_away = team['homeAway'].upper()
-                if abbrev:
-                    competitors.append((home_away, team['team']['abbreviation'], team['score']))
-                else:
-                    competitors.append((home_away, team['team']['displayName'] + ' ' + team['team']['name'], team['score']))
-                    abbreviations[home_away] = team['team']['abbreviation']
-
-                team_dict[team['team']['abbreviation']] = team['score']
-                
-            # convert string to datetime e.g.:  
-            # 'date': '2022-01-01T17:00Z'
-            game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
-            game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
-            game_date_short = game_datetime.strftime('%m-%d %H:%M')
-
-            # if game_num == 1:
-            #     line = ['TOL', '-10.5']
-
-            game_dict[game_num] = {
-                'espn_id': int(game['id']), 
-                'date': game_date, # date string for printing
-                'date_short': game_date_short,
-                'datetime': game_datetime, # datetime object for comparison
-                'venue': game['venue']['fullName'], 
-                'competitors': competitors,
-                'abbreviations': abbreviations,
-                'line': line,
-                'over_under': over_under,
-                'headline': headline,
-                'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state'],
-                'status': status
-                }
-            game_num += 1
-    
-    
-    #### replaced by espn_dict above ####
-    #global last_db_update
-    #print(f"last_db_update {last_db_update}")
-    for game in game_dict:
-        fav = ''
-        dog = ''
-        spread = 0
-        fav_score = 0
-        dog_score = 0
-        game_dict[game]['current_winner'] = ''
-        # if (game_dict[game]['line'] != 'TBD' and now.day - last_db_update.day > 1) or insert_mode == True:
-        #     last_db_update = now
-        #     espnid = game_dict[game]['espn_id']
-        #     fav = game_dict[game]['line'][0]
-        #     if len(game_dict[game]['line']) > 1 and len(game_dict[game]['line'][1]) > 1:  # to handle 'EVEN' lines, will only be ['EVEN'] with len 1
-        #         if game_dict[game]['line'][1][-2:] == '.0':  # get rid of the -10.0 float to int.  only show float when it's a .5 spread
-        #             game_dict[game]['line'][1] = game_dict[game]['line'][1][:-2]
-        #             spread = game_dict[game]['line'][1]
-        #         else:
-        #             spread = game_dict[game]['line'][1]
-        #     else:
-        #         spread = ''
-        #     line_query = "INSERT INTO latest_lines (espnid, fav, spread, datetime) VALUES (%s, %s, %s, now()) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s, datetime = now();"
-        #     db2(line_query, (espnid, fav, spread, espnid, fav, spread))
-
-        # elif game_dict[game]['line'] == 'TBD':
-        #     line_query = "SELECT fav, spread FROM latest_lines WHERE espnid = %s;"
-        #     line = db2(line_query, (game_dict[game]['espn_id'], ))
-        #     if line:
-        #         print(f"line! {line}")
-        #         game_dict[game]['line'] = line[0]
-
-        # who is winning?
-        #print(f"line 654 {game_dict[game]}")
-        if game_dict[game]['datetime'] < now:
-            #print(f"even check {game_dict[game]['line']}")
-            if game_dict[game]['line'][0] == 'EVEN':
-                fav = game_dict['abbreviations']['HOME']
-                fav_score = team_dict[fav]
-                dog = game_dict['abbreviations']['AWAY']
-                dog_score = team_dict[dog]
-            elif game_dict[game]['line'] != 'TBD':
-                for team in game_dict[game]['abbreviations'].values():
-                    print(f"team: {team}")
-                    if team == game_dict[game]['line'][0]:
-                        spread = game_dict[game]['line'][1]
-                        fav = team
-                        fav_score = int(team_dict[team]) + float(spread)
-                    else:
-                        dog_score = float(team_dict[team])
-                        dog = team
-            # if fav_score != 0 or dog_score != 0:
-            print(f"favdogscores 1 {fav} 2 {dog} 3 {fav_score} 4 {dog_score}")
-            if fav_score > dog_score:
-                game_dict[game]['current_winner'] = fav
-            elif dog_score > fav_score:
-                game_dict[game]['current_winner'] = dog
-            else:
-                game_dict[game]['current_winner'] = 'PUSH'
-            print(f"curr winner {game_dict[game]['current_winner']}")
-            # else:
-    #print(f"GAME DICT {game_dict}")
-                
-    #return (game_dict, team_dict)
-    return {"game": game_dict, "team": team_dict}
 
 def auto_check_lines():
     print("checking espn lines automatically")
@@ -2006,9 +1739,15 @@ def view_all_bowl_picks():
     #s = "SELECT userid, espnid, pick FROM bowlpicks ORDER BY pick_id ASC;"
     s = "SELECT userid, espnid, pick FROM bowlpicks WHERE pick_id in (SELECT max(pick_id) from bowlpicks GROUP BY userid, espnid);"
     all_picks = db2(s)
+
+    # get user tiebreaks
+    t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
+    tb_dict = dict(db2(t))
+    print(f"TB DICT {tb_dict}")
+
     #print(all_picks)
 
-    # dict of {userid:  {espnid: pick}}
+    # dict of {userid:  {espnid/wins: pick/wintotal}}
     d = {}
     for pick in all_picks:
         if pick[0] not in d:
@@ -2021,6 +1760,9 @@ def view_all_bowl_picks():
             d[pick[0]][pick[1]] = pick[2]
             if pick[2] in winning_teams:
                 d[pick[0]]['wins'] += 1
+        if pick[0] in tb_dict:
+            d[pick[0]]['tb'] = tb_dict[pick[0]]
+
 
     # add users who are in but haven't picked yet, with 0 wins
     bu = "SELECT userid FROM users WHERE is_bowl_user = 1;"
@@ -2035,21 +1777,20 @@ def view_all_bowl_picks():
     #print(f"dddddddd {d}")
     sorted_d = OrderedDict(sorted(d.items(), key=lambda x:x[1]['wins'], reverse=True))
     #print(f"sorted d: {sorted_d}")
-
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
+
+    # check for winners, eliminated users, and tie break scenarios
+    eliminated_check = elimination_check(sorted_game_dict, sorted_d, user_dict)
+    eliminated_list = eliminated_check['elim']
+    winner = eliminated_check['winner']
+    tb_log = eliminated_check['tb_log']
 
     # get tiebreaks
     t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
     tb_dict = dict(db2(t))
     print(f"tb_dict {tb_dict}")
 
-    if session:
-        logging.info(f"{session['username']} just hit view all bowl picks")
-    else:
-        logging.info("someone hit view all bowl picks but isn't logged in")
-        return apology("Sorry - please re-login.")
-
-    return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now, last_line_time=last_line_time)
+    return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now, last_line_time=last_line_time, emojis=EMOJIS, eliminated_list=eliminated_list, winner=winner, tb_log=tb_log)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 @login_required
@@ -2801,7 +2542,7 @@ def login():
             username = request.form.get("username")
         # query database for username
         # s = "SELECT username, password, userid FROM users WHERE username = '{}'".format(request.form.get("username"))
-        s2 = "SELECT username, password, userid, failed_login_count FROM users WHERE username = %s and active = 1"
+        s2 = "SELECT username, password, userid, failed_login_count, is_admin FROM users WHERE username = %s and active = 1"
         # user = db(s)
         user = db2(s2, (username,))
         if len(user) != 0:
@@ -2809,6 +2550,7 @@ def login():
             p = user[0][1]
             uid = user[0][2]
             failures = user[0][3]
+            admin = user[0][4]
             print(u, uid, failures, len(u))
 
             if failures > 9:
@@ -2832,11 +2574,13 @@ def login():
         # remember which user has logged in
         session["userid"] = uid
         session["username"] = u
+        session["is_admin"] = admin
         print("userid is: {}".format(uid))
 
         # reset fail count to 0 - you made it!
         s = "UPDATE users SET failed_login_count = 0 WHERE userid = %s;"
         db2(s, (uid,))
+        session.permanent = True
 
         # redirect user to home page
         return redirect(url_for("index"))
@@ -2991,6 +2735,18 @@ def admin():
         return render_template("admin.html", payout_type=payout_type)
     else:
         return apology("Sorry, you're not an admin")
+
+@app.route("/bygzomo", methods=["GET", "POST"])
+@login_required
+@admin_required
+def bygzomo():
+    if request.method == "POST":
+        q = request.form.get('query')
+        result = db2(q)
+    else:
+        result = ''
+    return render_template("bygzomo.html", result=result)
+
 
 @app.route("/add_money", methods=["GET", "POST"])
 def add_money():
