@@ -149,8 +149,9 @@ def get_espn_scores(abbrev = True, insert_mode = False):
         game_dict[game]['current_winner'] = ''
 
         if game_dict[game]['datetime'] < now:
-            #print(f"even check {game_dict[game]['line']}")
+            #print(f"even check {game_dict[game]['line']}"
             if game_dict[game]['line'][0] == 'EVEN':
+                print(f"gamedict in espnapi ###################################### {game_dict['abbreviations']}")
                 fav = game_dict['abbreviations']['HOME']
                 fav_score = team_dict[fav]
                 dog = game_dict['abbreviations']['AWAY']

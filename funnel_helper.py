@@ -18,7 +18,7 @@ def elimination_check(game_dict, d, user_dict):
             total_games += 1
 
     print(f"games left: {games_left}")
-    print(f"curr_winner from helper!!!: {curr_most_wins}")
+    print(f"curr_most_winner from helper!!!: {curr_most_wins}")
     print(f"total games: {total_games}")
 
     # compare most with user wins vs games left to calc elim
