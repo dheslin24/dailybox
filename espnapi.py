@@ -62,7 +62,7 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                 if game_status == 'Scheduled':
                     status['status'] = game_status
 
-                elif game_status == 'Canceled':
+                elif game_status == 'Canceled' or game_status == 'Postponed':
                     status['status'] = game_status
                     status['detail'] = game_status
 

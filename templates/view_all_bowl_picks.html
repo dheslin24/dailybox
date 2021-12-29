@@ -55,7 +55,7 @@
         <tr>
             <th rowspan="3" colspan="2" style="width: 200px; background-color: gray;"> The<br>Funnel </th>
             {% for game in game_dict %}
-                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' or game_dict[game]['status']['status'] == 'Canceled' %}
+                {% if game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' or game_dict[game]['status']['status'] == 'Canceled'  or game_dict[game]['status']['status'] == 'Postponed' %}
                     <th class="CellWithComment" style="font-size: 9px; background-color: gray;"> {{ game_dict[game]['abbreviations']['HOME'] }} vs. {{ game_dict[game]['abbreviations']['AWAY'] }} 
                         <span class="CellComment">
                             {{ game_dict[game]['headline'] }}
@@ -78,6 +78,8 @@
             {% for game in game_dict %}
                 {% if game_dict[game]['status']['status'] == 'Canceled' %}
                     <th style="font-size: 8px; white-space: nowrap; background-color: gray;">Canceled</th>
+                {% elif game_dict[game]['status']['status'] == 'Postponed' %}
+                    <th style="font-size: 8px; white-space: nowrap; background-color: gray;">Postponed</th>
                 {% elif game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
                     <th style="font-size: 8px; white-space: nowrap;"> 
                         {% for elem in game_dict[game]['line'] %}
@@ -97,7 +99,7 @@
         <!-- display game start date/time -->
         <tr>
             {% for game in game_dict %}
-                {% if game_dict[game]['status']['status'] == 'Canceled' %}
+                {% if game_dict[game]['status']['status'] == 'Canceled' or game_dict[game]['status']['status'] == 'Postponed' %}
                     <th style="font-size: 8px; background-color: gray;">
                         {{ game_dict[game]['status']['status'] }}
                     </th>
@@ -124,6 +126,8 @@
             {% for game in game_dict %}
                 {% if game_dict[game]['status']['status'] == 'Canceled' %}
                     <th style="font-size: 8px; white-space: nowrap; background-color: gray;">Canceled</th>
+                {% elif game_dict[game]['status']['status'] == 'Postponed' %}
+                    <th style="font-size: 8px; white-space: nowrap; background-color: gray;">Postponed</th>
                 {% elif game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
                     <th style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
                 {% else %}
@@ -175,7 +179,7 @@
                 <!-- User picks  -->
                 {% for game in game_dict %}
                     <!-- locked games  -->
-                    {% if game_dict[game]['status']['status'] == 'Canceled' %}
+                    {% if game_dict[game]['status']['status'] == 'Canceled' or game_dict[game]['status']['status'] == 'Postponed' %}
                         {% if user == session['userid'] %}
                             <td style="background-color: gray;"></td>
                         {% else %}
@@ -192,7 +196,7 @@
                     
                     <!-- unlocked games -->
                     {% else %}
-                        {% if game_dict[game]['status']['status'] == 'Canceled' %}
+                        {% if game_dict[game]['status']['status'] == 'Canceled' or game_dict[game]['status']['status'] == 'Postponed' %}
                             {% if user == session['userid'] %}
                                 <td style="background-color: gray;"></td>
                             {% else %}
