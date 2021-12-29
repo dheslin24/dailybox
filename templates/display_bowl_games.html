@@ -49,7 +49,7 @@
                 {% for team in game_dict[game]['competitors'] %}
 
                     <!-- game hasn't started yet -->
-                    {% if game_dict[game]['datetime'] > now and game_dict[game]['status']['status'] != 'Canceled' %}
+                    {% if game_dict[game]['datetime'] > now and game_dict[game]['status']['status'] != 'Canceled' and game_dict[game]['status']['status'] != 'Postponed' %}
                     <tr>
                         <!-- display the current line -->
                         {% if game_dict[game]['abbreviations'][team[0]] == game_dict[game]['line'][0] %}
@@ -98,7 +98,9 @@
                             {% if game_dict[game]['espn_id'] in picks %}
                             <!-- user's pick -->
                             {% if game_dict[game]['status']['status'] == 'Canceled' %}
-                                <td rowspan="2" class="pick">CXL</td>
+                                <td rowspan="2" class="pick">CXL'd</td>
+                            {% elif game_dict[game]['status']['status'] == 'Postponed' %}
+                                <td rowspan="2" class="pick">PPD</td>
                             {% else %}
                                 <td rowspan="2" class="pick">{{ picks[game_dict[game]['espn_id']] }}</td>
                             {% endif %}
@@ -106,6 +108,8 @@
                                 <!-- win/loss calculation -->
                                 {% if game_dict[game]['status']['status'] == 'Canceled' %}
                                     <td rowspan="2" class="pick"> CXL'd </td>
+                                {% elif game_dict[game]['status']['status'] == 'Postponed' %}
+                                    <td rowspan="2" class="pick"> PPD </td>
                                 {% elif game_dict[game]['status']['status'] != 'Final' %}
                                     {% if game_dict[game]['current_winner'] == picks[game_dict[game]['espn_id']] %}
                                     <td rowspan="2" class="pick"> Winning </td>
