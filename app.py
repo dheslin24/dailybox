@@ -1624,6 +1624,7 @@ def display_bowl_games():
     season = 2021
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
     # print(f"teamdict: {team_dict}")
+    print(f"sorted game dict in display picks {sorted_game_dict}")
 
     # print(f"espn response game dict:")
     # [print(f"game {game}: {game_dict[game]}") for game in game_dict]

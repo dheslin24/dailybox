@@ -4,3 +4,4 @@ line_checker/config.py
 flask*
 __py*
 line_checker/*.log
+espnapi.txt

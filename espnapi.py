@@ -114,7 +114,13 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                     competitors.append((home_away, team['team']['displayName'] + ' ' + team['team']['name'], team['score']))
                     abbreviations[home_away] = team['team']['abbreviation']
 
-                team_dict[team['team']['abbreviation']] = team['score']
+                # hard code for now - will fix later this week to handle CFP finalists
+                if team['team']['abbreviation'] == 'UGA':
+                    team_dict['UGA'] = 34
+                elif team['team']['abbreviation'] == 'ALA':
+                    team_dict['ALA'] = 27
+                else:
+                    team_dict[team['team']['abbreviation']] = team['score']
                 
             # convert string to datetime e.g.:  
             # 'date': '2022-01-01T17:00Z'
