@@ -5,6 +5,13 @@
 {% endblock %}
 
 {% block main %}
+
+    {% if session['is_admin'] == 1 %}
+    <h3>
+    <p style="color: green; font-weight: bold"> Only admins can see this </p>
+    </h3>
+    {% endif %}
+
     <form action="{{ url_for('bygzomo') }}" method="post">
         <fieldset>
             <div class="form-group">

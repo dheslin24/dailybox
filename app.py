@@ -1707,6 +1707,7 @@ def view_all_bowl_picks():
     # and if unlocked, calc winner
     locked_games = set()
     winning_teams = set()
+    winning_d = {}
     for game in game_dict:
         if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5) or game_dict[game]['status']['status'] == 'Canceled':
             locked_games.add(game_dict[game]['espn_id'])
@@ -1726,13 +1727,19 @@ def view_all_bowl_picks():
             if home_score > away_score:
                 game_dict[game]['winner'] = game_dict[game]['abbreviations']['HOME']
                 winning_teams.add(game_dict[game]['abbreviations']['HOME'])
+                winning_d[game] = game_dict[game]['abbreviations']['HOME']
             elif away_score > home_score:
                 game_dict[game]['winner'] = game_dict[game]['abbreviations']['AWAY']
                 winning_teams.add(game_dict[game]['abbreviations']['AWAY'])
+                winning_d[game] = game_dict[game]['abbreviations']['AWAY']
             else:  #pushing
                 game_dict[game]['winner'] = 'PUSH'
+                winning_d[game] = 'PUSH'
 
     print(f"locked games {locked_games}")
+    print(f"winning teams {winning_teams}")
+    print(f"winning d {winning_d}")
+
 
     # get user picks
     #           |pick0| |pick1||pick2|
