@@ -1754,21 +1754,23 @@ def view_all_bowl_picks():
     tb_dict = dict(db2(t))
     print(f"TB DICT {tb_dict}")
 
-    #print(all_picks)
+    print(f"all_picks {all_picks}")
 
     # dict of {userid:  {espnid/wins: pick/wintotal}}
     d = {}
+    ignore = [401331242, 401331217, 401331220, 401339628, 401331225, 401352013] # 401331242 is final
     for pick in all_picks:
-        if pick[0] not in d:
-            d[pick[0]] = {pick[1]: pick[2]}
-            if pick[2] in winning_teams:
-                d[pick[0]]['wins'] = 1
+        if pick[1] not in ignore:
+            if pick[0] not in d:
+                d[pick[0]] = {pick[1]: pick[2]}
+                if pick[2] in winning_teams:
+                    d[pick[0]]['wins'] = 1
+                else:
+                    d[pick[0]]['wins'] = 0
             else:
-                d[pick[0]]['wins'] = 0
-        else:
-            d[pick[0]][pick[1]] = pick[2]
-            if pick[2] in winning_teams:
-                d[pick[0]]['wins'] += 1
+                d[pick[0]][pick[1]] = pick[2]
+                if pick[2] in winning_teams:
+                    d[pick[0]]['wins'] += 1
         if pick[0] in tb_dict:
             d[pick[0]]['tb'] = tb_dict[pick[0]]
 

@@ -36,7 +36,7 @@
 
                 <!-- date of game and/or if in progress will show quarter/time left -->
                 {% if game_dict[game]['status']['status'] == 'Canceled' %}
-                    <tr><td colspan="5" class="headline">Canceled</td></tr>
+                    <tr><td colspan="5" class="headline">{{ game_dict[game]['espn_id'] }} - Canceled</td></tr>
                 {% elif game_dict[game]['datetime'] > now %}
                     <tr><td colspan="5" class="headline">{{ game_dict[game]['date'] }}</td></tr>
                 {% elif game_dict[game]['status']['status'] != 'Final' %}
