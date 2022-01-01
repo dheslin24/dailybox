@@ -1736,6 +1736,8 @@ def view_all_bowl_picks():
                 game_dict[game]['winner'] = 'PUSH'
                 winning_d[game] = 'PUSH'
 
+    print("HHHHHHHHHHHHHHHEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRREEEEEEEEEEEEEEE")
+    print("#<br>#<br>#<br>")
     print(f"locked games {locked_games}")
     print(f"winning teams {winning_teams}")
     print(f"winning d {winning_d}")
