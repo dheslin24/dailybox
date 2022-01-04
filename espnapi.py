@@ -2,17 +2,21 @@ import requests
 from datetime import datetime, timedelta
 from db_accessor.db_accessor import db2
 
-def get_espn_scores(abbrev = True, insert_mode = False):
+def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', espnid=False):
     season_type = 3  # 1: preseason, 2: regular, 3: post
     week = 1 # will make this an input soon
-    league = 'nfl'
     espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
-    espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+    espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
     #espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
     espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 
     #response = requests.get(espn_url)
-    response = requests.get(espn_ncaa_url)
+
+    if league == 'ncaa':
+        response = requests.get(espn_ncaa_url)
+    else:
+        response = requests.get(espn_nfl_url)
+
     r = response.json()
 
     game_dict = {}
@@ -186,3 +190,64 @@ def get_espn_scores(abbrev = True, insert_mode = False):
                 
     #return (game_dict, team_dict)
     return {"game": game_dict, "team": team_dict}
+
+
+def get_espn_score_by_qtr(eventid, league='ncaaf'):
+    # season_type = 3
+    # week = 1
+    event = 401331242   # 401331242 is CFP final
+    espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={event}"  # change to eventid eventually
+    espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={event}"
+
+    if league == 'ncaaf':
+        response = requests.get(espn_url_ncaaf)
+    else:
+        response = requests.get(espn_url_nfl)
+    r = response.json()
+    espn_dict = dict(r)
+    print(espn_dict.keys())
+
+    d = {}
+
+    print("----------BOXSCORE------------")
+    #print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
+    print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
+    for teams in espn_dict['boxscore']['teams']:
+        for k, v in teams.items():
+            #print(f"{k}\n{v}")
+            #print(teams[k])
+            if k == 'team':
+                print(v['abbreviation'] + ' - ' + v['displayName'] + ' ' + v['name'])
+                print(v['logo'])
+                d[v['abbreviation']] = {'schoolName': v['displayName'], 'nickname': v['name'], 'logo': v['logo']}
+
+    # result of above:
+    # dheslin@DESKTOP-IF8M32H:~/bygtech/line_checker$ ./espn_tester.py
+    # UGA - Georgia Bulldogs
+    # ALA - Alabama Crimson Tide
+
+    print("\n-----------GAMEINFO--------------")
+    print(espn_dict['gameInfo'])
+
+    print("\n------------HEADER----------")
+    for competition in espn_dict['header']['competitions']:
+        print(type(competition))
+        for competitor in competition['competitors']:
+            team = competitor['team']['abbreviation']
+            if 'score' in competitor:
+                #print(competitor['team']['abbreviation'], competitor['score'])
+                
+                curr_score = competitor['score']
+                qtrs = {}
+                q = 1
+                for qtr in competitor['linescores']:
+                    #print(qtr['displayValue'])
+                    qtrs[q] = qtr['displayValue']
+                    q += 1
+                d[team]['current_score'] = curr_score
+                d[team]['qtr_scores'] = qtrs
+            else:
+                d[team]['current_score'] = '0'
+                d[team]['qtr_scores'] = 'n/a'
+    
+    return d

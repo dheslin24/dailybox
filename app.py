@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, date
 import re
 from operator import itemgetter, attrgetter
 from functools import wraps
-from espnapi import get_espn_scores
+from espnapi import get_espn_scores, get_espn_score_by_qtr
 from funnel_helper import elimination_check
 
 
@@ -176,8 +176,8 @@ def payout_calc(pay_type, fee):
     '''
     if pay_type == PAY_TYPE_ID['four_qtr']:
         a = fee * 10
-        b = fee * 30
-        c = fee * 50
+        b = fee * 20
+        c = fee * 60
         s = '1st {} / 2nd {} / 3rd {} / Final {}'.format(a, b, a, c)
     elif pay_type == PAY_TYPE_ID['single']:
         s = 'Single Winner: {}'.format(fee * 100)
@@ -311,24 +311,25 @@ def check_box_limit(userid):
     else:
         return True
 
-def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None):
+def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None, espn_id=None):
     if box_name == None:
         s = "SELECT max(boxid) from boxes;"
         max_box = db(s)[0][0]
         box_name = "db" + str(max_box + 1)
 
+    # builds the string of box## to create
     c = ''
     for x in range(100):
         c += 'box' + str(x) + ", "
     c = c[:-2]  # chop last space and ,
 
     # create string of v = values to add
-    v = "{}, 1, {}, '{}', '{}', ".format(fee, box_type, box_name, pay_type) # sets column active to Y
+    v = "{}, 1, {}, '{}', '{}', '{}', ".format(fee, box_type, box_name, pay_type, espn_id) # sets column active to Y
     for x in range(100):
         v += str(1) + ", "  # 1 is place holder value for box entry
     v = v[:-2] # chop last space and ,
 
-    s = "INSERT INTO boxes(fee, active, box_type, box_name, pay_type, {}) VALUES({});".format(c,v)
+    s = "INSERT INTO boxes(fee, active, box_type, box_name, pay_type, espn_id, {}) VALUES({});".format(c,v)
     db(s)
     
     b = "SELECT max(boxid) FROM boxes;"
@@ -454,6 +455,7 @@ def init_box_db():
 @app.route("/create_game", methods=["POST", "GET"])
 def create_game():
     fee = request.form.get('fee')
+    espn_id = request.form.get('espn_id')
     if not request.form.get('box_name'):
         s = "SELECT max(boxid) from boxes;"
         max_box = db(s)[0][0]
@@ -466,7 +468,7 @@ def create_game():
     # create string of c = columns to update
     home = request.form.get('home')
     away = request.form.get('away')
-    create_new_game(box_type, pay_type, fee, box_name, home, away)
+    create_new_game(box_type, pay_type, fee, box_name, home, away, espn_id)
 
     return redirect(url_for("index"))
 
@@ -537,6 +539,7 @@ def my_games():
         fee = game[4]
         pay_type = payout_types[game[5]]
         gobbler_id = game[6]
+        espn_id = game[7]
         box_index = 0
         if active == 0:
             # find who won
@@ -552,7 +555,7 @@ def my_games():
                     #w = "SELECT username FROM users WHERE userid = {};".format(win_dict[gameid])
                     #winner = db(w)[0][0]
                     winner = user_dict[int(win_dict[gameid])]
-        for box in game[7:]:
+        for box in game[8:]:  # BOX DB Change if schema change here
             if box == session['userid'] and active == 1:
                 if gameid in boxnum_x:
                     h_num = boxnum_x[gameid][str(box_index % 10)]
@@ -640,13 +643,17 @@ def display_box():
     box_name = box[3]
     fee = box[4]
     ptype = box[5]
+    for p in PAY_TYPE_ID:
+        if ptype == PAY_TYPE_ID[p]:
+            pay_type = p  # human form of a pay type
     gobbler_id = box[6]
+    espn_id = box[7]
     payout = payout_calc(ptype, fee)
     rev_payout = 0
     #current_user = Session['userid']
     # if ptype != 2 and ptype != 5:
     if ptype == PAY_TYPE_ID['four_qtr']:
-        final_payout = fee * 50
+        final_payout = fee * 60
     elif ptype == PAY_TYPE_ID['single']:
         final_payout = fee * 100
     elif ptype == PAY_TYPE_ID['ten_man']:
@@ -676,18 +683,25 @@ def display_box():
         away_team['4'] = away[0]
         away_team['5'] = away[1]
 
-    team_scores = get_espn_scores()['team']
-    print(f"team scores: {team_scores}")
-    print(f"home and away: {home} {away}")
-    home_digit = 0
-    away_digit = 0
-    if home in team_scores and away in team_scores:
-        print(f"home: {home}:{team_scores[home]} away: {away}:{team_scores[away]}")
-        home_digit = team_scores[home][-1]
-        away_digit = team_scores[away][-1]
-        print(home_digit, away_digit)
-    else:
-        print("one team is most likely on bye")
+    print(f"paytype:  {pay_type}")
+    # check for final scores only
+    if pay_type == 'single' or pay_type == 'ten_man' or pay_type == 'sattelite':
+        team_scores = get_espn_scores(espnid = '')['team']
+        print(f"team scores: {team_scores}")
+        print(f"home and away: {home} {away}")
+        home_digit = 0
+        away_digit = 0
+        if home in team_scores and away in team_scores:
+            print(f"home: {home}:{team_scores[home]} away: {away}:{team_scores[away]}")
+            home_digit = team_scores[home][-1]
+            away_digit = team_scores[away][-1]
+            print(home_digit, away_digit)
+        else:
+            print("one team is most likely on bye")
+
+    elif pay_type == 'four_qtr':
+        game_dict = get_espn_score_by_qtr(espn_id)
+        print(f"game_dict in display box {game_dict}")
     
     # create a dict of userid:username
     u = "SELECT userid, username FROM users;"
@@ -700,7 +714,7 @@ def display_box():
     # create a list (grid) of 10 lists (rows) of 10 tuples (boxes)
     for _ in range(10):
         l = []
-        for x in box[7 + row : 17 + row]:
+        for x in box[8 + row : 18 + row]:  # BOX DB CHANGE if boxes schema changes
             if x == 1 or x == 0:
                 x = 'Available '
                 avail += 1
@@ -727,7 +741,7 @@ def display_box():
 
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
-        num_selection = "Row/Column numbers will be randomly generated once the last box is selected."
+        num_selection = "Row/Column numbers will be randomly generated after the last box is selected."
         x = {}
         for n in range(10):
             x[str(n)] = '?'
@@ -951,7 +965,13 @@ def display_box():
         final_payout = ''
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, sf=sf, home=home, away=away, away_team=away_team)
     
-    # display box for all except every score or dailybox
+    elif pay_type == 'four_qtr':
+        print("xy {} {}".format(x,y))
+        print("home/away: {} {}".format(home,away))
+        #final_payout = 'Current Final Payout: ' + str(final_payout)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict)
+
+    # display box for all except every score, 4qtr, or dailybox
     else:
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))

@@ -21,7 +21,7 @@
         <p class="text-center">
             Entry Fee: {{ fee }}
             Boxes Available: {{ avail }} </br>
-            Current Score: {{ home }}: {{ team_scores[home] }}  {{ away }}: {{ team_scores[away] }}
+            Current Score: {{ home }}: {{ team_scores[home]['current_score'] }}  {{ away }}: {{ team_scores[away]['current_score'] }}
         </p>
     </h3>
     <h5>
@@ -37,16 +37,18 @@
         <p class="text-center"> Click your selection again to 'undo' pick. </p>
     </h5>
         {% else %}
-    <h3>
-        {% if scores|length > 0 %}
-        <p class="text-center">Current Final Payout: <span style="color: darkgreen;"><strong>{{ final_payout }}</strong></span>           Current Reverse Final Payout: <span style="color: darkgreen;"><strong>{{ rev_payout }}</strong></span></p>
-    </h3>
-    <h5><p class="text-center">Touch Reverse: <span style="color: darkgreen;"><strong>{{ fee }} x4</strong></span> Touch Final: <span style="color: darkgreen;"><strong>{{ fee }} x4</strong></span></p>
-    </h5>
-        {% endif %}
+            <h3>
+            {% if scores|length > 0 %}
+            <p class="text-center">Current Final Payout: <span style="color: darkgreen;"><strong>{{ final_payout }}</strong></span>           Current Reverse Final Payout: <span style="color: darkgreen;"><strong>{{ rev_payout }}</strong></span></p>
+            </h3>
+            <h5><p class="text-center">Touch Reverse: <span style="color: darkgreen;"><strong>{{ fee }} x4</strong></span> Touch Final: <span style="color: darkgreen;"><strong>{{ fee }} x4</strong></span></p>
+            </h5>
+            {% endif %}
 
         {% endif %}
     <h4><p class="text-center">{{ num_selection }}</p>
+    <img src="https://thumbs.gfycat.com/CandidGiddyFlyingfish-max-1mb.gif" style="display: block; margin-left: auto; margin-right: auto;">
+    
     <!--
     <a href="{{ url_for("current_winners", boxid=boxid) }}">Click here for list of current winners</a>
     -->
@@ -65,11 +67,11 @@
     </form>
     -->
     </div>
-    {% if scores|length > 0 %}
-    <div class="col-lg-4 col-md-12 col-xs-12">
-    {% endif %}
-    
-    </div>
+        {% if scores|length > 0 %}
+        <div class="col-lg-4 col-md-12 col-xs-12">
+        {% endif %}
+        
+        </div>
     </div>
 
     <div class="row">
@@ -242,7 +244,10 @@
         <div class="col-md-6">
         </div>        
         {% endif %}
+        
     </div>
+
+    
 {% endblock %}
 
 
