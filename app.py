@@ -720,13 +720,13 @@ def display_box():
         l = []
         for x in box[8 + row : 18 + row]:  # BOX DB CHANGE if boxes schema changes
             if x == 1 or x == 0:
-                x = 'Available '
+                name = 'Available '
                 avail += 1
             else:
                 #s = "SELECT username FROM users where userid = {};".format(x)
                 #x = db(s)[0][0]
-                x = user_dict[x]
-            l.append((box_num, x))
+                name = user_dict[x]
+            l.append((box_num, name, x))
             box_num += 1
         grid.append(l)
         row += 10
@@ -784,8 +784,9 @@ def display_box():
 
             #f"this one here: {grid[curr_win_row][curr_win_col][0]}")
             curr_winner_boxnum = grid[curr_win_row][curr_win_col][0]
+            curr_winner_userid = grid[curr_win_row][curr_win_col][2]
             print(curr_winner)
-            grid[curr_win_row][curr_win_col] = (curr_winner_boxnum, curr_winner)
+            grid[curr_win_row][curr_win_col] = (curr_winner_boxnum, curr_winner, curr_winner_userid)
             print(grid)
 
             return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict)
@@ -806,9 +807,10 @@ def display_box():
                 if y[item] == int(winners[1]):
                     y_winner = int(item)
             winning_username = grid[y_winner][x_winner][1]
+            winning_userid = grid[y_winner][x_winner][2]
             winning_boxnum = int(str(y_winner) + str(x_winner))
             winner = Markup('WINNER</br>')
-            grid[y_winner][x_winner] = (winning_boxnum, winner + winning_username)
+            grid[y_winner][x_winner] = (winning_boxnum, winner + winning_username, winning_userid)
             if (ptype == PAY_TYPE_ID['single'] or ptype == PAY_TYPE_ID['ten_man'] or ptype == PAY_TYPE_ID['satellite']) and len(winners) != 2:
                 return apology("something went wrong with winner calculations")
 
@@ -839,7 +841,6 @@ def display_box():
                     if x[item] == int(winners[0]):
                         q1_x_winner = int(item)
                     
-                print(f"xq {xq}")
                 if quarter > xq:
                     xq += 1
                     if x[item] == int(winners[2]):
@@ -877,27 +878,31 @@ def display_box():
 
             if quarter >= 1:
                 q1_winning_username = grid[q1_y_winner][q1_x_winner][1]
+                q1_winning_userid = grid[q1_y_winner][q1_x_winner][2]
                 q1_winning_boxnum = int(str(q1_y_winner) + str(q1_x_winner))
                 q1_winner = Markup('Q1 WINNER</br>')
-                grid[q1_y_winner][q1_x_winner] = (q1_winning_boxnum, q1_winner + q1_winning_username)
+                grid[q1_y_winner][q1_x_winner] = (q1_winning_boxnum, q1_winner + q1_winning_username, q1_winning_userid)
 
             if quarter >= 2:
                 q2_winning_username = grid[q2_y_winner][q2_x_winner][1]
+                q2_winning_userid = grid[q2_y_winner][q2_x_winner][2]
                 q2_winning_boxnum = int(str(q2_y_winner) + str(q2_x_winner))
                 q2_winner = Markup('Q2 WINNER</br>')
-                grid[q2_y_winner][q2_x_winner] = (q2_winning_boxnum, q2_winner + q2_winning_username)
+                grid[q2_y_winner][q2_x_winner] = (q2_winning_boxnum, q2_winner + q2_winning_username, q2_winning_userid)
 
             if quarter >= 3:
                 q3_winning_username = grid[q3_y_winner][q3_x_winner][1]
+                q3_winning_userid = grid[q3_y_winner][q3_x_winner][2]
                 q3_winning_boxnum = int(str(q3_y_winner) + str(q3_x_winner))
                 q3_winner = Markup('Q3 WINNER</br>')
-                grid[q3_y_winner][q3_x_winner] = (q3_winning_boxnum, q3_winner + q3_winning_username)
+                grid[q3_y_winner][q3_x_winner] = (q3_winning_boxnum, q3_winner + q3_winning_username, q3_winning_userid)
 
             if quarter == 4:
                 q4_winning_username = grid[q4_y_winner][q4_x_winner][1]
+                q4_winning_userid = grid[q4_y_winner][q4_x_winner][2]
                 q4_winning_boxnum = int(str(q4_y_winner) + str(q4_x_winner))
                 q4_winner = Markup('Q4 WINNER</br>')
-                grid[q4_y_winner][q4_x_winner] = (q4_winning_boxnum, q4_winner + q4_winning_username)
+                grid[q4_y_winner][q4_x_winner] = (q4_winning_boxnum, q4_winner + q4_winning_username, q4_winning_userid)
 
         # elif ptype == PAY_TYPE_ID['four_qtr'] and len(winners) != 8:
         #     return apology("something went wrong with winner calculations")
@@ -976,8 +981,9 @@ def display_box():
                         y_win = '0'
     
                     winner_username = grid[int(y_win)][int(x_win)][1]
+                    winner_userid = grid[int(y_win)][int(x_win)][2]
                     winner_markup = Markup('WINNER</br>{}</br>{}'.format(winner_username[:10], cash))
-                    grid[int(y_win)][int(x_win)] = (grid[int(y_win)][int(x_win)][0], winner_markup, winner_username)
+                    grid[int(y_win)][int(x_win)] = (grid[int(y_win)][int(x_win)][0], winner_markup, winner_username, winner_userid)
 
                     print(winner_markup)
                     print("WINNER DICT!!")
@@ -1005,6 +1011,7 @@ def display_box():
     elif pay_type == 'four_qtr':
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
+        print(f"GRID!! {grid}")
         #final_payout = 'Current Final Payout: ' + str(final_payout)
         return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict)
 
