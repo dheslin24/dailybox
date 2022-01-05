@@ -564,6 +564,24 @@ main td.UGA {
     border-top: #BA0C2F;
 }
 
+main td.KSU {
+    background-color: #512888;
+    color:  #D1D1D1;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #512888;
+    border-top: #512888;
+}
+
+main td.LSU {
+    background-color: #461D7C;
+    color:  #FDD023;
+    border-left: 5px green;
+    border-right: 2px solid black;
+    border-bottom: #461D7C;
+    border-top: #461D7C;
+}
+
 
 
 main td.pick {

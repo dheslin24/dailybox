@@ -689,8 +689,8 @@ def display_box():
         team_scores = get_espn_scores(espnid = '')['team']
         print(f"team scores: {team_scores}")
         print(f"home and away: {home} {away}")
-        home_digit = 0
-        away_digit = 0
+        home_digit = str(0)
+        away_digit = str(0)
         if home in team_scores and away in team_scores:
             print(f"home: {home}:{team_scores[home]} away: {away}:{team_scores[away]}")
             home_digit = team_scores[home][-1]
@@ -700,6 +700,8 @@ def display_box():
             print("one team is most likely on bye")
 
     elif pay_type == 'four_qtr':
+        home_digit = str(0)
+        away_digit = str(0)
         game_dict = get_espn_score_by_qtr(espn_id)
         print(f"game_dict in display box {game_dict}")
     
@@ -784,7 +786,7 @@ def display_box():
             grid[curr_win_row][curr_win_col] = (curr_winner_boxnum, curr_winner)
             print(grid)
 
-            return render_template("display_box_espn.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict)
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
         print(f'dh 1126 paytype {ptype} {winners}')

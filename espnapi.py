@@ -196,8 +196,8 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
     # season_type = 3
     # week = 1
     event = 401331242   # 401331242 is CFP final
-    espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={event}"  # change to eventid eventually
-    espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={event}"
+    espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={eventid}"  # change to eventid eventually
+    espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={eventid}"
 
     if league == 'ncaaf':
         response = requests.get(espn_url_ncaaf)
@@ -247,7 +247,8 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
                 d[team]['current_score'] = curr_score
                 d[team]['qtr_scores'] = qtrs
             else:
+                qtrs = {1: 0, 2: 0, 3: 0, 4: 0}
                 d[team]['current_score'] = '0'
-                d[team]['qtr_scores'] = 'n/a'
+                d[team]['qtr_scores'] = qtrs
     
     return d

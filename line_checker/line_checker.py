@@ -24,9 +24,10 @@ while True:
     game_dict = get_games(r, False)['game']
     #print(game_dict)
     #print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
+
     now = datetime.utcnow() - timedelta(hours=5)
     print(now)
-
+    print('now again')
     for game in game_dict:
         fav = ''
         spread = 0
