@@ -37,31 +37,37 @@ else:
         # 'qtr_scores': {1: 0, 2: 0, 3: 0, 4: 0}}}
 
         qtrs = []
+        print(f"scores {scores}")
         for team in scores:
             q = len(scores[team]['qtr_scores'])
+            print(f"q:  --  {q}")
             if q > 0:
                 for qtr in scores[team]['qtr_scores']:
+                    print(f"qtr -- {qtr}")
                     if qtr <= q or qtr == 4:
                         qtrs.append(scores[team]['qtr_scores'][qtr])
-                    
-        quarter = len(qtrs) / 2
+
+        print(f"qtrs:  --- {qtrs}")           
+        quarter = len(qtrs) // 2
         cols = ''
         vals = ''
         total_x = 0
         total_y = 0
         if qtrs:
-            xq = 1
-            for qtr in qtrs[0::2]:
-                cols += 'y' + str(xq) + ', '
-                vals += str(total_y + int(qtr)) + ', '
-                total_y += int(qtr)
-                xq += 1
             yq = 1
-            for qtr in qtrs[1::2]:
-                cols += 'x' + str(yq) + ', '
-                vals += str(total_x + int(qtr)) + ', '
-                total_x += int(qtr)
+            for y_qtr in qtrs[:quarter]:
+                print(f"yqtr {y_qtr}")
+                cols += 'y' + str(yq) + ', '
+                vals += str(total_y + int(y_qtr)) + ', '
+                total_y += int(y_qtr)
                 yq += 1
+            xq = 1
+            for x_qtr in qtrs[quarter:]:
+                print(f"xqtr {x_qtr}")
+                cols += 'x' + str(xq) + ', '
+                vals += str(total_x + int(x_qtr)) + ', '
+                total_x += int(x_qtr)
+                xq += 1
         if len(cols) > 1:
             cols = cols[:-2]
             vals = vals[:-2]   
