@@ -65,7 +65,7 @@ else:
             q = f"INSERT INTO scores (boxid, {cols}) VALUES ({boxid}, {vals});"
             db2(q)
             print(q)
-            break
+            #break
 
 
-        #time.sleep(300.0 - ((time.time() - starttime) % 300.0))
+        time.sleep(300.0 - ((time.time() - starttime) % 300.0))
