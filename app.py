@@ -224,10 +224,12 @@ def calc_winner(boxid):  # all this does is strip all beginning digits from the 
             return winner_list
         else:
             for score in scores[-1:][0]:
-                if score > 9:
-                    winner_list.append(str(score)[-1:])
-                else:
-                    winner_list.append(str(score))
+                print(f"score in calc {score}")
+                if score is not None:
+                    if score > 9:
+                        winner_list.append(str(score)[-1:])
+                    else:
+                        winner_list.append(str(score))
 
     # pay_type == 3:  #  will do this elsewhere
 
@@ -824,48 +826,81 @@ def display_box():
             # grid[x_winner][y_winner] = (rev_winning_boxnum, rev_winner + rev_winning_username)
             grid[3][1] = (31, Markup('REVERSE</br>WINNER</br>')+'toddw26')
 
-        if ptype == PAY_TYPE_ID['four_qtr'] and len(winners) == 8:
-            final_payment = '' +  str(fee * 10) + ' / ' + str(fee * 30) + ' / ' + str(fee * 10) + ' / ' + str(fee * 50)
+        if winners and ptype == PAY_TYPE_ID['four_qtr']:
+            print(f"winners---- {winners}")
+            quarter = len(winners) // 2
+            print(f"quarter:  {quarter}")
+            final_payment = '' +  str(fee * 10) + ' / ' + str(fee * 20) + ' / ' + str(fee * 10) + ' / ' + str(fee * 60)
+            #xq = 0
             for item in x: 
-                if x[item] == int(winners[0]):
-                    q1_x_winner = int(item)
-                if x[item] == int(winners[2]):
-                    q2_x_winner = int(item)
-                if x[item] == int(winners[4]):
-                    q3_x_winner = int(item)
-                if x[item] == int(winners[6]):
-                    q4_x_winner = int(item)
+                xq = 0
+                if quarter > xq:
+                    xq += 1
+                    if x[item] == int(winners[0]):
+                        q1_x_winner = int(item)
+                    
+                print(f"xq {xq}")
+                if quarter > xq:
+                    xq += 1
+                    if x[item] == int(winners[2]):
+                        q2_x_winner = int(item)
+                    
+                if quarter > xq:
+                    xq += 1
+                    if x[item] == int(winners[4]):
+                        q3_x_winner = int(item)
+                    
+                if quarter > xq:
+                    if x[item] == int(winners[6]):
+                        q4_x_winner = int(item)
+            #yq = 0
             for item in y:
-                if y[item] == int(winners[1]):
-                    q1_y_winner = int(item)
-                if y[item] == int(winners[3]):
-                    q2_y_winner = int(item)
-                if y[item] == int(winners[5]):
-                    q3_y_winner = int(item)
-                if y[item] == int(winners[7]):
-                    q4_y_winner = int(item)
-            q1_winning_username = grid[q1_y_winner][q1_x_winner][1]
-            q1_winning_boxnum = int(str(q1_y_winner) + str(q1_x_winner))
-            q1_winner = Markup('Q1 WINNER</br>')
-            grid[q1_y_winner][q1_x_winner] = (q1_winning_boxnum, q1_winner + q1_winning_username)
+                yq = 0
+                if quarter > yq:
+                    yq += 1
+                    if y[item] == int(winners[1]):
+                        q1_y_winner = int(item)
+                    
+                if quarter > yq:
+                    yq += 1
+                    if y[item] == int(winners[3]):
+                        q2_y_winner = int(item)
+                    
+                if quarter > yq:
+                    yq += 1
+                    if y[item] == int(winners[5]):
+                        q3_y_winner = int(item)
+                    
+                if quarter > yq:
+                    if y[item] == int(winners[7]):
+                        q4_y_winner = int(item)
 
-            q2_winning_username = grid[q2_y_winner][q2_x_winner][1]
-            q2_winning_boxnum = int(str(q2_y_winner) + str(q2_x_winner))
-            q2_winner = Markup('Q2 WINNER</br>')
-            grid[q2_y_winner][q2_x_winner] = (q2_winning_boxnum, q2_winner + q2_winning_username)
+            if quarter >= 1:
+                q1_winning_username = grid[q1_y_winner][q1_x_winner][1]
+                q1_winning_boxnum = int(str(q1_y_winner) + str(q1_x_winner))
+                q1_winner = Markup('Q1 WINNER</br>')
+                grid[q1_y_winner][q1_x_winner] = (q1_winning_boxnum, q1_winner + q1_winning_username)
 
-            q3_winning_username = grid[q3_y_winner][q3_x_winner][1]
-            q3_winning_boxnum = int(str(q3_y_winner) + str(q3_x_winner))
-            q3_winner = Markup('Q3 WINNER</br>')
-            grid[q3_y_winner][q3_x_winner] = (q3_winning_boxnum, q3_winner + q3_winning_username)
+            if quarter >= 2:
+                q2_winning_username = grid[q2_y_winner][q2_x_winner][1]
+                q2_winning_boxnum = int(str(q2_y_winner) + str(q2_x_winner))
+                q2_winner = Markup('Q2 WINNER</br>')
+                grid[q2_y_winner][q2_x_winner] = (q2_winning_boxnum, q2_winner + q2_winning_username)
 
-            q4_winning_username = grid[q4_y_winner][q4_x_winner][1]
-            q4_winning_boxnum = int(str(q4_y_winner) + str(q4_x_winner))
-            q4_winner = Markup('Q4 WINNER</br>')
-            grid[q4_y_winner][q4_x_winner] = (q4_winning_boxnum, q4_winner + q4_winning_username)
+            if quarter >= 3:
+                q3_winning_username = grid[q3_y_winner][q3_x_winner][1]
+                q3_winning_boxnum = int(str(q3_y_winner) + str(q3_x_winner))
+                q3_winner = Markup('Q3 WINNER</br>')
+                grid[q3_y_winner][q3_x_winner] = (q3_winning_boxnum, q3_winner + q3_winning_username)
 
-        elif ptype == PAY_TYPE_ID['four_qtr'] and len(winners) != 8:
-            return apology("something went wrong with winner calculations")
+            if quarter == 4:
+                q4_winning_username = grid[q4_y_winner][q4_x_winner][1]
+                q4_winning_boxnum = int(str(q4_y_winner) + str(q4_x_winner))
+                q4_winner = Markup('Q4 WINNER</br>')
+                grid[q4_y_winner][q4_x_winner] = (q4_winning_boxnum, q4_winner + q4_winning_username)
+
+        # elif ptype == PAY_TYPE_ID['four_qtr'] and len(winners) != 8:
+        #     return apology("something went wrong with winner calculations")
 
         if ptype == PAY_TYPE_ID['every_score']:
             print("paytype == 3 i'm here")

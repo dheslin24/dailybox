@@ -36,16 +36,36 @@ else:
         # 'https://a.espncdn.com/i/teamlogos/ncaa/500/2306.png', 'current_score': '0', 
         # 'qtr_scores': {1: 0, 2: 0, 3: 0, 4: 0}}}
 
-        x1 = scores['KSU']['qtr_scores'][1]
-        x2 = scores['KSU']['qtr_scores'][2] + x1
-        x3 = scores['KSU']['qtr_scores'][3] + x2
-        x4 = scores['KSU']['qtr_scores'][4] + x3
-        y1 = scores['LSU']['qtr_scores'][1]
-        y2 = scores['LSU']['qtr_scores'][2] + y1
-        y3 = scores['LSU']['qtr_scores'][3] + y2
-        y4 = scores['LSU']['qtr_scores'][4] + y3
+        qtrs = []
+        for team in scores:
+            q = len(scores[team]['qtr_scores'])
+            if q > 0:
+                for qtr in scores[team]['qtr_scores']:
+                    if qtr < q or qtr == 4:
+                        qtrs.append(scores[team]['qtr_scores'][qtr])
+                    
+        quarter = len(qtrs) / 2
+        cols = ''
+        vals = ''
+        if qtrs:
+            xq = 1
+            for qtr in qtrs[0::2]:
+                cols += 'y' + str(xq) + ', '
+                vals += str(qtr) + ', '
+                xq += 1
+            yq = 1
+            for qtr in qtrs[1::2]:
+                cols += 'x' + str(yq) + ', '
+                vals += str(qtr) + ', '
+                yq += 1
+        if len(cols) > 1:
+            cols = cols[:-2]
+            vals = vals[:-2]   
 
-        q = "INSERT INTO scores (boxid, x1, y1, x2, y2, x3, y3, x4, y4) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
-        db2(q, (boxid, x1, y1, x2, y2, x3, y3, x4, y4))
+            q = f"INSERT INTO scores (boxid, {cols}) VALUES ({boxid}, {vals});"
+            db2(q)
+            print(q)
+            break
 
-        time.sleep(300.0 - ((time.time() - starttime) % 300.0))
+
+        #time.sleep(300.0 - ((time.time() - starttime) % 300.0))
