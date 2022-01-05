@@ -41,7 +41,7 @@ else:
             q = len(scores[team]['qtr_scores'])
             if q > 0:
                 for qtr in scores[team]['qtr_scores']:
-                    if qtr < q or qtr == 4:
+                    if qtr <= q or qtr == 4:
                         qtrs.append(scores[team]['qtr_scores'][qtr])
                     
         quarter = len(qtrs) / 2
