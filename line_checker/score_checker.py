@@ -47,16 +47,20 @@ else:
         quarter = len(qtrs) / 2
         cols = ''
         vals = ''
+        total_x = 0
+        total_y = 0
         if qtrs:
             xq = 1
             for qtr in qtrs[0::2]:
                 cols += 'y' + str(xq) + ', '
-                vals += str(qtr) + ', '
+                vals += str(total_y + int(qtr)) + ', '
+                total_y += int(qtr)
                 xq += 1
             yq = 1
             for qtr in qtrs[1::2]:
                 cols += 'x' + str(yq) + ', '
-                vals += str(qtr) + ', '
+                vals += str(total_x + int(qtr)) + ', '
+                total_x += int(qtr)
                 yq += 1
         if len(cols) > 1:
             cols = cols[:-2]
