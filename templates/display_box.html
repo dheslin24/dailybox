@@ -57,25 +57,8 @@
 
         {% endif %}
     <h4><p class="text-center">{{ num_selection }}</p>
+    <!-- will ferrell old school just one -->
     <img src="https://thumbs.gfycat.com/CandidGiddyFlyingfish-max-1mb.gif" style="display: block; margin-left: auto; margin-right: auto;">
-    
-    <!--
-    <a href="{{ url_for("current_winners", boxid=boxid) }}">Click here for list of current winners</a>
-    -->
-    <!--
-    </br>
-    </br>
-    <a href="{{ url_for("payment_status") }}">Click here for payment status of all users</a>
-    -->
-    
-    <!--
-    <p> Randomize Selection </p> 
-    <form name="randform" id="randform" action="{{ url_for("select_box") }}",  method="POST">
-        <input type="text" name="rand" id="rand" size="5" placeholder="# boxes">
-        <input type="hidden" name="boxid" value="{{ boxid }}">
-        <input type="submit" onClick="return empty()">
-    </form>
-    -->
     </div>
         {% if scores|length > 0 %}
         <div class="col-lg-4 col-md-12 col-xs-12">
@@ -91,29 +74,14 @@
         <div class="col-md-12">
         {% endif %}
         <table id="grid" class="box_table" align="center" style="table-layout: fixed;">
-        <h3>
-        <!--
-        <tr>
-        <td></td>
-        <td></td>
-        {% for n in range(0,10) %}
-            <td>
-                <form action="{{ url_for("select_box") }}", method="POST">
-                <button type="submit" value="{{ loop.index0 }}" name="column">Select Column</button>
-                <input type="hidden" name="boxid" value="{{ boxid }}">
-                </form>
-            </td>
-        {% endfor %}
-        </tr>
-        -->
-        </h3>
         <h1>
         <!--
         <tr><td style="background-color: #aaa" colspan="12"><strong style="font-size:  30px; letter-spacing: 5px">{{ home[0:3] }}</td></tr>
         -->
         <tr>
-        <td class="BYG" colspan="2" style="border-bottom: solid blue;"><strong style="font-size: 30px;">BYG</td>
-        <td class="{{ home }}" colspan="10" style="border-bottom: 2px solid black;"><strong style="font-size:  30px; letter-spacing: 5px;">{{ home[0:3] }}</td></tr>
+            <td class="BYG" colspan="2" style="border-bottom: solid blue;"><strong style="font-size: 30px;">BYG</td>
+            <td class="{{ home }}" colspan="10" style="border-bottom: 2px solid black;"><strong style="font-size:  30px; letter-spacing: 5px;">{{ home[0:3] }}</td>
+        </tr>
         <tr>
         <td class="BYG" colspan="2" style="border-bottom: 1px solid black;">Box: {{ boxid }} </td>
         {% for num in x %}
@@ -188,6 +156,7 @@
         </table>
         </div>
 
+        <!-- Every Score pool table -->
         {% if scores|length > 0 %}
         <div class="col-lg-4 col-md-6 col-xs-12">
         <p class="text-center"> Live IN-Game Updates (must refresh) </p>

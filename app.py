@@ -16,6 +16,7 @@ from operator import itemgetter, attrgetter
 from functools import wraps
 from espnapi import get_espn_scores, get_espn_score_by_qtr
 from funnel_helper import elimination_check
+from email_helper import send_email
 
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
@@ -550,6 +551,7 @@ def my_games():
             if gameid not in win_dict:
                 winner = "multi" # these are cxl'd or every score
             else:
+                print(f"GAMEID before crash {gameid}")
                 # total hack, check if string is json format, then it's multi
                 if win_dict[gameid][:1] == "{":
                     winner = "multi" # will parse this later...
@@ -1571,6 +1573,9 @@ def end_games():
 @app.route("/enter_custom_scores", methods=["GET", "POST"])
 @login_required
 def enter_custom_scores():
+
+    send_email(None, None, "DH Testing", None, None)
+
     if request.method == "POST":
         if not request.form.get("boxid"):
             return apology("boxid required")

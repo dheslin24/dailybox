@@ -1,6 +1,7 @@
 *.log
 config.py
 line_checker/config.py
+line_checker/*.json
 flask*
 __py*
 line_checker/*.log
