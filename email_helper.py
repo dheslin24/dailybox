@@ -42,7 +42,7 @@ def send_email(sndr=None, rcpt=None, subj=None, b_text=None, b_html=None):
                 
     # The HTML body of the email.
     if b_html:
-        BODY_HTML = b_html:
+        BODY_HTML = b_html
     else:
         BODY_HTML = """<html>
         <head></head>
