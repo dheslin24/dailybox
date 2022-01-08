@@ -769,7 +769,8 @@ def display_box():
             
         winners = calc_winner(boxid)
         # no winners and not an every score (paytype = 3)
-        if len(winners) == 0 and (ptype != PAY_TYPE_ID['every_score'] or ptype != PAY_TYPE_ID['four_qtr']):
+        print(f"pay type 1/8 debug {ptype} {winners}")
+        if len(winners) == 0 and (ptype != PAY_TYPE_ID['every_score'] and ptype != PAY_TYPE_ID['four_qtr']):
 
             for col in x:   
                 if str(x[col]) == home_digit:
