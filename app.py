@@ -2705,7 +2705,7 @@ def register():
     secret = config.captchasecret
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-        r = requests.post('https://www.google.com/recaptcha/api/siteverify', data = {'secret' : secret, 'response' : request.form['g-recaptcha-response']})
+        r = requests.post('https://hcaptcha.com/siteverify', data = {'secret' : secret, 'response' : request.form['h-captcha-response']})
         google_response = json.loads(r.text)
   
         # ensure username was submitted
