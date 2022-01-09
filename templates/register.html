@@ -5,8 +5,12 @@
 {% endblock %}
 
 {% block main %}
-
-    <form action="{{ url_for('register') }}" method="post">
+<script type="text/javascript">
+    function onSubmit(token) {
+      document.getElementById('registerForm').submit();
+    }
+  </script>
+    <form action="{{ url_for('register') }}" id="registerForm" method="post">
         <fieldset>
             <div class="form-group">
                 <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text"/>
@@ -29,13 +33,16 @@
             <div class="form-group">
                 <input class="form-control" name="mobile" placeholder="Mobile Number" type="text"/>
             </div>
-            
-            <div class="g-recaptcha" data-sitekey="6Lf3CVYaAAAAAFjSOS_Mn51fAi0d3wxSqsFCmRGj"></div>
 
             <div class="form-group">
-                <button class="btn btn-default" type="submit">Register</button>
+                <button data-sitekey="91f9316f-66bc-4bfa-8a88-8b8a05ac22e8" data-callback="onSubmit" class="h-captcha btn btn-default" type="submit">Register</button>
             </div>
 
         </fieldset>
     </form>
+    <div style="float: right;">
+    This site is protected by hCaptcha and its
+<a href="https://hcaptcha.com/privacy">Privacy Policy</a> and
+<a href="https://hcaptcha.com/terms">Terms of Service</a> apply.
+</div>
 {% endblock %}
