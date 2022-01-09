@@ -17,7 +17,7 @@ from functools import wraps
 from espnapi import get_espn_scores, get_espn_score_by_qtr
 from funnel_helper import elimination_check
 from email_helper import send_email
-
+from email_validator import validate_email, EmailNotValidError
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -2707,7 +2707,7 @@ def register():
     if request.method == "POST":
         r = requests.post('https://hcaptcha.com/siteverify', data = {'secret' : secret, 'response' : request.form['h-captcha-response']})
         google_response = json.loads(r.text)
-        from email_validator import validate_email, EmailNotValidError
+        
 
         # ensure username was submitted
         if not request.form.get("username"):
