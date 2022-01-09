@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, date
 import re
 from operator import itemgetter, attrgetter
 from functools import wraps
-from espnapi import get_espn_scores, get_espn_score_by_qtr
+from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game
 from funnel_helper import elimination_check
 from email_helper import send_email
 
@@ -687,6 +687,13 @@ def display_box():
         away_team['4'] = away[0]
         away_team['5'] = away[1]
 
+    game_status = get_espn_summary_single_game(espn_id)
+    live_quarter = int(game_status['quarter'])
+    status = game_status['game_status']
+    game_clock = game_status['game_clock']
+    kickoff_time = game_status['kickoff_time']
+
+
     print(f"paytype:  {pay_type}")
     # check for final scores only
     if pay_type == 'single' or pay_type == 'ten_man' or pay_type == 'sattelite':
@@ -734,16 +741,6 @@ def display_box():
         row += 10
 
     print(grid)
-
-    # get num boxes avail and create list for randomizer
-    '''
-    avail = 0
-    for row in grid:
-        for box in row:
-            if box[1] == 'Open':
-                avail += 1
-    '''
-
 
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
@@ -834,8 +831,9 @@ def display_box():
             print(f"winners---- {winners}")
             quarter = len(winners) // 2
             print(f"quarter:  {quarter}")
+            print(f"live quarter: {live_quarter}")
             final_payment = '' +  str(fee * 10) + ' / ' + str(fee * 20) + ' / ' + str(fee * 10) + ' / ' + str(fee * 60)
-            #xq = 0
+
             for item in x: 
                 xq = 0
                 if quarter > xq:
@@ -856,7 +854,7 @@ def display_box():
                 if quarter > xq:
                     if x[item] == int(winners[6]):
                         q4_x_winner = int(item)
-            #yq = 0
+
             for item in y:
                 yq = 0
                 if quarter > yq:
@@ -882,32 +880,42 @@ def display_box():
                 q1_winning_username = grid[q1_y_winner][q1_x_winner][1]
                 q1_winning_userid = grid[q1_y_winner][q1_x_winner][2]
                 q1_winning_boxnum = int(str(q1_y_winner) + str(q1_x_winner))
-                q1_winner = Markup('Q1 WINNER</br>')
+                if live_quarter > 1:
+                    q1_winner = Markup('Q1 WINNER</br>')
+                else:
+                    q1_winner = Markup('WINNING Q1</br>')
                 grid[q1_y_winner][q1_x_winner] = (q1_winning_boxnum, q1_winner + q1_winning_username, q1_winning_userid)
 
             if quarter >= 2:
                 q2_winning_username = grid[q2_y_winner][q2_x_winner][1]
                 q2_winning_userid = grid[q2_y_winner][q2_x_winner][2]
                 q2_winning_boxnum = int(str(q2_y_winner) + str(q2_x_winner))
-                q2_winner = Markup('Q2 WINNER</br>')
+                if live_quarter > 2:
+                    q2_winner = Markup('Q2 WINNER</br>')
+                else:
+                    q2_winner = Markup('WINNING Q2</br>')
                 grid[q2_y_winner][q2_x_winner] = (q2_winning_boxnum, q2_winner + q2_winning_username, q2_winning_userid)
 
             if quarter >= 3:
                 q3_winning_username = grid[q3_y_winner][q3_x_winner][1]
                 q3_winning_userid = grid[q3_y_winner][q3_x_winner][2]
                 q3_winning_boxnum = int(str(q3_y_winner) + str(q3_x_winner))
-                q3_winner = Markup('Q3 WINNER</br>')
+                if live_quarter > 3:
+                    q3_winner = Markup('Q3 WINNER</br>')
+                else:
+                    q3_winner = Markup('WINNING Q3</br>')
                 grid[q3_y_winner][q3_x_winner] = (q3_winning_boxnum, q3_winner + q3_winning_username, q3_winning_userid)
 
             if quarter == 4:
                 q4_winning_username = grid[q4_y_winner][q4_x_winner][1]
                 q4_winning_userid = grid[q4_y_winner][q4_x_winner][2]
                 q4_winning_boxnum = int(str(q4_y_winner) + str(q4_x_winner))
-                q4_winner = Markup('Q4 WINNER</br>')
+                if status == 'Final':
+                    q4_winner = Markup('Q4 WINNER</br>')
+                else:
+                    q4_winner = Markup('WINNING Q4</br>')
                 grid[q4_y_winner][q4_x_winner] = (q4_winning_boxnum, q4_winner + q4_winning_username, q4_winning_userid)
 
-        # elif ptype == PAY_TYPE_ID['four_qtr'] and len(winners) != 8:
-        #     return apology("something went wrong with winner calculations")
 
         if ptype == PAY_TYPE_ID['every_score']:
             print("paytype == 3 i'm here")
@@ -1013,9 +1021,10 @@ def display_box():
     elif pay_type == 'four_qtr':
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
-        print(f"GRID!! {grid}")
+        print(f"GRID!! 4qtr {grid}")
         #final_payout = 'Current Final Payout: ' + str(final_payout)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict)
+        print(f"avail {avail}")
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time)
 
     # display box for all except every score, 4qtr, or dailybox
     else:

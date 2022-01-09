@@ -254,3 +254,32 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
                 d[team]['qtr_scores'] = qtrs
     
     return d
+
+
+def get_espn_summary_single_game(espnid):
+    espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+
+    r = requests.get(espn_url).json()
+
+    game_status = r['header']['competitions'][0]['status']
+
+    clock = ''
+    quarter = 0
+
+    if 'displayClock' in game_status:
+        clock = game_status['displayClock']
+
+    if 'period' in game_status:
+        quarter = game_status['period']
+
+    response = {
+        'game_status': game_status['type']['description'],
+        'kickoff_time': game_status['type']['detail'],
+        'game_clock': clock,
+        'quarter': quarter
+    }
+
+    return response
+    
+    
+

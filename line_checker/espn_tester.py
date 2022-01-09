@@ -13,35 +13,71 @@ import logging
 logging.basicConfig(filename="line.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
 
-starttime = time.mktime((2021, 12, 17, 18, 59, 0, 0, 0, 0))
-season_type = 3
-week = 1
-event = 401331242   # 401331242 is CFP final     401331215
-league = 'ncaaf'
-espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={event}"  # change to eventid eventually
-espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={event}"
+espnid = 401331242
+espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
 
-if league == 'ncaaf':
-    response = requests.get(espn_url_ncaaf)
-else:
-    response = requests.get(espn_url_nfl)
-r = response.json()
-espn_dict = dict(r)
-print(espn_dict.keys())
+r = requests.get(espn_url).json()
 
-d = {}
+print(r.keys())
 
-print("----------BOXSCORE------------")
-#print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
-print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
-for teams in espn_dict['boxscore']['teams']:
-    for k, v in teams.items():
-        #print(f"{k}\n{v}")
-        #print(teams[k])
-        if k == 'team':
-            print(v['abbreviation'] + ' - ' + v['displayName'] + ' ' + v['name'])
-            print(v['logo'])
-            d[v['abbreviation']] = {'schoolName': v['displayName'], 'nickname': v['name'], 'logo': v['logo']}
+print(f"header:  {r['header'].keys()}")
+print(f"com {len(r['header']['competitions'])}")
+print(f"com {r['header']['competitions'][0].keys()}")
+# dict_keys(['id', 'uid', 'date', 'neutralSite', 'conferenceCompetition', 'boxscoreAvailable', 
+#             'commentaryAvailable', 'liveAvailable', 'onWatchESPN', 'recent', 'boxscoreSource', 
+#             'playByPlaySource', 'competitors', 'status', 'broadcasts', 'groups'])
+
+print(f"status {r['header']['competitions'][0]['status']}")
+# status {'type': {'id': '1', 'name': 'STATUS_SCHEDULED', 'state': 'pre', 'completed': False, 
+#         'description': 'Scheduled', 'detail': 'Mon, January 10th at 8:00 PM EST', 
+#         'shortDetail': '1/10 - 8:00 PM EST'}}
+
+kickoff = r['header']['competitions'][0]['status']['type']['detail']
+print(kickoff)
+
+now = datetime.utcnow()
+print(now)
+# curr_year = datetime.strftime(now).year
+# print(curr_year)
+
+dt = datetime.strptime(kickoff + ' ' + str(datetime.utcnow().year), '%a, %B %dth at %I:%M %p %Z %Y')
+delta = dt - now
+print(delta.days)
+sec = delta.seconds
+print(delta.seconds)
+
+print(sec/60)
+
+# --------------------------------------------
+# starttime = time.mktime((2021, 12, 17, 18, 59, 0, 0, 0, 0))
+# season_type = 3
+# week = 1
+# event = 401331242   # 401331242 is CFP final     401331215
+# league = 'ncaaf'
+# espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={event}"  # change to eventid eventually
+# espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={event}"
+
+# if league == 'ncaaf':
+#     response = requests.get(espn_url_ncaaf)
+# else:
+#     response = requests.get(espn_url_nfl)
+# r = response.json()
+# espn_dict = dict(r)
+# print(espn_dict.keys())
+
+# d = {}
+
+# print("----------BOXSCORE------------")
+# #print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
+# print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
+# for teams in espn_dict['boxscore']['teams']:
+#     for k, v in teams.items():
+#         #print(f"{k}\n{v}")
+#         #print(teams[k])
+#         if k == 'team':
+#             print(v['abbreviation'] + ' - ' + v['displayName'] + ' ' + v['name'])
+#             print(v['logo'])
+#             d[v['abbreviation']] = {'schoolName': v['displayName'], 'nickname': v['name'], 'logo': v['logo']}
 
 # result of above:
 # dheslin@DESKTOP-IF8M32H:~/bygtech/line_checker$ ./espn_tester.py
@@ -52,27 +88,27 @@ for teams in espn_dict['boxscore']['teams']:
 # print(espn_dict['gameInfo'])
 
 #print("\n------------HEADER----------")
-for competition in espn_dict['header']['competitions']:
-    #print(type(competition))
-    for competitor in competition['competitors']:
-        team = competitor['team']['abbreviation']
-        if 'score' in competitor:
-            #print(competitor['team']['abbreviation'], competitor['score'])
+# for competition in espn_dict['header']['competitions']:
+#     #print(type(competition))
+#     for competitor in competition['competitors']:
+#         team = competitor['team']['abbreviation']
+#         if 'score' in competitor:
+#             #print(competitor['team']['abbreviation'], competitor['score'])
             
-            curr_score = competitor['score']
-            qtrs = {}
-            q = 1
-            for qtr in competitor['linescores']:
-                #print(qtr['displayValue'])
-                qtrs[q] = qtr['displayValue']
-                q += 1
-            d[team]['current_score'] = curr_score
-            d[team]['qtr_scores'] = qtrs
-        else:
-            d[team]['current_score'] = 'n/a'
-            d[team]['qtr_scores'] = 'n/a'
+#             curr_score = competitor['score']
+#             qtrs = {}
+#             q = 1
+#             for qtr in competitor['linescores']:
+#                 #print(qtr['displayValue'])
+#                 qtrs[q] = qtr['displayValue']
+#                 q += 1
+#             d[team]['current_score'] = curr_score
+#             d[team]['qtr_scores'] = qtrs
+#         else:
+#             d[team]['current_score'] = 'n/a'
+#             d[team]['qtr_scores'] = 'n/a'
 
-print(d)
+# print(d)
 
 
 
