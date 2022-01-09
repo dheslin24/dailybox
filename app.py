@@ -2707,7 +2707,8 @@ def register():
     if request.method == "POST":
         r = requests.post('https://hcaptcha.com/siteverify', data = {'secret' : secret, 'response' : request.form['h-captcha-response']})
         google_response = json.loads(r.text)
-  
+        from email_validator import validate_email, EmailNotValidError
+
         # ensure username was submitted
         if not request.form.get("username"):
             return apology("must provide username")
@@ -2737,6 +2738,16 @@ def register():
         elif not request.form.get("mobile"):
             return apology("must enter mobile number")
 
+        email = request.form.get("email")
+        try:
+            # Validate.
+            #valid = validate_email(email)
+
+            # Update with the normalized form.
+            email = valid.email
+        except EmailNotValidError as e:
+            # email is not valid, exception message is human-readable
+            return apology("must use valid email")
         # encrypt password
         if request.form.get("password") == request.form.get("password_confirm"):
             hash = pwd_context.hash(request.form.get("password"))
