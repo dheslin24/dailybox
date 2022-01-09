@@ -101,24 +101,6 @@ def admin_required(f):
     return decorated_function
 
 
-def init_grid():
-    grid = []
-    for x in range(10):
-        l = []
-        for y in range(10):
-            l.append((x,y))
-        grid.append(l)
-
-    grid[0][5] = 'DH'
-    grid[2][3] = 'TW'
-    grid[1][7] = 'GG'
-    grid[1][4] = 'THIS'
-    grid[2][4] = 'COULD'
-    grid[3][4] = 'BE'
-    grid[4][4] = 'YOU!'
-    print(grid)
-    return(grid)
-
 def box_string():
     s = ''
     for x in range(100):
@@ -130,10 +112,6 @@ def assign_xy():
     n = [x for x in range(10)]
     random.shuffle(n)
     return(n)
-
-x_nums = ['x{}'.format(x) for x in range(10)]
-x_nums.insert(0,'')
-y_nums = ['y{}'.format(x) for x in range(10)]
 
 # create json string of assigned x/y numbers
 def assign_numbers(boxid):
@@ -150,6 +128,8 @@ def assign_numbers(boxid):
     y_string += '}'
     s = "INSERT INTO boxnums(boxid, x, y) VALUES({}, '{}', '{}');".format(boxid, x_string, y_string)
     db(s)
+
+    
 
 def count_avail(boxid):
     s = "SELECT * FROM boxes WHERE boxid = {};".format(boxid)
@@ -766,7 +746,8 @@ def display_box():
             
         winners = calc_winner(boxid)
         # no winners and not an every score (paytype = 3)
-        if len(winners) == 0 and ptype != PAY_TYPE_ID['every_score']:
+        print(f"pay type 1/8 debug {ptype} {winners}")
+        if len(winners) == 0 and (ptype != PAY_TYPE_ID['every_score'] and ptype != PAY_TYPE_ID['four_qtr']):
 
             for col in x:   
                 if str(x[col]) == home_digit:
@@ -2685,8 +2666,6 @@ def login():
 @login_required
 def index():
     
-    grid = init_grid()
-
     print("*******************")
     print("***")
     print("***")
@@ -2698,7 +2677,7 @@ def index():
 
     logging.info("{} just logged in".format(session["username"]))
 
-    return render_template("landing_page.html", grid=grid, x=x_nums, y=y_nums)
+    return render_template("landing_page.html")
 
 # new landing page - redirect btwn pickem & boxes
 @app.route("/landing_page", methods=["GET", "POST"])
