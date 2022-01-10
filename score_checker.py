@@ -38,7 +38,7 @@ else:
 
         qtrs = []
         print(f"scores {scores}")
-        for team in scores:
+        for team in scores[::-1]:
             q = len(scores[team]['qtr_scores'])
             print(f"q:  --  {q}")
             if q > 0:
