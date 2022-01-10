@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime, timedelta
-from db_accessor import db2
+from db_accessor.db_accessor import db2
 
 def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', espnid=False):
     season_type = 3  # 1: preseason, 2: regular, 3: post
@@ -192,10 +192,11 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', esp
     return {"game": game_dict, "team": team_dict}
 
 
-def get_espn_score_by_qtr(eventid, league='ncaaf'):
+def get_espn_score_by_qtr(eventid, league='nfl'):
     # season_type = 3
     # week = 1
     event = 401331242   # 401331242 is CFP final
+    print(eventid)
     espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={eventid}"  # change to eventid eventually
     espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={eventid}"
 
@@ -203,6 +204,7 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
         response = requests.get(espn_url_ncaaf)
     else:
         response = requests.get(espn_url_nfl)
+    print(response)
     r = response.json()
     espn_dict = dict(r)
     print(espn_dict.keys())
@@ -210,8 +212,8 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
     d = {}
 
     print("----------BOXSCORE------------")
-    #print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
-    print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
+    # print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
+    # print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
     for teams in espn_dict['boxscore']['teams']:
         for k, v in teams.items():
             #print(f"{k}\n{v}")
@@ -230,9 +232,11 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
     print(espn_dict['gameInfo'])
 
     print("\n------------HEADER----------")
+    print(f"header: {espn_dict['header']}")
     for competition in espn_dict['header']['competitions']:
         print(type(competition))
         for competitor in competition['competitors']:
+            print(f"competitor!!!:  {competitor}")
             team = competitor['team']['abbreviation']
             if 'score' in competitor:
                 #print(competitor['team']['abbreviation'], competitor['score'])
@@ -247,8 +251,43 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
                 d[team]['current_score'] = curr_score
                 d[team]['qtr_scores'] = qtrs
             else:
-                qtrs = {1: 0, 2: 0, 3: 0, 4: 0}
+                qtrs = {}
                 d[team]['current_score'] = '0'
                 d[team]['qtr_scores'] = qtrs
     
     return d
+
+
+def get_espn_summary_single_game(espnid, league='nfl'):
+    if league == 'ncaaf':
+        espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+    elif league == 'nfl':
+        espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={espnid}"
+    else:
+        espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+
+
+    r = requests.get(espn_url).json()
+
+    game_status = r['header']['competitions'][0]['status']
+
+    clock = ''
+    quarter = 0
+
+    if 'displayClock' in game_status:
+        clock = game_status['displayClock']
+
+    if 'period' in game_status:
+        quarter = game_status['period']
+
+    response = {
+        'game_status': game_status['type']['description'],
+        'kickoff_time': game_status['type']['detail'],
+        'game_clock': clock,
+        'quarter': quarter
+    }
+
+    return response
+    
+    
+

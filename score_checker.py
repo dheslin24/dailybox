@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from db_accessor import db2 
+from db_accessor.db_accessor import db2 
 import logging
 #import random
 import time

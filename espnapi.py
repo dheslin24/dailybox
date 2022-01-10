@@ -192,10 +192,11 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', esp
     return {"game": game_dict, "team": team_dict}
 
 
-def get_espn_score_by_qtr(eventid, league='ncaaf'):
+def get_espn_score_by_qtr(eventid, league='nfl'):
     # season_type = 3
     # week = 1
     event = 401331242   # 401331242 is CFP final
+    print(eventid)
     espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={eventid}"  # change to eventid eventually
     espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={eventid}"
 
@@ -203,6 +204,7 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
         response = requests.get(espn_url_ncaaf)
     else:
         response = requests.get(espn_url_nfl)
+    print(response)
     r = response.json()
     espn_dict = dict(r)
     print(espn_dict.keys())
@@ -210,8 +212,8 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
     d = {}
 
     print("----------BOXSCORE------------")
-    print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
-    print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
+    # print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
+    # print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
     for teams in espn_dict['boxscore']['teams']:
         for k, v in teams.items():
             #print(f"{k}\n{v}")
@@ -256,8 +258,14 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
     return d
 
 
-def get_espn_summary_single_game(espnid):
-    espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+def get_espn_summary_single_game(espnid, league='nfl'):
+    if league == 'ncaaf':
+        espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+    elif league == 'nfl':
+        espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={espnid}"
+    else:
+        espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+
 
     r = requests.get(espn_url).json()
 
