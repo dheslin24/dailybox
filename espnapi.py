@@ -192,7 +192,7 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', esp
     return {"game": game_dict, "team": team_dict}
 
 
-def get_espn_score_by_qtr(eventid, league='nfl'):
+def get_espn_score_by_qtr(eventid, league='ncaaf'):
     # season_type = 3
     # week = 1
     event = 401331242   # 401331242 is CFP final
@@ -258,7 +258,7 @@ def get_espn_score_by_qtr(eventid, league='nfl'):
     return d
 
 
-def get_espn_summary_single_game(espnid, league='nfl'):
+def get_espn_summary_single_game(espnid, league='ncaaf'):
     if league == 'ncaaf':
         espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
     elif league == 'nfl':
