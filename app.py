@@ -2138,11 +2138,14 @@ def pickem_all_picks():
     user_picks_unplayed = {} # dictionary of non played games used for elimination analysis
     current_user = session['userid']
 
-    u = "SELECT userid, username FROM users WHERE active = 1;"
+    u = "SELECT userid, username FROM users;"
     usernames = dict(db2(u))
 
     for pick in all_picks:
-        username = usernames[pick[1]]
+        if pick[1] in usernames:
+            username = usernames[pick[1]]
+        else:
+            username = '*****DELETE'
         if game_dict[pick[2]].locked == 1 or current_user == pick[1]:
             if (pick[1], pick[2]) not in user_pick_list:   # then this is the latest pick for that game for this user
                 user_pick_list.append((pick[1], pick[2]))  # make sure the rest skip ovr this then
