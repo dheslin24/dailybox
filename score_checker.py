@@ -38,14 +38,28 @@ else:
 
         qtrs = []
         print(f"scores {scores}")
-        for team in scores[::-1]:
-            q = len(scores[team]['qtr_scores'])
-            print(f"q:  --  {q}")
-            if q > 0:
-                for qtr in scores[team]['qtr_scores']:
-                    print(f"qtr -- {qtr}")
-                    if qtr <= q or qtr == 4:
-                        qtrs.append(scores[team]['qtr_scores'][qtr])
+        # for team in scores:
+        #     q = len(scores[team]['qtr_scores'])
+        #     print(f"q:  --  {q}")
+        #     if q > 0:
+        #         for qtr in scores[team]['qtr_scores']:
+        #             print(f"qtr -- {qtr}")
+        #             if qtr <= q or qtr == 4:
+        #                 qtrs.append(scores[team]['qtr_scores'][qtr])
+
+        # ALA then UGA
+        q = len(scores['ALA']['qtr_scores'])
+        print(f"q:  --  {q}")
+        if q > 0:
+            for qtr in scores['ALA']['qtr_scores']:
+                print(f"qtr -- {qtr}")
+                if qtr <= q or qtr == 4:
+                    qtrs.append(scores['ALA']['qtr_scores'][qtr])
+            for qtr in scores['UGA']['qtr_scores']:
+                print(f"qtr -- {qtr}")
+                if qtr <= q or qtr == 4:
+                    qtrs.append(scores['UGA']['qtr_scores'][qtr])
+            
 
         print(f"qtrs:  --- {qtrs}")           
         quarter = len(qtrs) // 2
