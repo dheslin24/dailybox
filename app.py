@@ -862,7 +862,7 @@ def display_box():
                 q1_winning_username = grid[q1_y_winner][q1_x_winner][1]
                 q1_winning_userid = grid[q1_y_winner][q1_x_winner][2]
                 q1_winning_boxnum = int(str(q1_y_winner) + str(q1_x_winner))
-                if live_quarter > 1:
+                if live_quarter > 1 or status == 'Final':
                     q1_winner = Markup('Q1 WINNER</br>')
                 else:
                     q1_winner = Markup('WINNING Q1</br>')
@@ -872,7 +872,7 @@ def display_box():
                 q2_winning_username = grid[q2_y_winner][q2_x_winner][1]
                 q2_winning_userid = grid[q2_y_winner][q2_x_winner][2]
                 q2_winning_boxnum = int(str(q2_y_winner) + str(q2_x_winner))
-                if live_quarter > 2 or game_status['game_status'] == 'Halftime':
+                if live_quarter > 2 or status == 'Halftime' or status == 'Final':
                     q2_winner = Markup('Q2 WINNER</br>')
                 else:
                     q2_winner = Markup('WINNING Q2</br>')
@@ -882,7 +882,7 @@ def display_box():
                 q3_winning_username = grid[q3_y_winner][q3_x_winner][1]
                 q3_winning_userid = grid[q3_y_winner][q3_x_winner][2]
                 q3_winning_boxnum = int(str(q3_y_winner) + str(q3_x_winner))
-                if live_quarter > 3:
+                if live_quarter > 3 or status == 'Final':
                     q3_winner = Markup('Q3 WINNER</br>')
                 else:
                     q3_winner = Markup('WINNING Q3</br>')
