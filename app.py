@@ -813,6 +813,7 @@ def display_box():
             quarter = len(winners) // 2
             print(f"quarter:  {quarter}")
             print(f"live quarter: {live_quarter}")
+            print(f"gamestatus {game_status}")
             final_payment = '' +  str(fee * 10) + ' / ' + str(fee * 20) + ' / ' + str(fee * 10) + ' / ' + str(fee * 60)
 
             for item in x: 
@@ -871,7 +872,7 @@ def display_box():
                 q2_winning_username = grid[q2_y_winner][q2_x_winner][1]
                 q2_winning_userid = grid[q2_y_winner][q2_x_winner][2]
                 q2_winning_boxnum = int(str(q2_y_winner) + str(q2_x_winner))
-                if live_quarter > 2:
+                if live_quarter > 2 or game_status['game_status'] == 'Halftime':
                     q2_winner = Markup('Q2 WINNER</br>')
                 else:
                     q2_winner = Markup('WINNING Q2</br>')
