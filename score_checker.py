@@ -78,4 +78,4 @@ else:
             #break
 
 
-        time.sleep(300.0 - ((time.time() - starttime) % 300.0))
+        time.sleep(60.0 - ((time.time() - starttime) % 60.0))
