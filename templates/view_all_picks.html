@@ -30,7 +30,7 @@
         {% endif %}
         <!-- <p> HOME team in CAPS </p> -->
         {% if not winner %}
-        <a href="{{ url_for('display_bowl_games') }}">Jump to enter your picks</a>
+        <a href="{{ url_for('display_pickem_games') }}">Jump to enter your picks</a>
         {% endif %}
     </br>
     {% if winner|length > 0 %}

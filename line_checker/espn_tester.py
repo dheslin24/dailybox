@@ -13,40 +13,153 @@ import logging
 logging.basicConfig(filename="line.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
 
-espnid = 401331242
-espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+# espnid = 401331242
+# cpf playoff link
+#espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+season_type = 3 # post season
+week = 4
+espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 
-r = requests.get(espn_url).json()
 
-print(r.keys())
 
-print(f"header:  {r['header'].keys()}")
-print(f"com {len(r['header']['competitions'])}")
-print(f"com {r['header']['competitions'][0].keys()}")
-# dict_keys(['id', 'uid', 'date', 'neutralSite', 'conferenceCompetition', 'boxscoreAvailable', 
-#             'commentaryAvailable', 'liveAvailable', 'onWatchESPN', 'recent', 'boxscoreSource', 
-#             'playByPlaySource', 'competitors', 'status', 'broadcasts', 'groups'])
+r = requests.get(espn_nfl_url).json()
 
-print(f"status {r['header']['competitions'][0]['status']}")
-# status {'type': {'id': '1', 'name': 'STATUS_SCHEDULED', 'state': 'pre', 'completed': False, 
-#         'description': 'Scheduled', 'detail': 'Mon, January 10th at 8:00 PM EST', 
-#         'shortDetail': '1/10 - 8:00 PM EST'}}
+#print(r.keys())
+# dict_keys(['leagues', 'season', 'week', 'events'])
 
-kickoff = r['header']['competitions'][0]['status']['type']['detail']
-print(kickoff)
+#print(r['events'][0].keys())
+# dict_keys(['id', 'uid', 'date', 'name', 'shortName', 'season', 'competitions', 'links', 'weather', 'status'])
+# print(r['events'][0]['id'])
+# print(r['events'][0]['date'])
+# print(r['events'][0]['name'])
+# print(r['events'][0]['shortName'])
+# print(r['events'][0]['status'])
+# 401326627
+# 2022-01-15T21:30Z
+# Las Vegas Raiders at Cincinnati Bengals
+# LV @ CIN
+# {'clock': 0.0, 'displayClock': '0:00', 'period': 0, 'type': {'id': '1', 'name': 'STATUS_SCHEDULED', 
+# 'state': 'pre', 'completed': False, 'description': 'Scheduled', 'detail': 'Sat, January 15th at 4:30 PM EST', 
+# 'shortDetail': '1/15 - 4:30 PM EST'}}
+# print(r['leagues'][0]['abbreviation'])
+# print(r['season'])
+for event in r['events']:
+    print(f"espnid: {event['id']}")
+    print(f"date: {event['date']}")
+    print(f"date: {event['season']['year']}")
+    print(f"date: {event['name']}")
+    print(f"date: {event['shortName']}")
+    print(f"date: {event['status']['type']['detail']}")
+    print(f"date: {event['status']['type']['shortDetail']}")
 
-now = datetime.utcnow()
-print(now)
-# curr_year = datetime.strftime(now).year
-# print(curr_year)
+# print(r['events'][0]['competitions'][0].keys())
+# dict_keys(['id', 'uid', 'date', 'attendance', 'type', 'timeValid', 'neutralSite', 'conferenceCompetition', 
+#            'recent', 'venue', 'competitors', 'notes', 'status', 'broadcasts', 'leaders', 'tickets', 
+#            'startDate', 'geoBroadcasts', 'odds'])
 
-dt = datetime.strptime(kickoff + ' ' + str(datetime.utcnow().year), '%a, %B %dth at %I:%M %p %Z %Y')
-delta = dt - now
-print(delta.days)
-sec = delta.seconds
-print(delta.seconds)
+# print(r['events'][0]['competitions'][0]['id'])
+# print(r['events'][0]['competitions'][0]['type'])
+# #print(r['events'][0]['competitions'][0]['competitors'])
+# print(r['events'][0]['competitions'][0]['notes'])
+# print(r['events'][0]['competitions'][0]['status'])
+# print(r['events'][0]['competitions'][0]['startDate'])
+# print(r['events'][0]['competitions'][0]['odds'])
+# # 401326627
+# # {'id': '1', 'abbreviation': 'STD'}
+# # [{'type': 'event', 'headline': 'AFC Wild Card Playoffs'}]
+# # {'clock': 0.0, 'displayClock': '0:00', 'period': 0, 'type': {'id': '1', 'name': 'STATUS_SCHEDULED', 
+# # 'state': 'pre', 'completed': False, 'description': 'Scheduled', 'detail': 'Sat, January 15th at 4:30 PM EST', 
+# # 'shortDetail': '1/15 - 4:30 PM EST'}}
+# # 2022-01-15T21:30Z
+# # [{'provider': {'id': '45', 'name': 'Caesars Sportsbook (New Jersey)', 'priority': 1}, 'details': 'CIN -6.0', 
+# # 'overUnder': 49.0}]
 
-print(sec/60)
+
+# print(r['events'][0]['competitions'][0]['competitors'][0].keys())
+# # dict_keys(['id', 'uid', 'type', 'order', 'homeAway', 'team', 'score', 'statistics', 'records', 'leaders'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['id'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['type'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
+# print(r['events'][0]['competitions'][0]['competitors'][1]['order'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['team'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['homeAway'])
+# print(r['events'][0]['competitions'][0]['competitors'][1]['homeAway'])
+# #print(r['events'][0]['competitions'][0]['competitors'][0]['team'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['score'])
+# # 4
+# # team
+# # 0
+# # 1
+# # home
+# # away
+# # 0
+
+#print(r['events'][0]['competitions'][0]['competitors'][0]['team'].keys())
+# dict_keys(['id', 'uid', 'location', 'name', 'abbreviation', 'displayName', 'shortDisplayName', 'color', 
+#            'alternateColor', 'isActive', 'venue', 'links', 'logo'])
+
+# print(r['events'][0]['competitions'][0]['competitors'][0]['team']['name'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['team']['abbreviation'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['team']['displayName'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['team']['shortDisplayName'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['team']['color'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['team']['alternateColor'])
+# print(r['events'][0]['competitions'][0]['competitors'][0]['team']['logo'])
+# # Bengals
+# # CIN
+# # Cincinnati Bengals
+# # Bengals
+# # FF2700
+# # 000000
+# # https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/cin.png
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---- CFP box testing below ----
+
+# print(f"header:  {r['header'].keys()}")
+# print(f"com {len(r['header']['competitions'])}")
+# print(f"com {r['header']['competitions'][0].keys()}")
+# # dict_keys(['id', 'uid', 'date', 'neutralSite', 'conferenceCompetition', 'boxscoreAvailable', 
+# #             'commentaryAvailable', 'liveAvailable', 'onWatchESPN', 'recent', 'boxscoreSource', 
+# #             'playByPlaySource', 'competitors', 'status', 'broadcasts', 'groups'])
+
+# print(f"status {r['header']['competitions'][0]['status']}")
+# # status {'type': {'id': '1', 'name': 'STATUS_SCHEDULED', 'state': 'pre', 'completed': False, 
+# #         'description': 'Scheduled', 'detail': 'Mon, January 10th at 8:00 PM EST', 
+# #         'shortDetail': '1/10 - 8:00 PM EST'}}
+
+# kickoff = r['header']['competitions'][0]['status']['type']['detail']
+# print(kickoff)
+
+# now = datetime.utcnow()
+# print(now)
+# # curr_year = datetime.strftime(now).year
+# # print(curr_year)
+
+# dt = datetime.strptime(kickoff + ' ' + str(datetime.utcnow().year), '%a, %B %dth at %I:%M %p %Z %Y')
+# delta = dt - now
+# print(delta.days)
+# sec = delta.seconds
+# print(delta.seconds)
+
+# print(sec/60)
 
 # --------------------------------------------
 # starttime = time.mktime((2021, 12, 17, 18, 59, 0, 0, 0, 0))

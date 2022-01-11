@@ -7,7 +7,7 @@
 {% block main %}
     <h1>
         <p>
-            Payment Status for all Bowl Game Users (public shaming)
+            Payment Status for all Users (public shaming)
         </p>
     </h1>
         <p> Total users in pool:  {{ total_users }}  </p>
@@ -19,7 +19,7 @@
     {% if session['userid'] in admins %}
     <br><br>
     <form action="{{ url_for('add_bowl_user') }}" method="POST">
-        <label for="userid">Add New Bowl User by userid</label>
+        <label for="userid">Add new active user by userid</label>
         <input type="text" name="userid" size="5">
         <input type="submit">
     </form>

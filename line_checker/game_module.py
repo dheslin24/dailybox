@@ -7,11 +7,13 @@ def get_games(espn_data, abbrev=True):
     game_num = 1
     team_dict = {}
     
-    for team in r['events']:
-        for game in team['competitions']:
+    for event in r['events']:
+        season = event['season']['year']
+        for game in event['competitions']:
             competitors = []
             abbreviations = {}
             headline = ''
+
             if 'odds' in game:
                 #print(f"len odds: {len(game['odds'])}")
                 line = game['odds'][0]['details'].split(' ')
@@ -57,17 +59,25 @@ def get_games(espn_data, abbrev=True):
             # if game_num == 1:
             #     line = ['TOL', '-10.5']
 
+            if 'venue' in game:
+                venue = game['venue']['fullName']
+                location = game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
+            else:
+                venue = 'TBD'
+                location = 'TBD'
+
             game_dict[game_num] = {
                 'espn_id': int(game['id']), 
                 'date': game_date, # date string for printing
                 'datetime': game_datetime, # datetime object for comparison
-                'venue': game['venue']['fullName'], 
+                'venue': venue, 
                 'competitors': competitors,  # (home/away, team name, team score)
                 'abbreviations': abbreviations,
                 'line': line,
                 'over_under': over_under,
                 'headline': headline,
-                'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
+                'season': season,
+                'location': location
                 }
             game_num += 1
     return {'game': game_dict, 'team': team_dict}

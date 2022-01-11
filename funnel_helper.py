@@ -32,7 +32,7 @@ def elimination_check(game_dict, d, user_dict):
             curr_winners.append(user)
 
     print(f"total users: {total_users} total elim: {len(eliminated_list)}")
-    if total_users - len(curr_winners) - len(eliminated_list) == 0:
+    if total_users - len(curr_winners) - len(eliminated_list) == 0 and len(eliminated_list) != 0:
         winner = curr_winners
     print(f"WINNER:  {winner}")
 

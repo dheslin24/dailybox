@@ -2,9 +2,22 @@ import requests
 from datetime import datetime, timedelta
 from db_accessor.db_accessor import db2
 
-def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', espnid=False):
-    season_type = 3  # 1: preseason, 2: regular, 3: post
-    week = 1 # will make this an input soon
+def get_espn_ids(season_type = 3, week = 1, league='ncaaf'):
+    espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+    espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
+
+    if league == 'ncaaf':
+        response = requests.get(espn_ncaa_url)
+    else:
+        response = requests.get(espn_nfl_url)
+
+    r = response.json()
+
+    return r
+
+def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaaf', espnid=False):
+    # season_type = 3  # 1: preseason, 2: regular, 3: post
+    # week = 1 # will make this an input soon
     espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
     espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
     #espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
@@ -12,7 +25,7 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', esp
 
     #response = requests.get(espn_url)
 
-    if league == 'ncaa':
+    if league == 'ncaaf':
         response = requests.get(espn_ncaa_url)
     else:
         response = requests.get(espn_nfl_url)
@@ -20,26 +33,12 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', esp
     r = response.json()
 
     game_dict = {}
-    game_num = 1
+    #game_num = 1
     team_dict = {}
     now = datetime.utcnow() - timedelta(hours=5)
     print(now)
 
-    # <<<<<<<<<TESTING>>>>>>>>
-    # print(r.keys())
-    # print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
-    # print(r['events'][0]['competitions'][0]['competitors'][0]['order'])
-    # print(r)
-    print("dh test")
-    print(r['events'][0]['competitions'][0]['status'])
-    # print(r['events'][0]['competitions'][0]['odds'][0]['details'])
-    # print(r['events'][0]['competitions'][0]['odds'][0]['overUnder'])
-    #print(f"events: {r['events']}")
-    #print("##########################")
-    #print(f"games: {r['events'][0]['competitions']}")
-    # <<<<<<<<<END TESTING >>>>>>>>>>>>>>
-
-    espn_q = "SELECT espnid, fav, spread FROM latest_lines"
+    espn_q = f"SELECT espnid, fav, spread FROM latest_lines WHERE league = '{league}'"
     espn_db = db2(espn_q)
     print(f"espndb: {espn_db}")
 
@@ -54,8 +53,9 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', esp
 
     winloss_dict = {}
 
-    for team in r['events']:
-        for game in team['competitions']:
+    for event in r['events']:
+        for game in event['competitions']:
+            espnid = int(game['id'])
             competitors = []
             abbreviations = {}
             headline = ''
@@ -118,13 +118,7 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', esp
                     competitors.append((home_away, team['team']['displayName'] + ' ' + team['team']['name'], team['score']))
                     abbreviations[home_away] = team['team']['abbreviation']
 
-                # hard code for now - will fix later this week to handle CFP finalists
-                if team['team']['abbreviation'] == 'UGA':
-                    team_dict['UGA'] = 34
-                elif team['team']['abbreviation'] == 'ALA':
-                    team_dict['ALA'] = 27
-                else:
-                    team_dict[team['team']['abbreviation']] = team['score']
+                team_dict[team['team']['abbreviation']] = team['score']
                 
             # convert string to datetime e.g.:  
             # 'date': '2022-01-01T17:00Z'
@@ -132,22 +126,28 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaa', esp
             game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
             game_date_short = game_datetime.strftime('%m-%d %H:%M')
 
+            if 'venue' in game:
+                venue = game['venue']['fullName']
+                location = game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
+            else:
+                venue = 'TBD'
+                location = 'TBD'
 
-            game_dict[game_num] = {
+            game_dict[espnid] = {
                 'espn_id': int(game['id']), 
                 'date': game_date, # date string for printing
                 'date_short': game_date_short,
                 'datetime': game_datetime, # datetime object for comparison
-                'venue': game['venue']['fullName'], 
-                'competitors': competitors,
-                'abbreviations': abbreviations,
+                'venue': venue, 
+                'competitors': competitors,  # list of competitors [(home/away, team, score), ... ]
+                'abbreviations': abbreviations,  # {'HOME': abbrev, 'AWAY', abbrev}
                 'line': line,
                 'over_under': over_under,
                 'headline': headline,
-                'location': game['venue']['address']['city'] + ', ' + game['venue']['address']['state'],
+                'location': location,
                 'status': status
                 }
-            game_num += 1
+            #game_num += 1
             
     # post processing of game_dict for winner/loser
     for game in game_dict:

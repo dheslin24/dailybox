@@ -12,17 +12,28 @@ import logging
 
 logging.basicConfig(filename="line.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
+print(sys.argv)
+if len(sys.argv) < 4:
+    print("Usage:  ./line_checker.py <season_type> [week] <league>")
+    league = None
+else:
+    season_type = sys.argv[1]
+    week = sys.argv[2]
+    league = sys.argv[3]
 
 starttime = time.mktime((2021, 12, 17, 18, 59, 0, 0, 0, 0))
-season_type = 3
-week = 1
-espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
-while True:
-    response = requests.get(espn_ncaa_url)
+
+if league == 'ncaaf':
+    espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
+elif league == 'nfl':
+    espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+
+while league:
+    response = requests.get(espn_url)
     r = response.json()
 
     game_dict = get_games(r, False)['game']
-    #print(game_dict)
+    print(f"get games game_dict:  {game_dict}")
     #print(r['events'][0]['competitions'][0]['notes'][0]['headline'])
 
     now = datetime.utcnow() - timedelta(hours=5)
@@ -31,6 +42,7 @@ while True:
     for game in game_dict:
         fav = ''
         spread = 0
+        season = game_dict[game]['season']
         game_dict[game]['current_winner'] = ''
         game_in_future = game_dict[game]['datetime'] > now  # if in future, will be true.
         time_to_kickoff = game_dict[game]['datetime'] - now
@@ -46,8 +58,8 @@ while True:
                     spread = game_dict[game]['line'][1]
             else:
                 spread = ''
-            line_query = "INSERT INTO latest_lines (espnid, fav, spread, datetime) VALUES (%s, %s, %s, NOW()) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s, datetime = NOW();"
-            db2(line_query, (espnid, fav, spread, espnid, fav, spread))
-            logging.info(f"inserted new line: {espnid}: {fav}: {spread}: {now}")
+            line_query = "INSERT INTO latest_lines (espnid, fav, spread, datetime, league, season) VALUES (%s, %s, %s, NOW(), %s, %s) ON DUPLICATE KEY UPDATE espnid = %s, fav = %s, spread = %s, datetime = NOW();"
+            db2(line_query, (espnid, fav, spread, league, season, espnid, fav, spread))
+            logging.info(f"inserted new line: {espnid}: {fav}: {spread}: {now}: {league}: {season}")
 
-    time.sleep(900.0 - ((time.time() - starttime) % 900.0))
+    time.sleep(900.0 - ((time.time() - starttime) % 900.0))  # check every 15 min at :14, :29, :44, :59

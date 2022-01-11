@@ -1672,13 +1672,16 @@ def live_scores():
 
     return render_template("live_scores.html", game_dict = game_dict, picks=dict(picks), now=now)
 
-
-@app.route("/display_bowl_games", methods=["GET", "POST"])
+# @app.route("/display_bowl_games", methods=["GET", "POST"])
+@app.route("/display_pickem_games", methods=["GET", "POST"])
 @login_required
-def display_bowl_games():
+def display_pickem_games():
 
     now = datetime.utcnow() - timedelta(hours=5)
-    response = get_espn_scores(False)
+    season_type = 3
+    week = 1
+    league = 'nfl'
+    response = get_espn_scores(False, season_type, week, league)
     game_dict = response['game']
     team_dict = response['team']
     season = 2021
@@ -1706,14 +1709,17 @@ def display_bowl_games():
         logging.info(f"user {session['username']} just hit display all bowls")
     else:
         logging.info("someone just hit display all bowls but isn't logged in")
-    return render_template("display_bowl_games.html", game_dict = sorted_game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
+    return render_template("display_pickem_games.html", game_dict = sorted_game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
 
 @app.route("/select_bowl_games", methods=["GET", "POST"])
 @login_required
 def select_bowl_games():
 
+    season_type = 3
+    week = 1
+    league = 'nfl'
     # get list of active espn ids
-    game_dict = get_espn_scores(False)['game']
+    game_dict = get_espn_scores(False, season_type, week, league)['game']
     print(game_dict)
 
     # iterate through them, getting the pick value
@@ -1735,16 +1741,33 @@ def select_bowl_games():
     print(f"{session['username']} just selected bowl picks")
     logging.info("{} just actually selected bowl picks".format(session["username"]))
  
-    return redirect(url_for('view_all_bowl_picks'))
+    return redirect(url_for('view_all_picks'))
 
-@app.route("/view_all_bowl_picks", methods=["GET", "POST"])
+@app.route("/view_all_picks", methods = ["GET", "POST"])
+#@app.route("/view_all_bowl_picks", methods=["GET", "POST"])
 @login_required
-def view_all_bowl_picks():
+def view_all_picks():
 
     season = 2021
+    season_type = 3
+    weeks = [1]
+    league = 'nfl'
     now = datetime.utcnow() - timedelta(hours=5)
     # get list of active games first
-    game_dict = get_espn_scores(False)['game']
+    #game_dict = get_espn_scores(False)['game']
+    game_dicts = []
+    for week in weeks:
+        game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
+
+    # game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2], **game_dicts[3]}
+    game_dict = {**game_dicts[0]}  # expand as weeks go.. will figure out better way later
+    print("-------------------- GAME DICT -------------------\n\n\n")
+    print(game_dicts)
+
+    espnid_string = ''
+    for game in game_dict:
+        espnid_string += str(game) + ', '
+    espnid_string = espnid_string[:-2]
 
     # get dict of userid: username for display
     u = "SELECT userid, username, first_name, last_name, is_admin FROM users WHERE active = 1;"
@@ -1773,7 +1796,7 @@ def view_all_bowl_picks():
         if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5) or game_dict[game]['status']['status'] == 'Canceled':
             locked_games.add(game_dict[game]['espn_id'])
             game_dict[game]['winner'] = 'TBD'
-        else:  # game winner calcs here.. if in prog, winner is just 'current winner'
+        else:  # game winner calcs here.. if in progress, winner is just 'current winner'
             # get current score
             home_score = float(game_dict[game]['competitors'][0][2])
             away_score = float(game_dict[game]['competitors'][1][2])
@@ -1807,7 +1830,7 @@ def view_all_bowl_picks():
     # get user picks
     #           |pick0| |pick1||pick2|
     #s = "SELECT userid, espnid, pick FROM bowlpicks ORDER BY pick_id ASC;"
-    s = "SELECT userid, espnid, pick FROM bowlpicks WHERE pick_id in (SELECT max(pick_id) from bowlpicks GROUP BY userid, espnid);"
+    s = f"SELECT userid, espnid, pick FROM bowlpicks WHERE espnid in ({espnid_string}) and pick_id in (SELECT max(pick_id) from bowlpicks GROUP BY userid, espnid);"
     all_picks = db2(s)
 
     # get user tiebreaks
@@ -1862,14 +1885,23 @@ def view_all_bowl_picks():
     tb_dict = dict(db2(t))
     print(f"tb_dict {tb_dict}")
 
-    return render_template("view_all_bowl_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now, last_line_time=last_line_time, emojis=EMOJIS, eliminated_list=eliminated_list, winner=winner, tb_log=tb_log)
+    return render_template("view_all_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now, last_line_time=last_line_time, emojis=EMOJIS, eliminated_list=eliminated_list, winner=winner, tb_log=tb_log)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 @login_required
 def bowl_payment_status():
     #season = 2021 
+    # get list of espnids 
+    e = "SELECT espnid FROM latest_lines WHERE league = 'nfl';"
+    espnids = db2(e)
+    espn_string = ''
+    for espnid in espnids:
+        espn_string += str(espnid[0]) + ', '
+    espn_string = espn_string[:-2]
+
+
     # find users that have a bowl entry
-    u = "SELECT DISTINCT up.userid, u.username FROM bowlpicks up LEFT JOIN users u ON up.userid = u.userid;"
+    u = f"SELECT DISTINCT up.userid, u.username FROM bowlpicks up LEFT JOIN users u ON up.userid = u.userid WHERE up.espnid in ({espn_string});"
     bowl_users = dict(db2(u))
 
     # or ones that are in and haven't picked yet
@@ -1883,8 +1915,8 @@ def bowl_payment_status():
     p = "SELECT * FROM bowl_payment;"
     payment_dict = dict(db2(p))
     
-    entry = 25
-    prize_pool = 25 * len(bowl_users)
+    entry = 50
+    prize_pool = entry * len(bowl_users)
 
     # find list of admins who can update status
     s = "SELECT userid FROM users WHERE is_admin = 1;"
