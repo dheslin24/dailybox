@@ -17,7 +17,7 @@ from functools import wraps
 from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game
 from funnel_helper import elimination_check
 from email_helper import send_email
-
+from email_validator import validate_email, EmailNotValidError
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -2728,9 +2728,10 @@ def register():
     secret = config.captchasecret
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-        r = requests.post('https://www.google.com/recaptcha/api/siteverify', data = {'secret' : secret, 'response' : request.form['g-recaptcha-response']})
+        r = requests.post('https://hcaptcha.com/siteverify', data = {'secret' : secret, 'response' : request.form['h-captcha-response']})
         google_response = json.loads(r.text)
-  
+        
+
         # ensure username was submitted
         if not request.form.get("username"):
             return apology("must provide username")
@@ -2760,6 +2761,16 @@ def register():
         elif not request.form.get("mobile"):
             return apology("must enter mobile number")
 
+        email = request.form.get("email")
+        try:
+            # Validate.
+            #valid = validate_email(email)
+
+            # Update with the normalized form.
+            email = valid.email
+        except EmailNotValidError as e:
+            # email is not valid, exception message is human-readable
+            return apology("must use valid email")
         # encrypt password
         if request.form.get("password") == request.form.get("password_confirm"):
             hash = pwd_context.hash(request.form.get("password"))
