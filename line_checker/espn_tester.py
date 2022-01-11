@@ -17,7 +17,7 @@ logging.basicConfig(filename="line.log", format="%(asctime)s %(levelname)-8s %(m
 # cpf playoff link
 #espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
 season_type = 3 # post season
-week = 4
+week = 5
 espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
 espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 

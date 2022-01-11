@@ -1100,12 +1100,8 @@ def select_box():
     bal = "SELECT balance FROM users WHERE userid = {};".format(session['userid'])
     check = db(f)
     fee = check[0][0]
-    # box_type = check[0][1]
     balance = db(bal)[0][0]
     print(fee, balance)
-
-    #if balance < fee * len(box_list) and box_type != 3:
-        #return apology("Insufficient Funds")
 
     if user_box_count + len(box_list) > 10 and (box_type == BOX_TYPE_ID['nutcracker'] or pay_type == PAY_TYPE_ID['ten_man']):
         return apology("Really?  This is a 10-man.  10 boxes max.  100/10=10")
@@ -1122,18 +1118,6 @@ def select_box():
                 s = "UPDATE boxes SET box{}={} WHERE gobbler_id = {};".format(b, session['userid'], gobbler_id)
             db(s)
 
-        ######  DH 11/15/21 ###########################
-        ##     no longer auto starting games per biz ##
-        ###############################################
-
-        # are these the last available boxes?  start the game.
-        # if len(box_list) == len(rand_list):
-        #     gobs = "SELECT boxid FROM boxes WHERE gobbler_id = {};".format(gobbler_id)
-        #     boxids = db(gobs)
-        #     boxid_list = []
-        #     for box in boxids:
-        #         start_game(box[0])
-
         return redirect(url_for("display_box", boxid=boxid))
 
 
@@ -1143,22 +1127,6 @@ def select_box():
             s = "UPDATE boxes SET box{}={} WHERE boxid = {};".format(b, session['userid'], boxid)
             db(s)
             logging.info("user {} just picked box {} in boxid {}".format(session['username'], b, boxid))
-
-        # update balance
-        # new_bal = balance - (fee * len(box_list))
-        # bal = "UPDATE users SET balance = {} WHERE userid = {};".format(new_bal, session['userid'])
-        # db(bal)
-
-        ######  DH 11/15/21 ###########################
-        ##     no longer auto starting games per biz ##
-        ###############################################
-        
-        # are these the last available boxes?  start the game.
-        # if len(box_list) == len(rand_list):
-        #     start_game(boxid)
-        #     # also, if it's a DB, create a new one
-        #     if box_type == BOX_TYPE_ID['dailybox']:
-        #         create_new_game(box_type, 2, fee)
 
         return redirect(url_for("display_box", boxid=boxid))
 
@@ -1683,7 +1651,7 @@ def display_pickem_games():
     league = 'nfl'
     response = get_espn_scores(False, season_type, week, league)
     game_dict = response['game']
-    team_dict = response['team']
+    #team_dict = response['team']
     season = 2021
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
     # print(f"teamdict: {team_dict}")
@@ -1706,7 +1674,7 @@ def display_pickem_games():
     else:
         tiebreak = ''
     if session:
-        logging.info(f"user {session['username']} just hit display all bowls")
+        logging.info(f"user {session['username']} just hit display all games")
     else:
         logging.info("someone just hit display all bowls but isn't logged in")
     return render_template("display_pickem_games.html", game_dict = sorted_game_dict, picks=dict(picks), now=now, tiebreak=tiebreak)
@@ -1739,7 +1707,7 @@ def select_bowl_games():
         db2(t, (season, session['userid'], tiebreak))
 
     print(f"{session['username']} just selected bowl picks")
-    logging.info("{} just actually selected bowl picks".format(session["username"]))
+    logging.info("{} just actually selected picks".format(session["username"]))
  
     return redirect(url_for('view_all_picks'))
 
@@ -1750,7 +1718,7 @@ def view_all_picks():
 
     season = 2021
     season_type = 3
-    weeks = [1]
+    weeks = [1] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
     now = datetime.utcnow() - timedelta(hours=5)
     # get list of active games first
@@ -2764,10 +2732,11 @@ def register():
         email = request.form.get("email")
         try:
             # Validate.
-            #valid = validate_email(email)
+            valid = validate_email(email)
 
             # Update with the normalized form.
             email = valid.email
+
         except EmailNotValidError as e:
             # email is not valid, exception message is human-readable
             return apology("must use valid email")
