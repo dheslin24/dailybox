@@ -12,6 +12,11 @@
     </h1>
         <p> Total users in pool:  {{ total_users }}  </p>
         <p> Total Prize Pool:  {{ prize_pool }} </p>
+
+    {% if session['userid'] in admins %}
+        <p>Only Admins see this below, and only Admins see the last 3 columns</p>
+        <p>If PAID DH is thumbs up, means DH was paid but has not yet been xfr'd to TW</p>
+    {% endif %}
     
     <!-- <img src="https://media4.giphy.com/media/4jOqk3ChYjQSk/giphy.gif?cid=ecf05e47tsykcqwnvf74qwpec6y4tc92xfadc6ukr4kfp635&rid=giphy.gif&ct=g"> -->
     <img src="https://static.simpsonswiki.com/images/d/dd/Rain_man.png">
