@@ -1,5 +1,6 @@
 from flask import Flask, flash, redirect, render_template, request, session, url_for, Markup
 from flask_session import Session
+#from flask.ext.session import Session
 import logging
 import requests
 from passlib.apps import custom_app_context as pwd_context
@@ -36,6 +37,7 @@ if app.config["DEBUG"]:
 # configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "filesystem"
+app.permanent_session_lifetime = timedelta(days=7)
 Session(app)
 
 
