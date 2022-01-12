@@ -34,6 +34,12 @@
                 </tr>
                 {% endif %}
 
+                {% if game_dict[game]['venue']|length > 0 %}
+                <tr>
+                    <td colspan="5" class="headline">{{ game_dict[game]['venue'] }} {{ game_dict[game]['location'] }}</td>
+                </tr>
+                {% endif %}
+
                 <!-- date of game and/or if in progress will show quarter/time left -->
                 {% if game_dict[game]['status']['status'] == 'Canceled' %}
                     <tr><td colspan="5" class="headline">{{ game_dict[game]['espn_id'] }} - Canceled</td></tr>
@@ -156,7 +162,7 @@
         </form>
     </h4>
 
-    <img src="https://media3.giphy.com/media/3ohzdIuqJoo8QdKlnW/giphy.gif?cid=ecf05e47fpokmng5vdpy714k1eb9l27peb9bsz4bws176og4&rid=giphy.gif&ct=g" style="display: block; width: 120%; height: auto;">
+    <!-- <img src="https://media3.giphy.com/media/3ohzdIuqJoo8QdKlnW/giphy.gif?cid=ecf05e47fpokmng5vdpy714k1eb9l27peb9bsz4bws176og4&rid=giphy.gif&ct=g" style="display: block; width: 120%; height: auto;"> -->
 
     <script type="text/javascript">
         function change(value, id, locked) {

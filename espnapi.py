@@ -105,6 +105,7 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaaf', es
             else:
                 print(f"line: EVEN EVEN {line}")
                 #print(f"game with even {game}")
+
             if 'notes' in game:
                 if len(game['notes']) > 0:
                     if 'headline' in game['notes'][0]:
@@ -132,6 +133,9 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaaf', es
             else:
                 venue = 'TBD'
                 location = 'TBD'
+
+            if headline[-8:] == 'Playoffs':
+                headline = headline[:-8]
 
             game_dict[espnid] = {
                 'espn_id': int(game['id']), 
