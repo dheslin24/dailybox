@@ -1913,9 +1913,9 @@ def bowl_payment_status():
     for user in bowl_users:
         if user == 113:
             if user in payment_list:
-                display_list.append((user, bowl_users[user], middle_finger, check))
+                display_list.append((user, bowl_users[user], check, thumbs_down))
             else:
-                display_list.append((user, bowl_users[user], middle_finger, ex))
+                display_list.append((user, bowl_users[user], middle_finger, thumbs_down))
         elif user not in payment_list and user not in payment_list_dh:
             display_list.append((user, bowl_users[user], ex, thumbs_down))
         elif user in payment_list_dh:
