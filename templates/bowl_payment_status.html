@@ -31,16 +31,25 @@
             <th> userid </th>
             <th> username </th>
             <th> paid? </th>
+            <th> paid DH? </th>
             <th> mark paid </th>
+            <th> DH mark paid </th>
             </tr>
             {% for user in display_list %}
             <tr>
                 {% for field in user %}
                 <td class="payment"> {{ field }} </td>
                 {% endfor %}
-                <td><form action="{{ url_for('bowl_mark_paid') }}" method="POST">
+                <td>
+                    <form action="{{ url_for('bowl_mark_paid') }}" method="POST">
                     <input type="submit" value="{{ user[0] }}" name="userid">
-                    <input type="hidden" value="True" name="paid"></form></td>
+                    <input type="hidden" value="True" name="paid"></form>
+                </td>
+                <td>
+                    <form action="{{ url_for('bowl_mark_paid_dh') }}" method="POST">
+                    <input type="submit" value="{{ user[0] }}" name="userid">
+                    <input type="hidden" value="True" name="paid_dh"></form>
+                </td>
             </tr>
             {% endfor %}
         </table>
@@ -56,7 +65,7 @@
             </tr>
             {% for user in display_list %}
             <tr>
-                {% for field in user %}
+                {% for field in user[:3] %}
                 <td class="payment"> {{ field }} </td>
                 {% endfor %}
             </tr>

@@ -1880,10 +1880,7 @@ def bowl_payment_status():
 
     for user in no_picks_users:
         if user[0] not in bowl_users:
-            bowl_users[user[0]] = user[1]
-
-    p = "SELECT * FROM bowl_payment;"
-    payment_dict = dict(db2(p))
+            bowl_users[user[0]] = user[1]   
     
     entry = 50
     prize_pool = entry * len(bowl_users)
@@ -1902,21 +1899,33 @@ def bowl_payment_status():
     check = '\u2714'
     ex = '\u274c'
 
+    p = "SELECT userid, payment_status, payment_status_dh FROM bowl_payment;"
+    payments = db2(p)
+    payment_list = []
+    payment_list_dh = []
+    for payment_user in payments:
+        if payment_user[1]:
+            payment_list.append(payment_user[0])
+        if payment_user[2]:
+            payment_list_dh.append(payment_user[0])
     
     display_list = []
     for user in bowl_users:
-        if user not in payment_dict:
-            display_list.append((user, bowl_users[user], ex))
-        else:
-            if user == 113:
-                display_list.append((user, bowl_users[user], middle_finger))
-            elif payment_dict[user] == True:
-                display_list.append((user, bowl_users[user], check))
+        if user == 113:
+            if user in payment_list:
+                display_list.append((user, bowl_users[user], middle_finger, check))
             else:
-                display_list.append((user, bowl_users[user], ex))
+                display_list.append((user, bowl_users[user], middle_finger, ex))
+        elif user not in payment_list and user not in payment_list_dh:
+            display_list.append((user, bowl_users[user], ex, thumbs_down))
+        elif user in payment_list_dh:
+            display_list.append((user, bowl_users[user], check, thumbs_up))
+        else:
+            display_list.append((user, bowl_users[user], check, thumbs_down))
     print("payment stuff")
     print(bowl_users)
-    print(payment_dict)
+    print(payment_list)
+    print(payment_list_dh)
     print(display_list)
 
     logging.info(f"{session['username']} just hit view all bowl picks")
@@ -1937,15 +1946,38 @@ def bowl_mark_paid():
     userid = int(request.form.get("userid"))
     paid = request.form.get("paid")
 
-    s = "SELECT * FROM bowl_payment;"
+    s = "SELECT userid, payment_status FROM bowl_payment;"
     paid_status = dict(db2(s))
 
     if userid not in paid_status:
         s = "INSERT INTO bowl_payment (userid, payment_status) VALUES (%s, %s);"
         db2(s, (userid, True))
+    elif paid_status[userid] == False:
+        s = "UPDATE bowl_payment SET payment_status = %s, payment_status_dh = %s WHERE userid = %s;"
+        db2(s, (True, False, userid))
     else:
-        s = "UPDATE bowl_payment SET payment_status = %s WHERE userid = %s;"
-        db2(s, (True, userid))
+        s = "UPDATE bowl_payment SET payment_status = %s, payment_status_dh = %s WHERE userid = %s;"
+        db2(s, (False, False, userid))
+
+    return redirect(url_for('bowl_payment_status')) 
+
+@app.route("/bowl_mark_paid_dh", methods=["GET", "POST"])
+def bowl_mark_paid_dh():
+    userid = int(request.form.get("userid"))
+    paid = request.form.get("paid_dh")
+
+    s = "SELECT userid, payment_status_dh FROM bowl_payment;"
+    paid_status = dict(db2(s))
+
+    if userid not in paid_status:
+        s = "INSERT INTO bowl_payment (userid, payment_status, payment_status_dh) VALUES (%s, %s, %s);"
+        db2(s, (userid, True, True))
+    elif paid_status[userid] == False:
+        s = "UPDATE bowl_payment SET payment_status = %s, payment_status_dh = %s WHERE userid = %s;"
+        db2(s, (True, True, userid))
+    else:
+        s = "UPDATE bowl_payment SET payment_status = %s, payment_status_dh = %s WHERE userid = %s;"
+        db2(s, (False, False, userid))
 
     return redirect(url_for('bowl_payment_status')) 
 
