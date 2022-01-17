@@ -51,7 +51,7 @@
                 <!-- <tr><td colspan="5" class="headline">{{ game_dict[game]['status']['status'] }}</td></tr> -->
                 {% endif %}
                 
-                {% for team in game_dict[game]['competitors'] %}
+                {% for team in game_dict[game]['competitors'][::-1] %}
 
                     <!-- game hasn't started yet -->
                     {% if game_dict[game]['datetime'] > now and game_dict[game]['status']['status'] != 'Canceled' and game_dict[game]['status']['status'] != 'Postponed' %}

@@ -116,7 +116,7 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='nfl', espn
                 if abbrev:
                     competitors.append((home_away, team['team']['abbreviation'], team['score']))
                 else:
-                    competitors.append((home_away, team['team']['displayName'] + ' ' + team['team']['name'], team['score']))
+                    competitors.append((home_away, team['team']['displayName'], team['score']))
                     abbreviations[home_away] = team['team']['abbreviation']
 
                 team_dict[team['team']['abbreviation']] = team['score']
