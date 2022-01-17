@@ -15,7 +15,7 @@ def get_espn_ids(season_type = 3, week = 1, league='ncaaf'):
 
     return r
 
-def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaaf', espnid=False):
+def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='nfl', espnid=False):
     # season_type = 3  # 1: preseason, 2: regular, 3: post
     # week = 1 # will make this an input soon
     espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
@@ -196,7 +196,7 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='ncaaf', es
     return {"game": game_dict, "team": team_dict}
 
 
-def get_espn_score_by_qtr(eventid, league='ncaaf'):
+def get_espn_score_by_qtr(eventid, league='nfl'):
     # season_type = 3
     # week = 1
     event = 401331242   # 401331242 is CFP final
@@ -262,7 +262,7 @@ def get_espn_score_by_qtr(eventid, league='ncaaf'):
     return d
 
 
-def get_espn_summary_single_game(espnid, league='ncaaf'):
+def get_espn_summary_single_game(espnid, league='nfl'):
     if league == 'ncaaf':
         espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
     elif league == 'nfl':

@@ -674,6 +674,8 @@ def display_box():
     status = game_status['game_status']
     game_clock = game_status['game_clock']
     kickoff_time = game_status['kickoff_time']
+    team_scores = get_espn_score_by_qtr(espn_id)
+    print(f"team scores: {team_scores}")
 
 
     print(f"paytype:  {pay_type}")
@@ -1648,19 +1650,19 @@ def live_scores():
 def display_pickem_games():
 
     now = datetime.utcnow() - timedelta(hours=5)
-    season_type = 3
-    week = 1
-    league = 'nfl'
-    response = get_espn_scores(False, season_type, week, league)
-    game_dict = response['game']
-    #team_dict = response['team']
     season = 2021
-    sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
-    # print(f"teamdict: {team_dict}")
-    print(f"sorted game dict in display picks {sorted_game_dict}")
+    season_type = 3
+    #week = 1
+    weeks = [1, 2] #  - [1, 2, 3, 5] - 4 is probowl
+    league = 'nfl'
+    game_dicts = []
+    for week in weeks:
+        game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
-    # print(f"espn response game dict:")
-    # [print(f"game {game}: {game_dict[game]}") for game in game_dict]
+    game_dict = {**game_dicts[0], **game_dicts[1]}
+
+    sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
+    print(f"sorted game dict in display picks {sorted_game_dict}")
 
     # get users picks
     p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
@@ -1686,10 +1688,16 @@ def display_pickem_games():
 def select_bowl_games():
 
     season_type = 3
-    week = 1
+    #week = 1
+    weeks = [1, 2] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
+    game_dicts = []
     # get list of active espn ids
-    game_dict = get_espn_scores(False, season_type, week, league)['game']
+    for week in weeks:
+        game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
+
+    #game_dict = get_espn_scores(False, season_type, week, league)['game']
+    game_dict = {**game_dicts[0], **game_dicts[1]}
     print(game_dict)
 
     # iterate through them, getting the pick value
@@ -1720,7 +1728,7 @@ def view_all_picks():
 
     season = 2021
     season_type = 3
-    weeks = [1] # [1, 2, 3, 5]  - week 4 is probowl
+    weeks = [1, 2] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
     now = datetime.utcnow() - timedelta(hours=5)
     # get list of active games first
@@ -1730,9 +1738,10 @@ def view_all_picks():
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
     # game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2], **game_dicts[3]}
-    game_dict = {**game_dicts[0]}  # expand as weeks go.. will figure out better way later
-    print("-------------------- GAME DICT -------------------\n\n\n")
-    print(game_dicts)
+    game_dict = {**game_dicts[0], **game_dicts[1]}  # expand as weeks go.. will figure out better way later - also do in select
+    print("\n\n\n-------------------- GAME DICT -------------------\n\n\n")
+    print(game_dict)
+    print("\n\n\n-------------- END GAME DICT ---------------------\n\n\n")
 
     espnid_string = ''
     for game in game_dict:
@@ -1751,7 +1760,7 @@ def view_all_picks():
 
     print(user_dict)
 
-    # get last update in latest_liens table - display to admins
+    # get last update in latest_lines table - display to admins
     l = "SELECT datetime FROM latest_lines WHERE datetime IS NOT NULL ORDER BY datetime DESC LIMIT 1"
     ll = db2(l)
     
@@ -1763,6 +1772,8 @@ def view_all_picks():
     winning_teams = set()
     winning_d = {}
     for game in game_dict:
+        # print(f"game:  {game}")
+        # print(f"{game_dict[game]['datetime']} vs {datetime.utcnow()}")
         if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5) or game_dict[game]['status']['status'] == 'Canceled':
             locked_games.add(game_dict[game]['espn_id'])
             game_dict[game]['winner'] = 'TBD'
@@ -1780,11 +1791,11 @@ def view_all_picks():
             # who is winning (or won)?  home or away?
             if home_score > away_score:
                 game_dict[game]['winner'] = game_dict[game]['abbreviations']['HOME']
-                winning_teams.add(game_dict[game]['abbreviations']['HOME'])
+                winning_teams.add((game, game_dict[game]['abbreviations']['HOME']))
                 winning_d[game] = game_dict[game]['abbreviations']['HOME']
             elif away_score > home_score:
                 game_dict[game]['winner'] = game_dict[game]['abbreviations']['AWAY']
-                winning_teams.add(game_dict[game]['abbreviations']['AWAY'])
+                winning_teams.add((game, game_dict[game]['abbreviations']['AWAY']))
                 winning_d[game] = game_dict[game]['abbreviations']['AWAY']
             else:  #pushing
                 game_dict[game]['winner'] = 'PUSH'
@@ -1817,13 +1828,13 @@ def view_all_picks():
         if pick[1] not in ignore:
             if pick[0] not in d:
                 d[pick[0]] = {pick[1]: pick[2]}
-                if pick[2] in winning_teams:
+                if(pick[1], pick[2]) in winning_teams:
                     d[pick[0]]['wins'] = 1
                 else:
                     d[pick[0]]['wins'] = 0
             else:
                 d[pick[0]][pick[1]] = pick[2]
-                if pick[2] in winning_teams:
+                if (pick[1], pick[2]) in winning_teams:
                     d[pick[0]]['wins'] += 1
         if pick[0] in tb_dict:
             d[pick[0]]['tb'] = tb_dict[pick[0]]
@@ -1928,7 +1939,7 @@ def bowl_payment_status():
     print(payment_list_dh)
     print(display_list)
 
-    logging.info(f"{session['username']} just hit view all bowl picks")
+    logging.info(f"{session['username']} just hit view bowl payment status")
                 
     return render_template("bowl_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list), prize_pool=prize_pool) 
 
