@@ -13,9 +13,10 @@ import logging
 logging.basicConfig(filename="line.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
 
-# espnid = 401331242
+espnid = 401326625
 # cpf playoff link
-#espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+espn_nfl_url_single = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={espnid}"
 season_type = 3 # post season
 week = 5
 espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
@@ -23,18 +24,120 @@ espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college
 
 
 
+#r = requests.get(espn_nfl_url).json()
 r = requests.get(espn_nfl_url).json()
 
+# single espnid testing
 #print(r.keys())
+print("\n\n")
+
+# print(f"{r['boxscore']['teams']}")
+
+#print(r['scoringPlays'])
+# for score in r['scoringPlays']:
+#     print(f"\n\n{score}")
+
+# --- live game output ---
+# {'id': '401326625574', 'type': {'id': '67', 'text': 'Passing Touchdown', 'abbreviation': 'TD'}, 
+# 'text': 'Odell Beckham Jr. Pass From Matthew Stafford for 4 Yrds M.Gay extra point is GOOD, Center-M.Orzech, Holder-J.Hekker.', 'awayScore': 0, 'homeScore': 7, 
+# 'period': {'number': 1}, 'clock': {'value': 230.0, 'displayValue': '3:50'}, 'team': {'id': '14', 'uid': 's:20~l:28~t:14', 'displayName': 'Los Angeles Rams', 
+# 'abbreviation': 'LAR', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/lar/los-angeles-rams', 'text': 'Clubhouse'},
+#  {'href': 'https://www.espn.com/nfl/team/schedule/_/name/lar', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/lar.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}
+
+# {'id': '4013266251002', 'type': {'id': '68', 'text': 'Rushing Touchdown', 'abbreviation': 'TD'}, 
+# 'text': 'Matthew Stafford 1 Yard Rush, M.Gay extra point is GOOD, Center-M.Orzech, Holder-J.Hekker.', 'awayScore': 0, 'homeScore': 14, 'period': {'number': 2}, 
+# 'clock': {'value': 718.0, 'displayValue': '11:58'}, 'team': {'id': '14', 'uid': 's:20~l:28~t:14', 'displayName': 'Los Angeles Rams', 
+# 'abbreviation': 'LAR', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/lar/los-angeles-rams', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/lar', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/lar.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}
+
+# {'id': '4013266251385', 'type': {'id': '36', 'text': 'Interception Return Touchdown', 'abbreviation': 'TD'}, 
+# 'text': 'David Long Jr. 3 Yrd Interception Return M.Gay extra point is GOOD, Center-M.Orzech, Holder-J.Hekker', 'awayScore': 0, 'homeScore': 21, 
+# 'period': {'number': 2}, 'clock': {'value': 479.0, 'displayValue': '7:59'}, 'team': {'id': '14', 'uid': 's:20~l:28~t:14', 'displayName': 'Los Angeles Rams', 
+# 'abbreviation': 'LAR', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/lar/los-angeles-rams', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/lar', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/lar.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}
+
+# {'id': '4013266252222', 'type': {'id': '67', 'text': 'Passing Touchdown', 'abbreviation': 'TD'}, 
+# 'text': 'Cooper Kupp Pass From Matthew Stafford for 7 Yrds M.Gay extra point is GOOD, Center-M.Orzech, Holder-J.Hekker', 'awayScore': 0, 'homeScore': 28, 
+# 'period': {'number': 3}, 'clock': {'value': 636.0, 'displayValue': '10:36'}, 'team': {'id': '14', 'uid': 's:20~l:28~t:14', 'displayName': 'Los Angeles Rams', 
+# 'abbreviation': 'LAR', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/lar/los-angeles-rams', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/lar', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/lar.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}
+
+# ------- 2 pt converstion below -------
+# {'id': '4013266252535', 'type': {'id': '68', 'text': 'Rushing Touchdown', 'abbreviation': 'TD'}, 
+# 'text': 'James Conner 2 Yard Rush, (Pass formation) TWO-POINT CONVERSION ATTEMPT. K.Murray pass to A.Wesley is complete. ATTEMPT SUCCEEDS.', 
+# 'awayScore': 8, 'homeScore': 28, 'period': {'number': 3}, 'clock': {'value': 251.0, 'displayValue': '4:11'}, 'team': {'id': '22', 'uid': 's:20~l:28~t:22', 
+# 'displayName': 'Arizona Cardinals', 'abbreviation': 'ARI', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/ari/arizona-cardinals', 
+# 'text': 'Clubhouse'}, {'href': 'https://www.espn.com/nfl/team/schedule/_/name/ari', 'text': 'Schedule'}], 
+# 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/ari.png'}, 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}
+
+
+# --- past game ---
+# scoring plays output:
+# [{'id': '4013266281181', 'type': {'id': '9', 'text': 'Fumble Recovery (Own)'}, 'text': 'T.J. Watt 26 Yd Fumble Return (Chris Boswell Kick)', 'awayScore': 7, 
+# 'homeScore': 0, 'period': {'number': 2}, 'clock': {'value': 641.0, 'displayValue': '10:41'}, 'team': {'id': '23', 'uid': 's:20~l:28~t:23', 'displayName': 
+# 'Pittsburgh Steelers', 'abbreviation': 'PIT', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/pit/pittsburgh-steelers', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/pit', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}, {'id': '4013266281536', 'type': {'id': '67', 'text': 
+# 'Passing Touchdown', 'abbreviation': 'TD'}, 'text': 'Jerick McKinnon 4 Yd pass from Patrick Mahomes (Harrison Butker Kick)', 'awayScore': 7, 
+# 'homeScore': 7, 'period': {'number': 2}, 'clock': {'value': 345.0, 'displayValue': '5:45'}, 'team': {'id': '12', 'uid': 's:20~l:28~t:12', 'displayName': 
+# 'Kansas City Chiefs', 'abbreviation': 'KC', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/kc', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}, {'id': '4013266281846', 'type': {'id': '67', 'text': 
+# 'Passing Touchdown', 'abbreviation': 'TD'}, 'text': 'Byron Pringle 12 Yd pass from Patrick Mahomes (Harrison Butker Kick)', 'awayScore': 7, 
+# 'homeScore': 14, 'period': {'number': 2}, 'clock': {'value': 115.0, 'displayValue': '1:55'}, 'team': {'id': '12', 'uid': 's:20~l:28~t:12', 
+# 'displayName': 'Kansas City Chiefs', 'abbreviation': 'KC', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs', 'text': 
+# 'Clubhouse'}, {'href': 'https://www.espn.com/nfl/team/schedule/_/name/kc', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}, {'id': '4013266282167', 'type': {'id': '67', 'text': 
+# 'Passing Touchdown', 'abbreviation': 'TD'}, 'text': 'Travis Kelce 48 Yd pass from Patrick Mahomes (Harrison Butker Kick)', 'awayScore': 7, 'homeScore': 21, 
+# 'period': {'number': 2}, 'clock': {'value': 13.0, 'displayValue': '0:13'}, 'team': {'id': '12', 'uid': 's:20~l:28~t:12', 'displayName': 'Kansas City Chiefs', 
+# 'abbreviation': 'KC', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/kc', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}, {'id': '4013266282480', 'type': {'id': '67', 'text': 
+# 'Passing Touchdown', 'abbreviation': 'TD'}, 'text': 'Nick Allegretti 1 Yd pass from Patrick Mahomes (Harrison Butker Kick)', 'awayScore': 7, 
+# 'homeScore': 28, 'period': {'number': 3}, 'clock': {'value': 613.0, 'displayValue': '10:13'}, 'team': {'id': '12', 'uid': 's:20~l:28~t:12', 
+# 'displayName': 'Kansas City Chiefs', 'abbreviation': 'KC', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/kc', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}, {'id': '4013266282655', 'type': {'id': '67', 'text': 
+# 'Passing Touchdown', 'abbreviation': 'TD'}, 'text': 'Tyreek Hill 31 Yd pass from Patrick Mahomes (Harrison Butker Kick)', 'awayScore': 7, 'homeScore': 35, 
+# 'period': {'number': 3}, 'clock': {'value': 554.0, 'displayValue': '9:14'}, 'team': {'id': '12', 'uid': 's:20~l:28~t:12', 'displayName': 'Kansas City Chiefs', 
+# 'abbreviation': 'KC', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/kc', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png'}, 'scoringType': 
+# {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}, {'id': '4013266282949', 'type': {'id': '67', 'text': 'Passing Touchdown', 
+# 'abbreviation': 'TD'}, 'text': 'Diontae Johnson 13 Yd pass from Ben Roethlisberger (Chris Boswell Kick)', 'awayScore': 14, 'homeScore': 35, 'period': 
+# {'number': 3}, 'clock': {'value': 250.0, 'displayValue': '4:10'}, 'team': {'id': '23', 'uid': 's:20~l:28~t:23', 'displayName': 'Pittsburgh Steelers', 
+# 'abbreviation': 'PIT', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/pit/pittsburgh-steelers', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/pit', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}, {'id': '4013266283215', 'type': {'id': '67', 'text': 
+# 'Passing Touchdown', 'abbreviation': 'TD'}, 'text': 'Byron Pringle 2 Yd pass from Travis Kelce (Harrison Butker Kick)', 'awayScore': 14, 'homeScore': 42, 
+# 'period': {'number': 4}, 'clock': {'value': 853.0, 'displayValue': '14:13'}, 'team': {'id': '12', 'uid': 's:20~l:28~t:12', 'displayName': 
+# 'Kansas City Chiefs', 'abbreviation': 'KC', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/kc', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/kc.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}, {'id': '4013266283664', 'type': {'id': '67', 'text': 
+# 'Passing Touchdown', 'abbreviation': 'TD'}, 'text': 'James Washington 15 Yd pass from Ben Roethlisberger (Chris Boswell Kick)', 'awayScore': 21, 
+# 'homeScore': 42, 'period': {'number': 4}, 'clock': {'value': 456.0, 'displayValue': '7:36'}, 'team': {'id': '23', 'uid': 's:20~l:28~t:23', 'displayName': 
+# 'Pittsburgh Steelers', 'abbreviation': 'PIT', 'links': [{'href': 'https://www.espn.com/nfl/team/_/name/pit/pittsburgh-steelers', 'text': 'Clubhouse'}, 
+# {'href': 'https://www.espn.com/nfl/team/schedule/_/name/pit', 'text': 'Schedule'}], 'logo': 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png'}, 
+# 'scoringType': {'name': 'touchdown', 'displayName': 'Touchdown', 'abbreviation': 'TD'}}]
+
+
+
+
+
+
+
 # dict_keys(['leagues', 'season', 'week', 'events'])
 
-#print(r['events'][0].keys())
+print(r['events'][0].keys())
 # dict_keys(['id', 'uid', 'date', 'name', 'shortName', 'season', 'competitions', 'links', 'weather', 'status'])
-# print(r['events'][0]['id'])
-# print(r['events'][0]['date'])
-# print(r['events'][0]['name'])
-# print(r['events'][0]['shortName'])
-# print(r['events'][0]['status'])
+print(r['events'][0]['id'])
+print(r['events'][0]['date'])
+print(r['events'][0]['name'])
+print(r['events'][0]['shortName'])
+print(r['events'][0]['status'])
 # 401326627
 # 2022-01-15T21:30Z
 # Las Vegas Raiders at Cincinnati Bengals
@@ -44,16 +147,18 @@ r = requests.get(espn_nfl_url).json()
 # 'shortDetail': '1/15 - 4:30 PM EST'}}
 # print(r['leagues'][0]['abbreviation'])
 # print(r['season'])
-for event in r['events']:
-    print(f"espnid: {event['id']}")
-    print(f"date: {event['date']}")
-    print(f"date: {event['season']['year']}")
-    print(f"date: {event['name']}")
-    print(f"date: {event['shortName']}")
-    print(f"date: {event['status']['type']['detail']}")
-    print(f"date: {event['status']['type']['shortDetail']}")
 
-# print(r['events'][0]['competitions'][0].keys())
+
+# for event in r['events']:
+#     print(f"espnid: {event['id']}")
+#     print(f"date: {event['date']}")
+#     print(f"date: {event['season']['year']}")
+#     print(f"date: {event['name']}")
+#     print(f"date: {event['shortName']}")
+#     print(f"date: {event['status']['type']['detail']}")
+#     print(f"date: {event['status']['type']['shortDetail']}")
+
+#print(r['events'][0]['competitions'][0].keys())
 # dict_keys(['id', 'uid', 'date', 'attendance', 'type', 'timeValid', 'neutralSite', 'conferenceCompetition', 
 #            'recent', 'venue', 'competitors', 'notes', 'status', 'broadcasts', 'leaders', 'tickets', 
 #            'startDate', 'geoBroadcasts', 'odds'])

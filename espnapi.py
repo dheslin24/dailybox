@@ -224,7 +224,10 @@ def get_espn_score_by_qtr(eventid, league='nfl'):
             #print(teams[k])
             if k == 'team':
                 print(v['abbreviation'] + ' - ' + v['displayName'] + ' ' + v['name'])
-                print(v['logo'])
+                if 'logo' in v:
+                    print(v['logo'])
+                else:
+                    v['logo'] = ''
                 d[v['abbreviation']] = {'schoolName': v['displayName'], 'nickname': v['name'], 'logo': v['logo']}
 
     # result of above:

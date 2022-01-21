@@ -989,14 +989,14 @@ def display_box():
             else:
                 final_payout = (fee * 100) - (fee * 10) - (fee * 3)  # total pool - reverse - 0/0 
 
-            winner_dict = {}
+            #winner_dict = {}
             print("home/away2 {} {}".format(home,away))
 
             s = "SELECT e.score_num, e.x_score, e.y_score, e.score_type, u.username, e.winning_box FROM everyscore e LEFT JOIN users u ON e.winner = u.userid where e.boxid = {} order by e.score_num, e.score_id;".format(boxid)
             scores = db2(s)
 
             # final every score (paytype =3)
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores)
 
 
     if box_type == BOX_TYPE_ID['dailybox']:
