@@ -535,7 +535,9 @@ def my_games():
             else:
                 print(f"GAMEID before crash {gameid}")
                 # total hack, check if string is json format, then it's multi
-                if win_dict[gameid][:1] == "{":
+                if not win_dict[gameid]:
+                    winner = "none - game canceled"
+                elif win_dict[gameid][:1] == "{":
                     winner = "multi" # will parse this later...
                 else:
                     #w = "SELECT username FROM users WHERE userid = {};".format(win_dict[gameid])
