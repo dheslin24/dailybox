@@ -1655,13 +1655,13 @@ def display_pickem_games():
     season = 2021
     season_type = 3
     #week = 1
-    weeks = [1, 2] #  - [1, 2, 3, 5] - 4 is probowl
+    weeks = [1, 2, 3] #  - [1, 2, 3, 5] - 4 is probowl
     league = 'nfl'
     game_dicts = []
     for week in weeks:
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
-    game_dict = {**game_dicts[0], **game_dicts[1]}
+    game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2]}
 
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
     print(f"sorted game dict in display picks {sorted_game_dict}")
