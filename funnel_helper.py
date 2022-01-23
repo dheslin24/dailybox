@@ -17,7 +17,7 @@ def elimination_check(game_dict, d, user_dict):
         elif game['status']['status'] != 'Canceled':
             total_games += 1
 
-    games_left += 3
+    games_left += 1
     print(f"games left: {games_left}")
     print(f"curr_most_winner from helper!!!: {curr_most_wins}")
     print(f"total games: {total_games}")
