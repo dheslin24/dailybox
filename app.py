@@ -1730,7 +1730,7 @@ def view_all_picks():
 
     season = 2021
     season_type = 3
-    weeks = [1, 2] # [1, 2, 3, 5]  - week 4 is probowl
+    weeks = [1, 2, 3] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
     now = datetime.utcnow() - timedelta(hours=5)
     # get list of active games first
@@ -1740,7 +1740,7 @@ def view_all_picks():
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
     # game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2], **game_dicts[3]}
-    game_dict = {**game_dicts[0], **game_dicts[1]}  # expand as weeks go.. will figure out better way later - also do in select
+    game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2]}  # expand as weeks go.. will figure out better way later - also do in select
     print("\n\n\n-------------------- GAME DICT -------------------\n\n\n")
     print(game_dict)
     print("\n\n\n-------------- END GAME DICT ---------------------\n\n\n")

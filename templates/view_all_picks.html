@@ -129,9 +129,9 @@
                 {% elif game_dict[game]['status']['status'] == 'Postponed' %}
                     <th style="font-size: 8px; white-space: nowrap; background-color: gray;">Postponed</th>
                 {% elif game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
-                    <th style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
+                    <th style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][1][2]}} - {{ game_dict[game]['competitors'][0][2] }}</th>
                 {% else %}
-                    <th class="current_user" style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][0][2]}} - {{ game_dict[game]['competitors'][1][2] }}</th>
+                    <th class="current_user" style="font-size: 9px; white-space: nowrap;">{{ game_dict[game]['competitors'][1][2]}} - {{ game_dict[game]['competitors'][0][2] }}</th>
                 {% endif %}
             {% endfor %}
         </tr>
