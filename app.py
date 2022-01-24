@@ -2691,7 +2691,7 @@ def login():
                 if failures == 10:
                     return apology("That's it - you're done.  No more.. talk to TW.. BYE")
                 else:
-                    return apology(Markup("Failed login attempt {} of 10. <br><br>You're a portly fellow.. a bit long in the waistband?  So what's your pleasure; is it the salty snacks you crave?<br>No, no, no, no... yours is a sweet-tooth.  Oh, you may stray, but you'll always return to your dark master:  the cocoa-bean!<br><br><br>Try BOSCO... or reach out to customer support (TW) to reset.".format(failures)))
+                    return apology(Markup("<img src='https://y.yarn.co/a7d5df02-3cfb-4327-b2fe-d1bc2287187d_text.gif'/><br>Failed login attempt {} of 10. <br><br>You're a portly fellow.. a bit long in the waistband?  So what's your pleasure; is it the salty snacks you crave?<br>No, no, no, no... yours is a sweet-tooth.  Oh, you may stray, but you'll always return to your dark master:  the cocoa-bean!<br><br><br>Try BOSCO... or reach out to customer support (TW) to reset.".format(failures)))
         else:
             return apology("username does not exist")
 
