@@ -1691,7 +1691,7 @@ def select_bowl_games():
 
     season_type = 3
     #week = 1
-    weeks = [1, 2] # [1, 2, 3, 5]  - week 4 is probowl
+    weeks = [1, 2, 3] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
     game_dicts = []
     # get list of active espn ids
@@ -1699,7 +1699,7 @@ def select_bowl_games():
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
     #game_dict = get_espn_scores(False, season_type, week, league)['game']
-    game_dict = {**game_dicts[0], **game_dicts[1]}
+    game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2]}
     print(game_dict)
 
     # iterate through them, getting the pick value
