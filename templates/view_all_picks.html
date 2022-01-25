@@ -26,7 +26,7 @@
         {% endif %}
         {% if eliminated_list|length > 0 %}
             <p> If your name is in <em style="color: maroon">RED</em>, as of this moment you are DONE!</p>
-            <p> If there are no games in progress... see you next year...</p>
+            <p> If you are <em style="color: maroon">RED</em> and there's no games in progress... well, see you next year...</p>
         {% endif %}
         <!-- <p> HOME team in CAPS </p> -->
         {% if not winner %}
@@ -81,13 +81,13 @@
                 {% elif game_dict[game]['status']['status'] == 'Postponed' %}
                     <th style="font-size: 8px; white-space: nowrap; background-color: gray;">Postponed</th>
                 {% elif game_dict[game]['datetime'] > now or game_dict[game]['status']['status'] == 'Final' %}
-                    <th style="font-size: 8px; white-space: nowrap;"> 
+                    <th style="font-size: 10px; white-space: nowrap;"> 
                         {% for elem in game_dict[game]['line'] %}
                             {{ elem }}
                         {% endfor %}
                     </th>
                 {% else %}
-                    <th class="current_user" style="font-size: 8px; white-space: nowrap;"> 
+                    <th class="current_user" style="font-size: 10px; white-space: nowrap;"> 
                         {% for elem in game_dict[game]['line'] %}
                             {{ elem }}
                         {% endfor %}
@@ -121,7 +121,7 @@
 
         <!-- Current Score -->
         <tr>
-            <th style="font-size: 10px; background-color: gray;">Wins</th>
+            <th style="font-size: 12px; background-color: gray;">Wins</th>
             <th style="font-size: 12px; white-space: nowrap; background-color: white; color: darkblue;">Live Scoring</th>
             {% for game in game_dict %}
                 {% if game_dict[game]['status']['status'] == 'Canceled' %}
