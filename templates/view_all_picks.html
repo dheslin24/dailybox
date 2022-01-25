@@ -223,10 +223,10 @@
                 <!-- tie break and win totals -->
                 {% if user != session['userid'] %}
                     {% if user in tb_dict %}
-                        <td style="font-size: 12px; background-color: gray;"> X </td>
+                        <td style="font-size: 12px; background-color: gray; border-left-width: 3px;"> X </td>
                         <td style="font-size: 12px; background-color: gray;"> {{ d[user]['wins'] }}</td>
                     {% else %}
-                        <td style="font-size: 12px; background-color: gray;"></th>
+                        <td style="font-size: 12px; background-color: gray; border-left-width: 3px;"></th>
                         <td style="font-size: 12px; background-color: gray;"> {{ d[user]['wins'] }}</td>
                     {% endif %}
                 {% else %}
