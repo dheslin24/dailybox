@@ -2731,6 +2731,7 @@ def register():
         except EmailNotValidError as e:
             # email is not valid, exception message is human-readable
             return apology("must use valid email")
+
         # encrypt password
         if request.form.get("password") == request.form.get("password_confirm"):
             hash = pwd_context.hash(request.form.get("password"))
@@ -2741,12 +2742,9 @@ def register():
         s = "SELECT userid FROM users WHERE username = %s;"
         check_userid = db2(s, (request.form.get("username"),))
         print("check userid found {}".format(check_userid))
+
         if len(check_userid) > 0:
             return apology("username already exists.  reach out to customer support (aka TW) to have it reset.")
-
-        #insert username & hash into table
-        # s = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile) VALUES('{}', '{}', '{}', 1, 0, '{}', '{}', '{}');".format(request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
-        # db(s)
 
         s2 = "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile, failed_login_count) VALUES(%s, %s, %s, 1, 0, %s, %s, %s, 0);"
         values = (request.form.get("username"), hash, request.form.get("email"), request.form.get("first_name"), request.form.get("last_name"), request.form.get("mobile"))
@@ -2818,12 +2816,15 @@ def admin():
 @login_required
 @admin_required
 def bygzomo():
+    show_tables = db2("show tables;")
+
     if request.method == "POST":
         q = request.form.get('query')
         result = db2(q)
     else:
+        q = ''
         result = ''
-    return render_template("bygzomo.html", result=result)
+    return render_template("bygzomo.html", result=result, q=q, show_tables=show_tables)
 
 
 @app.route("/add_money", methods=["GET", "POST"])

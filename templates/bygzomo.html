@@ -17,7 +17,7 @@
             <div class="form-group">
                 <!-- <input autocomplete="off" autofocus class="form-control" name="query" placeholder="Query" type="text"/> -->
                 <label for="query">Enter query:</label><br>
-                <textarea id="query" name="query" rows="5" cols="50"></textarea>
+                <textarea id="query" name="query" rows="5" cols="50">{{ q }}</textarea>
             </div>
             <div class="form-group">
                 <button class="btn btn-default" type="submit">Submit Query</button>
@@ -30,7 +30,41 @@
             Result:
         </h3>
     <p style="text-align: left; text-anchor: start;">
-        {{ result }}
+    <table align='center'>
+    {% for row in result %}
+        <tr>
+        {% for field in row %}
+            <td>{{ field }}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </table>
     </p>
+
+    <table align='center'>
+        {% for table in show_tables %}
+            {% for row in table %}
+                <tr>
+                    <td>{{ row }}</td>
+                    <td class="team" onClick="change('SELECT * FROM {{ row }} limit 10;', 'query')">show top 10</td>
+                    <td class="team" onClick="change('DESC {{ row }};', 'query')">desc table</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    </table>
+
+    <script type="text/javascript">
+        function change(value, id) {
+        id.toString();
+        console.log("got to change value");
+        console.log(value, id);
+        var elem = document.getElementById(id.toString());
+        console.log(document.getElementById(id.toString()));
+        console.log(elem)
+        console.log(typeof id.toString());
+        console.log(typeof locked);
+        elem.value = value;
+    }
+    </script>
 
 {% endblock %}
