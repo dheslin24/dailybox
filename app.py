@@ -1654,14 +1654,13 @@ def display_pickem_games():
     now = datetime.utcnow() - timedelta(hours=5)
     season = 2021
     season_type = 3
-    #week = 1
-    weeks = [1, 2, 3] #  - [1, 2, 3, 5] - 4 is probowl
+    weeks = [1, 2, 3, 5] #  - [1, 2, 3, 5] - 4 is probowl
     league = 'nfl'
     game_dicts = []
     for week in weeks:
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
-    game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2]}
+    game_dict = {k: v for d in game_dicts for k, v in d.items()}
 
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
     print(f"sorted game dict in display picks {sorted_game_dict}")
@@ -1670,7 +1669,6 @@ def display_pickem_games():
     p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
     picks = db2(p, (session['userid'],))
     print(f"dict picks: {dict(picks)}")
-    #now = datetime.utcnow() - timedelta(hours=5)
 
     # get tiebreaks
     t = "SELECT tiebreak FROM bowl_tiebreaks WHERE userid = %s and season = %s ORDER BY tiebreak_id DESC LIMIT 1;"
@@ -1690,23 +1688,20 @@ def display_pickem_games():
 def select_bowl_games():
 
     season_type = 3
-    #week = 1
-    weeks = [1, 2, 3] # [1, 2, 3, 5]  - week 4 is probowl
+    weeks = [1, 2, 3, 5] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
     game_dicts = []
     # get list of active espn ids
     for week in weeks:
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
-    #game_dict = get_espn_scores(False, season_type, week, league)['game']
-    game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2]}
+    game_dict = {k: v for d in game_dicts for k, v in d.items()}
     print(game_dict)
 
     # iterate through them, getting the pick value
     # insert picks into bowlpicks table
     for game in game_dict:
         if request.form.get(str(game_dict[game]['espn_id'])) and request.form.get(str(game_dict[game]['espn_id'])) != "TBD":
-            #s = "INSERT INTO bowlpicks (userid, espnid, pick, datetime) VALUES (%s, %s, %s, convert_tz(now(), '-00:00', '+05:00'));"  # convert to utc
             s = "INSERT INTO bowlpicks (userid, espnid, pick, datetime) VALUES (%s, %s, %s, now());"  # local time, EST
             db2(s, (session['userid'], game_dict[game]['espn_id'], request.form.get(str(game_dict[game]['espn_id']))))
     
@@ -1730,7 +1725,7 @@ def view_all_picks():
 
     season = 2021
     season_type = 3
-    weeks = [1, 2, 3] # [1, 2, 3, 5]  - week 4 is probowl
+    weeks = [1, 2, 3, 5] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
     now = datetime.utcnow() - timedelta(hours=5)
     # get list of active games first
@@ -1740,7 +1735,9 @@ def view_all_picks():
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
     # game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2], **game_dicts[3]}
-    game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2]}  # expand as weeks go.. will figure out better way later - also do in select
+    # game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2]}  # expand as weeks go.. will figure out better way later - also do in select
+    game_dict = {k: v for d in game_dicts for k, v in d.items()}
+    
     print("\n\n\n-------------------- GAME DICT -------------------\n\n\n")
     print(game_dict)
     print("\n\n\n-------------- END GAME DICT ---------------------\n\n\n")
@@ -2588,59 +2585,6 @@ def pickem_enable_user():
 @app.route("/pickem_rules", methods=["GET", "POST"])
 def pickem_rules():
     return render_template("pickem_rules.html")
-
-## test stuff for auto download of scores
-# @app.route("/get_scores", methods=["GET", "POST"])
-# def get_scores():
-#     week = 17
-#     year = 2020
-
-#     team_dict = sref_to_pickem()
-
-#     # get list of game ids
-#     game_list = []
-#     game_data = Boxscores(week, year)
-#     for game in game_data.games[str(week) + '-' + str(year)]:
-#         game_list.append(game['boxscore'])
-
-#     # get boxscore objects for each game id
-#     game_dict = {}
-#     for game in game_list:
-#         b = Boxscore(game)
-#         print(b.home_abbreviation, b.home_points, b.away_abbreviation, b.away_points, b.summary)
-#         game_dict[game] = b
-
-#         gameid = game
-#         # hometeam = game_data.games[str(week) + '-' + str(year)][gameid]['home_name']
-#         home_abbr = b.home_abbreviation
-#         home_score = b.home_points
-#         # awayteam = game_data.games[str(week) + '-' + str(year)][gameid]['away_name']
-#         away_abbr = b.away_abbreviation
-#         away_score = b.away_points
-#         if len(b.summary['home']) > 0:
-#             home_q1 = b.summary['home'][0] 
-#             home_q2 = b.summary['home'][1]
-#             home_q3 = b.summary['home'][2]
-#             home_q4 = b.summary['home'][3]
-#             away_q1 = b.summary['away'][0]
-#             away_q2 = b.summary['away'][1]
-#             away_q3 = b.summary['away'][2]
-#             away_q4 = b.summary['away'][3]
-#         else:
-#             home_q1 = 0 
-#             home_q2 = 0 
-#             home_q3 = 0
-#             home_q4 = 0
-#             away_q1 = 0
-#             away_q2 = 0
-#             away_q3 = 0
-#             away_q4 = 0
-
-#     s = "INSERT INTO pickem.pickem_scores_sref (gameid, home_abbr, home_score, away_abbr, away_score, home_q1, home_q2, home_q3, home_q4, away_q1, away_q2, away_q3, away_q4) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-
-#     db2(s, (gameid, team_dict[home_abbr], home_score, team_dict[away_abbr], away_score, home_q1, home_q2, home_q3, home_q4, away_q1, away_q2, away_q3, away_q4))
-
-#     return render_template('get_scores.html', game_list=game_list, game_dict=game_dict, team_dict=team_dict)
 
 
 # LOGIN routine
