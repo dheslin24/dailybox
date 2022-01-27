@@ -499,6 +499,9 @@ def my_games():
     u = "SELECT userid, username FROM users;"
     user_dict = dict(db2(u))
 
+    alias_string = "SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"
+    aliases = dict(db2(alias_string))
+
     # create dict of boxid:{x:{json}, y:{json}}
     boxnum_x = {}
     boxnum_y = {}
@@ -533,7 +536,7 @@ def my_games():
             if gameid not in win_dict:
                 winner = "multi" # these are cxl'd or every score
             else:
-                print(f"GAMEID before crash {gameid}")
+                #print(f"GAMEID before crash {gameid}")
                 # total hack, check if string is json format, then it's multi
                 if not win_dict[gameid]:
                     winner = "none - game canceled"
@@ -543,7 +546,15 @@ def my_games():
                     #w = "SELECT username FROM users WHERE userid = {};".format(win_dict[gameid])
                     #winner = db(w)[0][0]
                     winner = user_dict[int(win_dict[gameid])]
-        for box in game[8:]:  # BOX DB Change if schema change here
+
+        for b in game[8:]:  # BOX DB Change if schema change here
+            if b in aliases:
+                box = aliases[b]
+                alias = user_dict[b]
+            else:
+                box = b
+                alias = ''
+
             if box == session['userid'] and active == 1:
                 if gameid in boxnum_x:
                     h_num = boxnum_x[gameid][str(box_index % 10)]
@@ -551,10 +562,10 @@ def my_games():
                 else:
                     h_num = "TBD"
                     a_num = "TBD"
-                game_list.append((gameid,box_name,box_index + 1,fee,pay_type,h_num,a_num))
+                game_list.append((gameid,box_name,box_index + 1,alias,fee,pay_type,h_num,a_num))
 
             elif box == session['userid'] and active == 0:
-                completed_game_list.append((gameid,box_type,box_name,box_index,fee,pay_type,winner))
+                completed_game_list.append((gameid,box_type,box_name,box_index + 1,alias,fee,pay_type,winner))
 
             if box == 1 or box == 0:
                 count += 1
@@ -562,9 +573,7 @@ def my_games():
         
         available[game[0]] = count
     
-    print(type(show_active))
     total = len(game_list)
-    print("total total {}".format(total))
     if show_active == 'True' or show_active == None:
         return render_template("my_games.html", game_list = game_list, available = available, total=total)
     else:
@@ -1719,7 +1728,6 @@ def select_bowl_games():
     return redirect(url_for('view_all_picks'))
 
 @app.route("/view_all_picks", methods = ["GET", "POST"])
-#@app.route("/view_all_bowl_picks", methods=["GET", "POST"])
 @login_required
 def view_all_picks():
 
@@ -1734,13 +1742,11 @@ def view_all_picks():
     for week in weeks:
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
-    # game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2], **game_dicts[3]}
-    # game_dict = {**game_dicts[0], **game_dicts[1], **game_dicts[2]}  # expand as weeks go.. will figure out better way later - also do in select
     game_dict = {k: v for d in game_dicts for k, v in d.items()}
     
-    print("\n\n\n-------------------- GAME DICT -------------------\n\n\n")
-    print(game_dict)
-    print("\n\n\n-------------- END GAME DICT ---------------------\n\n\n")
+    # print("\n\n\n-------------------- GAME DICT -------------------\n\n\n")
+    # print(game_dict)
+    # print("\n\n\n-------------- END GAME DICT ---------------------\n\n\n")
 
     espnid_string = ''
     for game in game_dict:
@@ -1849,9 +1855,7 @@ def view_all_picks():
             if user[0] not in d:
                 d[user[0]] = {'wins': 0}
 
-    #print(f"dddddddd {d}")
     sorted_d = OrderedDict(sorted(d.items(), key=lambda x:x[1]['wins'], reverse=True))
-    #print(f"sorted d: {sorted_d}")
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
 
     # check for winners, eliminated users, and tie break scenarios
@@ -1878,7 +1882,6 @@ def bowl_payment_status():
     for espnid in espnids:
         espn_string += str(espnid[0]) + ', '
     espn_string = espn_string[:-2]
-
 
     # find users that have a bowl entry
     u = f"SELECT DISTINCT up.userid, u.username FROM bowlpicks up LEFT JOIN users u ON up.userid = u.userid WHERE up.espnid in ({espn_string});"
@@ -2897,12 +2900,21 @@ def payment_status():
     #print(all_boxes)
     user_box_count = {}
     user_fees = {}
+
+    alias_string = "SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"
+    aliases = dict(db2(alias_string))
+    print(f"aliases:  {aliases}")
+
     for game in all_boxes:
         fee = game[0]
         pay_type = game[1]
         if pay_type == 5 or pay_type == 6 or pay_type == 7:
             fee = fee // 10
-        for box in game[2:]:
+        for b in game[2:]:
+            if b in aliases:
+                box = aliases[b]
+            else:
+                box = b
             if box != 0 and box != 1:
                 if box in user_box_count.keys():
                     user_box_count[box] += 1
@@ -2964,7 +2976,7 @@ def admin_summary():
         s = "UPDATE users SET amt_paid = {} WHERE userid = {};".format(amt, userid)
         db(s)
 
-    s = "SELECT userid, username, first_name, last_name, email, mobile, is_admin FROM users where active = 1;"
+    s = "SELECT userid, username, first_name, last_name, email, mobile, is_admin, alias_of_userid FROM users where active = 1;"
     users = db(s)
 
     p = "SELECT userid, amt_paid FROM users;"
