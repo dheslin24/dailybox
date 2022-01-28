@@ -28,7 +28,7 @@
             <th> Game ID </th>
             <th> Box Name </th>
             <th> Box Number </th>
-            <th> Name Alias</th>
+            <th class="CellWithComment"> Name Alias <span class="CellComment">{{ hover_text_1 }} <br> {{ hover_text_2 }}</span></th>
             <th> Entry Fee </th>    
             <th> Payout Type </th>
             <th> Home # </th>
@@ -43,7 +43,22 @@
                 {{ row[0] }}
                 </form>
                 </td>
-                {% for field in row[1:] %}
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                {% if row[3]|length > 0 %}
+                    <td>{{ row[3] }}</td>
+                {% else %}
+                    <td class="team" onClick="document.getElementById('{{ row[0] }} {{ row[2] }}').submit()">
+                    <form action="{{ url_for("create_alias") }}", method="POST", id="{{ row[0] }} {{ row[2] }}">
+                        <input type="hidden" value="({{ row[0] }}, {{ row[2] }})" name="alias_boxnum">
+                        Change box label
+                        <span class="CellComment">
+                            {{ hover_text }}
+                        </span>
+                    </form>
+                    </td>
+                    {% endif %}
+                {% for field in row[4:] %}
                     <td>{{ field }}</td>
                 {% endfor %}
                 <td> {{ available[row[0]] }}</td>

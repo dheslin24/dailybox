@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Assign Alias
+{% endblock %}
+
+{% block main %}
+<script type="text/javascript">
+    function onSubmit(token) {
+      document.getElementById('assignAliasForm').submit();
+    }
+  </script>
+
+    <form action="{{ url_for('assign_alias') }}" method="POST">
+        <label for="existing">Choose an existing label</label>
+        <select name="existing">
+            {% for alias in user_aliases %}
+                <option value="{{ alias }}">{{ alias }}</option>
+            {% endfor %}
+        </select>
+    <input type="submit">
+    </form>
+
+
+    <label for="aliasName"> Enter new label </label>
+    <form action="{{ url_for('assign_alias') }}" id="assignAliasForm" method="post">
+        <fieldset>
+            <div class="form-group">
+                <input autocomplete="on" autofocus class="form-control" name="aliasName" placeholder="Enter New Label" type="text"/>
+            </div>
+        </fieldset>
+    <input type="submit">
+    </form>
+
+{% endblock %}

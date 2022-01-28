@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Assign Alias
+{% endblock %}
+
+{% block main %}
+<script type="text/javascript">
+    function onSubmit(token) {
+      document.getElementById('assignAliasForm').submit();
+    }
+  </script>
+
+    <p>
+        If you fill out this form, you will change what shows up on this boxid / boxnum.   <br>
+        You are still on the hook for it - it's just a label change. <br>
+        Basically - you use this if you took the box for someone else, and want it displayed as such. <br><br>
+        Are you sure you want to do this?  It's not easily reversed. <br>
+        If something looks funky - please reach out to TW or DH - we will fix (after giving you a hard time of course)
+    </p>
+
+    <h3>
+        <p>
+            BOXID (the ID of the whole box):  {{ boxid }}
+        </p>
+        <p>
+            BOX NUMBER (the number within the grid):  {{ boxnum }}
+        </p>
+    </h3>
+
+    {% if user_aliases|length > 0 %}
+    <form action="{{ url_for('assign_alias') }}" method="POST">
+        <label for="existingAlias">Choose an existing label for this box</label>
+        <br>
+        <select name="existingAlias">
+            {% for alias in user_aliases %}
+                <option value="{{ alias }}">{{ alias[0] }}</option>
+            {% endfor %}
+        </select>
+        <input type="hidden" name="boxid" value="{{ boxid }}">
+        <input type="hidden" name="boxnum" value="{{ boxnum }}">
+    <input type="submit">
+    </form>
+    <br><p>--- OR ---</p>
+    {% endif %}
+
+
+    <label for="aliasName">Create a new label </label>
+    <form action="{{ url_for('assign_alias') }}" id="assignAliasForm" method="post">
+        <fieldset>
+            <div class="form-group">
+                <input autocomplete="on" autofocus class="form-control" name="newAliasName" placeholder="Enter New Label" type="text"/>
+                <input type="hidden" name="boxid" value="{{ boxid }}">
+                <input type="hidden" name="boxnum" value="{{ boxnum }}">
+            </div>
+        </fieldset>
+    <input type="submit">
+    </form>
+
+{% endblock %}

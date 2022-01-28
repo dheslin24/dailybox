@@ -471,7 +471,9 @@ def gobble_games():
 
     return redirect(url_for("admin_summary"))
 
+
 @app.route("/my_games", methods=["POST", "GET"])
+@login_required
 def my_games():
     show_active = request.form.get("active")
     print("activeactive")
@@ -572,14 +574,69 @@ def my_games():
             box_index += 1
         
         available[game[0]] = count
+
+    hover_text_1 = "Click on cell in this column to re-label"
+    hover_text_2 = "box to something other than your username"
     
     total = len(game_list)
     if show_active == 'True' or show_active == None:
-        return render_template("my_games.html", game_list = game_list, available = available, total=total)
+        return render_template("my_games.html", game_list = game_list, available = available, total=total, hover_text_1=hover_text_1, hover_text_2=hover_text_2)
     else:
         print("got to my completed list")
         return render_template("my_completed_games.html", game_list = completed_game_list)
 
+@app.route("/create_alias", methods=["POST", "GET"])
+@login_required
+def create_alias():
+    r = request.form.get('alias_boxnum')
+    print(f"alias boxnum: {r}")
+    box_tuple = eval(r)
+    boxid = box_tuple[0]
+    boxnum = box_tuple[1]
+
+    ud_string = "SELECT userid, username FROM users;"
+    user_dict = dict(db2(ud_string))
+
+    alias_string = "SELECT userid FROM users WHERE alias_of_userid = {}".format(session['userid'])
+    aliases_result = db2(alias_string)
+    user_aliases = []
+    if aliases_result:
+        for alias in aliases_result:
+            user_aliases.append((user_dict[alias[0]], alias[0]))
+    print(f"user_aliases: {user_aliases}")
+
+    return render_template("create_alias.html", boxid=boxid, boxnum=boxnum, user_aliases=user_aliases)
+        
+
+@app.route("/assign_alias", methods=["POST", "GET"])
+@login_required
+def assign_alias():
+    boxid = str(request.form.get('boxid'))
+    boxnum = str(int(request.form.get('boxnum')) - 1) #boxes displayed start at 1.  boxes in db start at 0.
+    if request.form.get('existingAlias'):
+        existing_alias = eval(request.form.get('existingAlias'))
+    else:
+        existing_alias = None
+
+    new_alias = request.form.get('newAliasName')
+    print(f"box info: {boxid} {boxnum} {new_alias} {type(existing_alias)} {existing_alias}")    
+
+    if existing_alias:
+        query = "UPDATE boxes SET box%s = %s WHERE boxid = %s;"
+        db2(query, (int(boxnum), existing_alias[1], int(boxid)))
+
+    elif new_alias:
+        new_user_q = "INSERT INTO users (username, password, first_name, last_name, active, alias_of_userid) values (%s, 'x', 'alias', %s, 1, %s);"
+        db2(new_user_q, (new_alias, session['username'], session['userid']))
+
+        get_new_user_q = "SELECT userid FROM users WHERE username = %s;"
+        new_userid = db2(get_new_user_q, (new_alias,))[0][0]
+        print(f"new userid for alias: {new_userid}")
+
+        assign_alias_q = "UPDATE boxes SET box%s = %s WHERE boxid = %s;"
+        db2(assign_alias_q, (int(boxnum), int(new_userid), int(boxid)))
+
+    return redirect(url_for("my_games"))
 
 @app.route("/completed_games")
 @login_required
