@@ -10,18 +10,39 @@
             Payment Status for all Users (public shaming)
         </p>
     </h1>
+    <p>Sort By:</p>
+    <form action="{{ url_for("payment_status") }}", method="POST", name="sort_method_form">
+        {% if sort_method == "id" %}
+        <input type="radio" id="ID" name="sort_method" value="id" onclick="this.form.submit()" checked>
+        {% else %}
+        <input type="radio" id="ID" name="sort_method" value="id" onclick="this.form.submit()">
+        {% endif %}
+        <label for="ID">ID</label>
+        {% if sort_method == "user" %}
+        <input type="radio" id="username" name="sort_method" value="user" onclick="this.form.submit()" checked>
+        {% else %}
+        <input type="radio" id="username" name="sort_method" value="user" onclick="this.form.submit()">
+        {% endif %}
+        <label for="username">Username</label>
+        {% if sort_method == "pay_status" %}
+        <input type="radio" id="pay_status" name="sort_method" value="pay_status" onclick="this.form.submit()" checked>
+        {% else %}
+        <input type="radio" id="pay_status" name="sort_method" value="pay_status" onclick="this.form.submit()">
+        {% endif %}
+        <label for="pay_status">Payment Status</label>
+    </form>
     
     <h4>
         {% if session['userid'] in admins %}
         <table align = "center", name="user_table", class="user_table", cellpadding = "10">
             <tr>
-            <th> userid </th>
-            <th> username </th>
-            <th> # active boxes </th>
-            <th> total fees </th>
-            <th> amt paid </th>
-            <th> paid in full?</th>
-            <th> mark paid </th>
+                <th> userid </th>
+                <th> username </th>
+                <th> # active boxes </th>
+                <th> total fees </th>
+                <th> amt paid </th>
+                <th> paid in full?</th>
+                <th> mark paid </th>
             </tr>
             {% for user in users %}
             <tr>
@@ -46,11 +67,11 @@
 
         <table align = "center", name="user_table", class="user_table", cellpadding = "10">
             <tr>
-            <th> userid </th>
-            <th> username </th>
-            <th> # active boxes </th>
-            <th> total fees </th>
-            <th> amt paid </th>
+                <th> userid </th>
+                <th> username </th>
+                <th> # active boxes </th>
+                <th> total fees </th>
+                <th> amt paid </th>
             </tr>
             {% for user in users %}
             <tr>

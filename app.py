@@ -2938,6 +2938,13 @@ def add_boxes_for_user():
 
 @app.route("/payment_status", methods=["GET", "POST"])
 def payment_status():
+
+    if request.method == "POST":
+        sort_method = request.form.get('sort_method')
+    else:
+        sort_method = "user"
+    print(f"SORT METHOD:   {sort_method}")
+
     s = "SELECT userid, username FROM users WHERE active = 1;"
     users_list = db(s)
 
@@ -2969,16 +2976,16 @@ def payment_status():
             fee = fee // 10
         for b in game[2:]:
             if b in aliases:
-                box = aliases[b]
+                userid = aliases[b]
             else:
-                box = b
-            if box != 0 and box != 1:
-                if box in user_box_count.keys():
-                    user_box_count[box] += 1
-                    user_fees[box] += fee
+                userid = b
+            if userid != 0 and userid != 1:
+                if userid in user_box_count.keys():
+                    user_box_count[userid] += 1
+                    user_fees[userid] += fee
                 else:
-                    user_box_count[box] = 1
-                    user_fees[box] = fee
+                    user_box_count[userid] = 1
+                    user_fees[userid] = fee
 
     thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
     thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
@@ -2998,7 +3005,11 @@ def payment_status():
                 emoji[user[0]] = ex
             else:
                 emoji[user[0]] = check
-            
+
+    if sort_method == 'user':
+        users.sort(key=lambda x:x[1])
+    elif sort_method == 'pay_status':
+        users.sort(key=lambda x:user_fees[x[0]] - paid[x[0]], reverse=True)
             
     print("after {}".format(users))
 
@@ -3009,7 +3020,7 @@ def payment_status():
     for admin in a:
         admins.append(admin[0])
 
-    return render_template("payment_status.html", users=users, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji)
+    return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji)
 
 @app.route("/mark_paid", methods=["GET", "POST"])
 def mark_paid():
