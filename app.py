@@ -3007,7 +3007,7 @@ def payment_status():
                 emoji[user[0]] = check
 
     if sort_method == 'user':
-        users.sort(key=lambda x:x[1])
+        users.sort(key=lambda x:x[1].upper())
     elif sort_method == 'pay_status':
         users.sort(key=lambda x:user_fees[x[0]] - paid[x[0]], reverse=True)
             
