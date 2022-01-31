@@ -1,5 +1,6 @@
-from flask import Flask, flash, redirect, render_template, request, session, url_for, Markup
+from flask import Flask, flash, redirect, render_template, request, session, url_for, Markup, send_file
 from flask_session import Session
+from werkzeug.utils import secure_filename
 #from flask.ext.session import Session
 import logging
 import requests
@@ -13,6 +14,7 @@ import sched, time
 from collections import OrderedDict
 from datetime import datetime, timedelta, date
 import re
+import os
 from operator import itemgetter, attrgetter
 from functools import wraps
 from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game
@@ -22,7 +24,12 @@ from email_validator import validate_email, EmailNotValidError
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
+UPLOAD_FOLDER = '/home/dheslin/dailybox/dailybox/static'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 # ensure responses aren't caches
 if app.config["DEBUG"]:
@@ -102,6 +109,37 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload_file', methods=["POST", "GET"])
+@login_required
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('user_details', name=filename))
+    return '''
+    <!doctype html>
+    <title>Upload new image to display in BOX selection</title>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+    '''
 
 def box_string():
     s = ''
@@ -783,6 +821,8 @@ def display_box():
             if x == 1 or x == 0:
                 name = 'Available '
                 avail += 1
+            # elif x == 4:
+            #     name = Markup('<img src="/static/byg.png" alt="byg.png">')
             else:
                 #s = "SELECT username FROM users where userid = {};".format(x)
                 #x = db(s)[0][0]
@@ -793,6 +833,11 @@ def display_box():
         row += 10
 
     print(grid)
+
+    img_dir = './static'
+    box_image_path = os.path.join(img_dir, "byg.png")
+    box_image = '/static/byg.png'
+    print(f"BOX IMAGE:  {box_image}")
 
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
@@ -1064,7 +1109,7 @@ def display_box():
             scores = db2(s)
 
             # final every score (paytype =3)
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, box_image=box_image)
 
 
     if box_type == BOX_TYPE_ID['dailybox']:

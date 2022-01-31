@@ -134,6 +134,40 @@
                     {{- box[1][:10] -}}
                     </form>
                 </td>
+
+                {% elif box[2] == 4 %}
+                <td class="taken_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
+                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                    <input type="hidden" name="boxid", value="{{ boxid }}">
+                    <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                    {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                     <p class="corner"> {{ bnum }}</p>
+                    <img src="{{ url_for('static', filename='New-York-Jets-Logo.png') }}">
+                    </form>
+                </td>
+
+                {% elif box[2] == 3 %}
+                <td class="taken_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
+                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                    <input type="hidden" name="boxid", value="{{ boxid }}">
+                    <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                    {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                     <p class="corner"> {{ bnum }}</p>
+                    <img src="{{ url_for('static', filename='byg.png') }}">
+                    </form>
+                </td>
+
+                {% elif box[2] == 5 %}
+                <td class="taken_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
+                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                    <input type="hidden" name="boxid", value="{{ boxid }}">
+                    <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
+                    {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
+                     <p class="corner"> {{ bnum }}</p>
+                    <img src="{{ url_for('static', filename='homerbush.gif') }}">
+                    </form>
+                </td>
+
                 {% elif box[1] != 'Available ' %}
                 <td class="taken_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
                     <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
@@ -144,6 +178,7 @@
                     {{- box[1][:10] -}}
                     </form>
                 </td>
+
                 {% else %}
                 <td class="box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">    
                     <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
