@@ -215,6 +215,11 @@ main td.taken_box {
     overflow: hidden;
 }
 
+main td.taken_box:hover span.CellComment {
+    visibility: visible;
+    display:block;
+}
+
 .corner {
     vertical-align: top;
     text-align: left;

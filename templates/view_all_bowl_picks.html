@@ -28,7 +28,7 @@
             <p> If your name is in <em style="color: maroon">RED</em>, as of this moment you are DONE!</p>
             <p> If there are no games in progress... see you next year...</p>
         {% endif %}
-        <!-- <p> HOME team in CAPS </p> -->
+
         {% if not winner %}
         <a href="{{ url_for('display_bowl_games') }}">Jump to enter your picks</a>
         {% endif %}

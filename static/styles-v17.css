@@ -204,6 +204,7 @@ main td.my_winning_box {
 }
 
 main td.taken_box {
+    position: relative;
     background-color: grey;
     width: 100px;
     height: 100px;
@@ -774,6 +775,11 @@ div .img {
 }
   
 .CellWithComment:hover span.CellComment{
+    visibility: visible;
+    display:block;
+}
+
+main td.taken_box:hover span.CellComment {
     visibility: visible;
     display:block;
 }

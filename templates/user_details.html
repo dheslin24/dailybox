@@ -23,5 +23,15 @@
     </br>
     <a href="{{ url_for('reset_password') }}">Click here to reset password</a>
     </h4>
+
+    {% if 'image' in user_dict %}
+        <p> This image below will be displayed in all of your selected boxes</p>
+        <p><a href="{{ url_for('upload_file') }}">Click here to upload a new image</a></p>
+        <img src="{{ url_for('static', filename=user_dict['image']) }}">
+    {% else %}
+        <p>You currently do not have an image to display in your BOX selections</p>
+        <p>Your username will be displayed</p>
+        <p><a href="{{ url_for('upload_file') }}">Click here to upload a new image</a></p>
+    {% endif %}
 {% endblock %}
 

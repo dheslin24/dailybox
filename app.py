@@ -24,7 +24,7 @@ from email_validator import validate_email, EmailNotValidError
 
 logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
-UPLOAD_FOLDER = '/home/dheslin/dailybox/dailybox/static'
+UPLOAD_FOLDER = 'static'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
@@ -130,7 +130,12 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+            user_query = "UPDATE users SET image = %s WHERE userid = %s;"
+            db2(user_query, (file.filename, session['userid']))
+
             return redirect(url_for('user_details', name=filename))
+
     return '''
     <!doctype html>
     <title>Upload new image to display in BOX selection</title>
@@ -838,10 +843,9 @@ def display_box():
 
     print(grid)
 
-    img_dir = './static'
-    box_image_path = os.path.join(img_dir, "byg.png")
-    box_image = '/static/byg.png'
-    print(f"BOX IMAGE:  {box_image}")
+    image_query = 'SELECT userid, image FROM users WHERE image IS NOT NULL;'
+    images = dict(db2(image_query))
+    print(f"IMAGES!!!! {images}")
 
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
@@ -1113,7 +1117,7 @@ def display_box():
             scores = db2(s)
 
             # final every score (paytype =3)
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, box_image=box_image)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images)
 
 
     if box_type == BOX_TYPE_ID['dailybox']:
@@ -1127,14 +1131,14 @@ def display_box():
         print(f"GRID!! 4qtr {grid}")
         #final_payout = 'Current Final Payout: ' + str(final_payout)
         print(f"avail {avail}")
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time, images=images)
 
     # display box for all except every score, 4qtr, or dailybox
     else:
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
         final_payout = 'Current Final Payout: ' + str(final_payout)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images)
 
 
 @app.route("/select_box", methods=["GET", "POST"])
@@ -3139,13 +3143,18 @@ def admin_summary():
     
 
 @app.route("/user_details", methods=["GET", "POST"])
+@login_required
 def user_details():
     s = "SELECT * FROM users WHERE userid = {};".format(session['userid'])
     
-    #    0         1       2     3     4      5      6       7         8        9
-    # (userid, username, pswd, first, last, email, mobile, balance, active, isadmin)
+    #    0         1       2     3     4      5      6       7         8        9        10         11         12        13       14         15
+    # (userid, username, pswd, first, last, email, mobile, balance, amt_paid, active, isadmin, ispickem, failedlogin, isbowl, aliasuserid, image)
     user = db(s)[0]
+    print(f"USER! {user}")
     user_dict = {'username':user[1], 'first_name':user[3], 'last_name':user[4], 'email':user[5], 'mobile':user[6], 'balance':user[7]}
+    if user[15] != None:
+        user_dict['image'] = user[15]
+        print(f"userdict image: {user[15]}")
 
     return render_template("user_details.html", user_dict = user_dict) 
 
