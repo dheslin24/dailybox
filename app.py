@@ -113,6 +113,15 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route("/remove_image", methods=["POST", "GET"])
+@login_required
+def remove_image():
+    remove_query = "UPDATE users SET image = NULL WHERE userid = %s;"
+    db2(remove_query, (session['userid'],))
+
+    return redirect(url_for('user_details'))
+
+
 @app.route('/upload_file', methods=["POST", "GET"])
 @login_required
 def upload_file():
@@ -140,6 +149,8 @@ def upload_file():
     <!doctype html>
     <title>Upload new image to display in BOX selection</title>
     <h1>Upload new File</h1>
+    <p>All of your boxes will display this image if you upload</p>
+    <p>Only .png, .jpg, .jpeg, .gif filetypes are supported</p>
     <form method=post enctype=multipart/form-data>
       <input type=file name=file>
       <input type=submit value=Upload>
