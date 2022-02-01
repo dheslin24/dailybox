@@ -780,17 +780,6 @@ def display_box():
         home = 'XXX'
         away = 'YYY'
 
-    away_team = {}
-    for i in range(10):
-        away_team[str(i)] = ''
-    if len(away) == 3:
-        away_team['3'] = away[0]
-        away_team['4'] = away[1]
-        away_team['5'] = away[2]
-    else:
-        away_team['4'] = away[0]
-        away_team['5'] = away[1]
-
     game_status = get_espn_summary_single_game(espn_id)
     live_quarter = int(game_status['quarter'])
     status = game_status['game_status']
@@ -799,6 +788,21 @@ def display_box():
     team_scores = get_espn_score_by_qtr(espn_id)
     print(f"team scores: {team_scores}")
 
+    away_team = {}
+    for i in range(10):
+        away_team[str(i)] = ''
+    if len(away) == 3:
+        away_team['2'] = team_scores[away]['logo']
+        away_team['3'] = away[0]
+        away_team['4'] = away[1]
+        away_team['5'] = away[2]
+        away_team['6'] = team_scores[away]['logo']
+        print(f"LEN AWAY TEAM {len(away_team)}")
+    else:
+        away_team['3'] = team_scores[away]['logo']
+        away_team['4'] = away[0]
+        away_team['5'] = away[1]
+        away_team['6'] = team_scores[away]['logo']
 
     print(f"paytype:  {pay_type}")
     # check for final scores only
@@ -833,6 +837,7 @@ def display_box():
     box_num = 0
     row = 0 
     avail = 0
+    alias = None
     # create a list (grid) of 10 lists (rows) of 10 tuples (boxes)
     for _ in range(10):
         l = []
@@ -843,8 +848,6 @@ def display_box():
             else:
                 if box_userid in alias_dict:
                     alias = alias_dict[box_userid]
-                else:
-                    alias = None
                 name = user_dict[box_userid]
 
             l.append((box_num, name, box_userid, alias))
