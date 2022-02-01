@@ -810,6 +810,9 @@ def display_box():
     u = "SELECT userid, username FROM users;"
     user_dict = dict(db(u))
 
+    alias_query = "SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"
+    alias_dict = dict(db2(alias_query))
+
     grid = []
     box_num = 0
     row = 0 
@@ -817,17 +820,18 @@ def display_box():
     # create a list (grid) of 10 lists (rows) of 10 tuples (boxes)
     for _ in range(10):
         l = []
-        for x in box[8 + row : 18 + row]:  # BOX DB CHANGE if boxes schema changes
-            if x == 1 or x == 0:
+        for box_userid in box[8 + row : 18 + row]:  # BOX DB CHANGE if boxes schema changes
+            if box_userid == 1 or box_userid == 0:
                 name = 'Available '
                 avail += 1
-            # elif x == 4:
-            #     name = Markup('<img src="/static/byg.png" alt="byg.png">')
             else:
-                #s = "SELECT username FROM users where userid = {};".format(x)
-                #x = db(s)[0][0]
-                name = user_dict[x]
-            l.append((box_num, name, x))
+                if box_userid in alias_dict:
+                    alias = alias_dict[box_userid]
+                else:
+                    alias = None
+                name = user_dict[box_userid]
+
+            l.append((box_num, name, box_userid, alias))
             box_num += 1
         grid.append(l)
         row += 10

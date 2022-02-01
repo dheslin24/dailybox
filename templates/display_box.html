@@ -103,7 +103,7 @@
             <h1><td class="{{ away }}" style="border-bottom: 2px solid black;"><strong style="font-size: 30px"> {{ y[outer_loop.index0|string] }} </strong></td></h1>
             {% for box in row %}
                 {% if box[1][:4] == 'WINN' or box[1][:2] == 'Q1' or box[1][:2] == 'Q2' or box[1][:2] == 'Q3' or box[1][:2] == 'Q4' %} 
-                    {% if box[2] == session['userid'] %}
+                    {% if box[2] == session['userid']  or box[3] == session['userid'] %}
                     <td class="my_winning_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
                         <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
                         <input type="hidden" name="boxid", value="{{ boxid }}">
@@ -124,7 +124,8 @@
                         </form>
                     </td>
                     {% endif %}
-                {% elif box[1] == session['username'] %}
+
+                {% elif box[1] == session['username'] or box[3] == session['userid'] %}
                 <td class="user_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
                     <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
                     <input type="hidden" name="boxid", value="{{ boxid }}">
