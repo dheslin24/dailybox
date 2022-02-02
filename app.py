@@ -3096,7 +3096,7 @@ def mark_paid():
     fees = int(request.form.get("fees"))
     amt_paid = int(request.form.get("amt_paid"))
 
-    update_amt = fees - amt_paid
+    update_amt = fees 
 
     u = "UPDATE users SET amt_paid = %s WHERE userid = %s;"
     db2(u, (update_amt, userid))
