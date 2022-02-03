@@ -67,8 +67,12 @@
 
         {% endif %}
     <h4><p class="text-center">{{ num_selection }}</p>
+    {% if boxid == '4' or boxid == '46' %}
+    <img src="{{ url_for('static', filename='cannellacrest.png') }}" style="display: block; margin-left: auto; margin-right: auto;">
+    {% else %}
     <!-- will ferrell old school just one -->
     <img src="https://thumbs.gfycat.com/CandidGiddyFlyingfish-max-1mb.gif" style="display: block; margin-left: auto; margin-right: auto;">
+    {% endif %}
     </div>
         {% if scores|length > 0 %}
         <div class="col-lg-4 col-md-12 col-xs-12">
