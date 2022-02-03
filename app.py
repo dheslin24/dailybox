@@ -3230,8 +3230,8 @@ def priv_payment_status():
         print(f"boxidboxid {boxid}")
         
 
-    s = "SELECT userid, username FROM users WHERE active = 1 and userid in (SELECT userid FROM privategames WHERE userid = %s);"
-    users_list = db2(s, (session['userid'], ))
+    s = "SELECT userid, username FROM users WHERE active = 1 and userid in (SELECT userid FROM privategames WHERE boxid = %s);"
+    users_list = db2(s, (boxid, ))
 
     p = "SELECT userid, paid FROM privategames WHERE boxid = %s;"
     paid = dict(db2(p, (boxid, )))
