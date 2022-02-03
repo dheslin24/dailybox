@@ -17,7 +17,11 @@
             {{ box_name }} </br>
         <p>
     </h2>
-    <h3>
+    {% if private_game_payment_link|length > 0 %}
+        <p class="text-center"><a href="{{ url_for('priv_payment_status', boxid=boxid, sort_method='user') }}">{{ private_game_payment_link }}</a></p>
+    {% endif %}
+    
+        <h3>
         <p class="text-center">
             {{ kickoff_time }} </br>
         </p>

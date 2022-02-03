@@ -62,7 +62,8 @@ PAY_TYPE_ID = {
 BOX_TYPE_ID = {
     'dailybox' : 1,
     'custom' : 2,
-    'nutcracker' : 3
+    'nutcracker' : 3,
+    'private' : 4
 }
 
 EMOJIS = {
@@ -425,6 +426,7 @@ def start_game():
     
 # takes [box_type, box_type, ...]
 def get_games(box_type, active = 1):
+    
     box_string = ''
     for b in box_type:
         box_string += str(b) + ', '
@@ -445,6 +447,25 @@ def get_games(box_type, active = 1):
                 game[4] = user_dict[int(game[4])]
             else:
                 game[4] = "N/A"
+
+    elif box_type[0] == 4:
+        priv_boxid_string = "SELECT boxid FROM privategames WHERE userid = %s;"
+        priv_boxes = db2(priv_boxid_string, (session['userid'], ))
+        if priv_boxes:
+            priv_boxids = []
+            for box in priv_boxes:
+                priv_boxids.append(box[0])
+            #priv_boxids = priv_boxes[0][0]
+            print(f"private boxids {priv_boxids}")
+            boxid_string = ""
+            for bs in priv_boxids:
+                boxid_string += str(bs) + ", "
+            boxid_string = boxid_string[:-2]
+            s = f"SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {active} and b.boxid in ({boxid_string}) and b.box_type in ({box_type[0]});"
+            games = db2(s)
+            game_list = [list(game) for game in games]
+        else:
+            return []
             
     else:
         s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type in ({});".format(active, box_string)
@@ -715,6 +736,29 @@ def completed_games():
         
     return render_template("completed_games.html", game_list = game_list)
 
+@app.route("/completed_private_games")
+@login_required
+def completed_private_games():
+    #game_list_d = get_games(1, 0)
+    game_list_c = get_games([4], 0)
+    #game_list = game_list_d + game_list_c
+    game_list_pre = game_list_c
+    game_list_pre.sort(key=lambda x: x[0])
+    
+    # dedupe - if corrections were made in score entry a game can have multiple
+    game_list = []
+    seen = set()
+    for game in game_list_pre:
+        if game[0] not in seen:  # unique game, mark as seen and add to gl
+            game_list.append(game)
+            seen.add(game[0])
+        else:  # seen this one already.. replace it with a new one
+            del game_list[-1]
+            game_list.append(game)
+        
+        
+    return render_template("completed_private_games.html", game_list = game_list)
+
 @app.route("/game_list")
 def game_list():
     game_list = get_games([1])
@@ -724,7 +768,7 @@ def game_list():
 @app.route("/custom_game_list")
 @login_required
 def custom_game_list():
-    game_list = get_games([2,3])
+    game_list = get_games([2,3]) # pass a list of box types.. 
 
     no_active_games_string = ''
     if not game_list:
@@ -734,6 +778,45 @@ def custom_game_list():
     game_list.sort(key=lambda x: x[0])
 
     return render_template("custom_game_list.html", game_list = game_list, no_active_games_string = no_active_games_string)
+
+@app.route("/private_game_list")
+@login_required
+def private_game_list():
+    game_list = get_games([4])  # takes a list of box_types.. only 4 for private here
+
+    no_active_games_string = ''
+    if not game_list:
+        no_active_games_string = 'No Active Games'
+    else:
+        game_list.sort(key=lambda x: x[0])
+
+    return render_template("private_game_list.html", game_list = game_list, no_active_games_string = no_active_games_string)
+
+@app.route("/private_pswd", methods=["POST", "GET"])
+@login_required
+def private_pswd():
+    if request.method == "POST":
+        pswd = request.form.get('priv_password')
+
+        # first check if this is valid#
+        p = "SELECT boxid FROM privatepass WHERE pswd = %s;"
+        box = db2(p, (pswd, ))
+        print(f"BOXBOX {box}")
+        if box:
+            print(f"privpswd BOX {box}")
+            s = "INSERT INTO privategames (userid, boxid, paid) values (%s, %s, 0) ON DUPLICATE KEY UPDATE userid = %s, boxid=%s;"
+            db2(s, (session['userid'], box[0][0], session['userid'], box[0][0]))
+
+        # for now
+        return redirect("private_game_list")
+
+
+    else:
+        return render_template("private_pswd.html")
+
+
+
+
 
 @app.route("/display_box", methods=["GET", "POST"])
 @login_required
@@ -748,6 +831,11 @@ def display_box():
     s = "SELECT * FROM boxes where boxid = {};".format(boxid)
     box = list(db(s))[0]
     box_type = box[2]
+    if box_type == 4:
+        private_game_payment_link = "Click here for this game's payment status"
+    else:
+        private_game_payment_link = ""
+
     box_name = box[3]
     fee = box[4]
     ptype = box[5]
@@ -908,7 +996,7 @@ def display_box():
             grid[curr_win_row][curr_win_col] = (curr_winner_boxnum, curr_winner, curr_winner_userid)
             print(grid)
 
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, private_game_payment_link=private_game_payment_link)
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
         print(f'dh 1126 paytype {ptype} {winners}')
@@ -1131,7 +1219,7 @@ def display_box():
             scores = db2(s)
 
             # final every score (paytype =3)
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link)
 
 
     if box_type == BOX_TYPE_ID['dailybox']:
@@ -1145,14 +1233,14 @@ def display_box():
         print(f"GRID!! 4qtr {grid}")
         #final_payout = 'Current Final Payout: ' + str(final_payout)
         print(f"avail {avail}")
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time, images=images)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time, images=images, private_game_payment_link=private_game_payment_link)
 
     # display box for all except every score, 4qtr, or dailybox
     else:
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
         final_payout = 'Current Final Payout: ' + str(final_payout)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link)
 
 
 @app.route("/select_box", methods=["GET", "POST"])
@@ -3004,13 +3092,14 @@ def add_boxes_for_user():
     return redirect(url_for("admin_summary"))
 
 @app.route("/payment_status", methods=["GET", "POST"])
+@login_required
 def payment_status():
 
     if request.method == "POST":
         sort_method = request.form.get('sort_method')
     else:
-        sort_method = "user"
-    print(f"SORT METHOD:   {sort_method}")
+        sort_method = request.args['sort_method']
+        priv = request.args['priv']
 
     s = "SELECT userid, username FROM users WHERE active = 1;"
     users_list = db(s)
@@ -3026,7 +3115,7 @@ def payment_status():
     for _ in box_list:
         box_string += _
     box_string = box_string[:-2]
-    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1;".format(box_string)
+    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1 and boxid NOT IN (SELECT boxid FROM privatepass);".format(box_string)
     all_boxes = db(box)
     #print(all_boxes)
     user_box_count = {}
@@ -3087,21 +3176,136 @@ def payment_status():
     for admin in a:
         admins.append(admin[0])
 
-    return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji)
+    return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=False)
 
 @app.route("/mark_paid", methods=["GET", "POST"])
 def mark_paid():
     userid = int(request.form.get("userid"))
-    paid = request.form.get("paid")
+    # paid = request.form.get("paid")
     fees = int(request.form.get("fees"))
-    amt_paid = int(request.form.get("amt_paid"))
+    # amt_paid = int(request.form.get("amt_paid"))
+    sort_method = request.form.get("sort_method")
+
+    print(f"SORT METHOD IN MARK PAID: {sort_method}")
 
     update_amt = fees 
 
     u = "UPDATE users SET amt_paid = %s WHERE userid = %s;"
     db2(u, (update_amt, userid))
 
-    return redirect(url_for("payment_status"))
+    return redirect(url_for("payment_status", sort_method=sort_method, priv=False))
+
+@app.route("/priv_mark_paid", methods=["GET", "POST"])
+def priv_mark_paid():
+    userid = int(request.form.get("userid"))
+    paid = request.form.get("paid")
+    if paid:
+        db_paid = 1
+    else:
+        db_paid = 0
+    sort_method = request.form.get("sort_method")
+    boxid = request.form.get('boxid')
+
+    print(f"SORT METHOD IN MARK PAID: {sort_method}")
+
+    u = "UPDATE privategames SET paid = %s WHERE userid = %s and boxid = %s;"
+    db2(u, (db_paid, userid, boxid))
+
+    return redirect(url_for("priv_payment_status", sort_method=sort_method, priv=True, boxid=boxid))
+
+
+@app.route("/priv_payment_status", methods=["POST", "GET"])
+@login_required
+def priv_payment_status():
+    if request.method == "POST":
+        print("ZEPP")
+        sort_method = request.form.get('sort_method')
+        boxid = request.form.get("boxid")
+        
+    else:
+        print("ZEPP2")
+        sort_method = request.args['sort_method']
+        print("zepp3")
+        boxid = request.args['boxid']
+        print(f"boxidboxid {boxid}")
+        
+
+    s = "SELECT userid, username FROM users WHERE active = 1 and userid in (SELECT userid FROM privategames WHERE userid = %s);"
+    users_list = db2(s, (session['userid'], ))
+
+    p = "SELECT userid, paid FROM privategames WHERE boxid = %s;"
+    paid = dict(db2(p, (boxid, )))
+
+    box_list = ['box' + str(x) + ' ,' for x in range(100)]
+    box_string = ''
+    for _ in box_list:
+        box_string += _
+    box_string = box_string[:-2]
+    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1 and boxid = {};".format(box_string, boxid)
+    all_boxes = db2(box)
+    #print(all_boxes)
+    user_box_count = {}
+    user_fees = {}
+
+    alias_string = "SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"
+    aliases = dict(db2(alias_string))
+    print(f"aliases:  {aliases}")
+
+    for game in all_boxes:
+        fee = game[0]
+        pay_type = game[1]
+        if pay_type == 5 or pay_type == 6 or pay_type == 7:
+            fee = fee // 10
+        for b in game[2:]:
+            if b in aliases:
+                userid = aliases[b]
+            else:
+                userid = b
+            if userid != 0 and userid != 1:
+                if userid in user_box_count.keys():
+                    user_box_count[userid] += 1
+                    user_fees[userid] += fee
+                else:
+                    user_box_count[userid] = 1
+                    user_fees[userid] = fee
+
+    thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    middle_finger = '\uD83D\uDD95'.encode('utf-16', 'surrogatepass').decode('utf-16')
+    check = '\u2714'
+    ex = '\u274c'
+
+    users = []
+    emoji = {}
+    print("before {}".format(users_list))
+    for user in users_list:
+        if user[0] in user_fees:
+            users.append(user)
+            if user[0] in [67, 113, 15]:
+                emoji[user[0]] = middle_finger
+            elif not paid[user[0]]:
+                emoji[user[0]] = ex
+            else:
+                paid[user[0]] = user_fees[user[0]]
+                emoji[user[0]] = check
+
+
+    if sort_method == 'user':
+        users.sort(key=lambda x:x[1].upper())
+    elif sort_method == 'pay_status':
+        users.sort(key=lambda x:user_fees[x[0]] - paid[x[0]], reverse=True)
+            
+    print("after {}".format(users))
+
+    # find list of admins who can update status
+    s = "SELECT admin FROM privatepass WHERE boxid = %s;"
+    a = db2(s, (boxid, ))
+    admins = []
+    for admin in a:
+        admins.append(admin[0])
+        admins.append(19) # DH superuser
+
+    return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=True, boxid=boxid)
 
 @app.route("/admin_summary", methods=["GET", "POST"])
 def admin_summary():
