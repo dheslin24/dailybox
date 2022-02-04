@@ -5,7 +5,10 @@
 {% endblock %}
 
 {% block main %}
-    <form action="{{ url_for('private_pswd') }}" method="post">
+
+<h2><p style="color: maroon;">{{ display_error }}</p></h2>
+
+<form action="{{ url_for('private_pswd') }}" method="post">
         <fieldset>
             <div class="form-group">
                 <input class="form-control" name="priv_password" placeholder="Enter Password for Pool" type="password"/>
@@ -15,13 +18,15 @@
             </div>
         </fieldset>
     </form>
-
-    <h2><p style="color: maroon;">{{ display_error }}</p></h2>
-
-    <img src="https://i.ytimg.com/vi/W7rSYzbpA8k/hqdefault.jpg">
-    
-</br>
-<br>
+<h4>
     <p>You will only need to do this once.  Once you have successfully registered for a pool,</p>
     <p>they will be available to you via the 'Access Existing Private Pools' link.</p>
+    <img src="https://i.ytimg.com/vi/W7rSYzbpA8k/hqdefault.jpg">
+    <br>
+    <br>
+
+    <p>Don't have a code and want to create your own pool?</p>
+    <p>If you don't know TW or DH, not likely (at least this year)..</p>
+    <p>But if not... reach out and be a beta tester...  will talk</p>
+</h4>
 {% endblock %}
