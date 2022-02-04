@@ -79,14 +79,18 @@
                                 <li><a href="{{ url_for('pickem_payment_status') }}">Payment Status</a></li>
                                 <li><a href="{{ url_for('pickem_rules') }}">Pickem Rules</a></li>
                                 -->
+                                {% if box_type != 4 %}
                                 <li><a href="{{ url_for('payment_status', sort_method='user', priv=False) }}">Payment Status</a></li>
+                                {% else %}
+                                <li><a href="{{ url_for('priv_payment_status', sort_method='user', boxid=boxid) }}">Payment Status</a></li>
+                                {% endif %}
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
                                 {% if session['is_admin'] == 1 %}
                                 <li><a href="{{ url_for('bygzomo') }}">BYGZomo</a></li>
+                                <li><a href="{{ url_for('admin') }}">Admin</a></li>
                                 {% endif %}
                                 <li><a href="{{ url_for('user_details') }}">User {{ session['username'] }}</a></li>
-                                <li><a href="{{ url_for('admin') }}">Admin</a></li>
                                 <li><a href="{{ url_for('logout') }}">Log Out</a></li>
                             </ul>
                         {% else %}

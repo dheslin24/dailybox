@@ -1,3 +1,4 @@
+from ast import alias
 from flask import Flask, flash, redirect, render_template, request, session, url_for, Markup, send_file
 from flask_session import Session
 from werkzeug.utils import secure_filename
@@ -117,8 +118,9 @@ def allowed_file(filename):
 @app.route("/remove_image", methods=["POST", "GET"])
 @login_required
 def remove_image():
+    userid = request.args['userid']
     remove_query = "UPDATE users SET image = NULL WHERE userid = %s;"
-    db2(remove_query, (session['userid'],))
+    db2(remove_query, (userid,))
 
     return redirect(url_for('user_details'))
 
@@ -138,14 +140,17 @@ def upload_file():
             flash('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
+            user = int(request.form.get('user'))
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             user_query = "UPDATE users SET image = %s WHERE userid = %s;"
-            db2(user_query, (file.filename, session['userid']))
+            db2(user_query, (file.filename, user))
 
             return redirect(url_for('user_details', name=filename))
 
+    userid = request.args['userid']
+    print(userid)
     return '''
     <!doctype html>
     <title>Upload new image to display in BOX selection</title>
@@ -155,6 +160,7 @@ def upload_file():
     <form method=post enctype=multipart/form-data>
       <input type=file name=file>
       <input type=submit value=Upload>
+      <input type=hidden value=''' + userid + ''' name=user>
     </form>
     '''
 
@@ -786,7 +792,7 @@ def private_game_list():
 
     no_active_games_string = ''
     if not game_list:
-        no_active_games_string = 'No Active Games'
+        no_active_games_string = 'You have no active private games'
     else:
         game_list.sort(key=lambda x: x[0])
 
@@ -930,6 +936,7 @@ def display_box():
     for _ in range(10):
         l = []
         for box_userid in box[8 + row : 18 + row]:  # BOX DB CHANGE if boxes schema changes
+            alias = None
             if box_userid == 1 or box_userid == 0:
                 name = 'Available '
                 avail += 1
@@ -1219,7 +1226,7 @@ def display_box():
             scores = db2(s)
 
             # final every score (paytype =3)
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
 
 
     if box_type == BOX_TYPE_ID['dailybox']:
@@ -1233,14 +1240,14 @@ def display_box():
         print(f"GRID!! 4qtr {grid}")
         #final_payout = 'Current Final Payout: ' + str(final_payout)
         print(f"avail {avail}")
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time, images=images, private_game_payment_link=private_game_payment_link)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type)
 
     # display box for all except every score, 4qtr, or dailybox
     else:
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
         final_payout = 'Current Final Payout: ' + str(final_payout)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type)
 
 
 @app.route("/select_box", methods=["GET", "POST"])
@@ -1442,7 +1449,8 @@ def sanity_checks(boxid_list):
 
 @app.route("/es_payout_details", methods=["GET"])
 def es_payout_details():
-    fee = 100
+    #fee = 100
+    fee = int(request.args['fee'])
     payouts = []
     for i in range(1,31):
         score = []
@@ -3305,7 +3313,7 @@ def priv_payment_status():
         admins.append(admin[0])
         admins.append(19) # DH superuser
 
-    return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=True, boxid=boxid)
+    return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=True, boxid=boxid, box_type=4)
 
 @app.route("/admin_summary", methods=["GET", "POST"])
 def admin_summary():
@@ -3374,7 +3382,15 @@ def user_details():
         user_dict['image'] = user[15]
         print(f"userdict image: {user[15]}")
 
-    return render_template("user_details.html", user_dict = user_dict) 
+    # get user aliases
+    a = "SELECT username, IFNULL(image, '') from users where alias_of_userid = %s;"
+    alias_dict = dict(db2(a, (session['userid'], )))
+
+    u = "SELECT username, userid FROM users WHERE alias_of_userid = %s"
+    userid_dict = dict(db2(u, (session['userid'], )))
+
+    print(f"userid_dict:  {userid_dict}")
+    return render_template("user_details.html", user_dict = user_dict, alias_dict = alias_dict, userid_dict=userid_dict) 
 
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():

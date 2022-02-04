@@ -214,7 +214,7 @@
         {% if scores|length > 0 %}
         <div class="col-lg-4 col-md-6 col-xs-12">
         <p class="text-center"> Live IN-Game Updates (must refresh) </p>
-        <p class="text-center"> Curious about how payouts work??  Click <a href="{{ url_for('es_payout_details') }}"> here</a></p>
+        <p class="text-center"> Curious about how payouts work??  Click <a href="{{ url_for('es_payout_details', fee=fee) }}"> here</a></p>
         <table class="table table-striped" style="padding-top: 30px; table-layout: fixed;">
             <th style="width: 5px;">#</th>
             <th style="width: 10px;">TB</th>
