@@ -31,12 +31,17 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+path = '/home/ec2-user/dailybox'
+
 print(f"OS instance PATH {os.path.dirname(app.instance_path)}")
 print(f"OS root PATH {os.path.dirname(app.root_path)}")
 print(f"OS CWD {os.getcwd()}")
 logging.info(f"OS instance PATH {os.path.dirname(app.instance_path)}")
 logging.info(f"OS root PATH {os.path.dirname(app.root_path)}")
 logging.info(f"OS CWD {os.getcwd()}")
+os.chdir(path)
+print(f"OS CWD after: {os.getcwd()}")
+logging.info(f"OS CWD after: {os.getcwd()}")
 
 # ensure responses aren't caches
 if app.config["DEBUG"]:
