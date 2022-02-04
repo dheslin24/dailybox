@@ -17,8 +17,9 @@
             {{ box_name }} </br>
         <p>
     </h2>
-    {% if private_game_payment_link|length > 0 %}
-        <p class="text-center"><a href="{{ url_for('priv_payment_status', boxid=boxid, sort_method='user') }}">{{ private_game_payment_link }}</a></p>
+
+    {% if boxid == '46' or boxid == '7' %}
+    <p class="text-center"><a href="{{ url_for('es_payout_details', fee=fee) }}"> Click here for detailed payout table</a></p>
     {% endif %}
     
         <h3>

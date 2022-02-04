@@ -15,7 +15,7 @@ def get_espn_ids(season_type = 3, week = 1, league='ncaaf'):
 
     return r
 
-def get_espn_scores(abbrev = True, season_type = 3, week = 1, league='nfl', espnid=False):
+def get_espn_scores(abbrev = True, season_type = 3, week = 5, league='nfl', espnid=False):
     # season_type = 3  # 1: preseason, 2: regular, 3: post
     # week = 1 # will make this an input soon
     espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
