@@ -813,6 +813,9 @@ def private_pswd():
             s = "INSERT INTO privategames (userid, boxid, paid) values (%s, %s, 0) ON DUPLICATE KEY UPDATE userid = %s, boxid=%s;"
             db2(s, (session['userid'], box[0][0], session['userid'], box[0][0]))
 
+        else:
+            display_error = "Invalid code - please try again or contact the game admin."
+            return render_template("private_pswd.html", display_error=display_error)
         # for now
         return redirect("private_game_list")
 
