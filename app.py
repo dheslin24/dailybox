@@ -28,14 +28,16 @@ path = '/home/ec2-user/dailybox'
 print(f"OS instance PATH {os.path.dirname(app.instance_path)}")
 print(f"OS root PATH {os.path.dirname(app.root_path)}")
 print(f"OS CWD {os.getcwd()}")
+if os.getcwd() != path:
+    os.chdir(path)
+print(f"OS CWD after: {os.getcwd()}")
+
+
+logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
+
 logging.info(f"OS instance PATH {os.path.dirname(app.instance_path)}")
 logging.info(f"OS root PATH {os.path.dirname(app.root_path)}")
 logging.info(f"OS CWD {os.getcwd()}")
-os.chdir(path)
-print(f"OS CWD after: {os.getcwd()}")
-logging.info(f"OS CWD after: {os.getcwd()}")
-
-logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
 UPLOAD_FOLDER = 'static'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
