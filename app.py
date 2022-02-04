@@ -889,6 +889,7 @@ def display_box():
     kickoff_time = game_status['kickoff_time']
     team_scores = get_espn_score_by_qtr(espn_id)
     print(f"team scores: {team_scores}")
+    game_dict = get_espn_score_by_qtr(espn_id)
 
     away_team = {}
     for i in range(10):
@@ -910,7 +911,7 @@ def display_box():
     # check for final scores only
     if pay_type == 'single' or pay_type == 'ten_man' or pay_type == 'sattelite':
         team_scores_digit = get_espn_scores(espnid = '')['team']
-        game_dict = get_espn_score_by_qtr(espn_id)
+        #game_dict = get_espn_score_by_qtr(espn_id)
         print(f"team scores: {team_scores_digit}")
         print(f"home and away: {home} {away}")
         home_digit = str(0)
@@ -926,7 +927,7 @@ def display_box():
     elif pay_type == 'four_qtr':
         home_digit = str(0)
         away_digit = str(0)
-        game_dict = get_espn_score_by_qtr(espn_id)
+        #game_dict = get_espn_score_by_qtr(espn_id)
         print(f"game_dict in display box {game_dict}")
     
     # create a dict of userid:username
