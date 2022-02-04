@@ -909,15 +909,16 @@ def display_box():
     print(f"paytype:  {pay_type}")
     # check for final scores only
     if pay_type == 'single' or pay_type == 'ten_man' or pay_type == 'sattelite':
-        team_scores = get_espn_scores(espnid = '')['team']
-        print(f"team scores: {team_scores}")
+        team_scores_digit = get_espn_scores(espnid = '')['team']
+        game_dict = get_espn_score_by_qtr(espn_id)
+        print(f"team scores: {team_scores_digit}")
         print(f"home and away: {home} {away}")
         home_digit = str(0)
         away_digit = str(0)
-        if home in team_scores and away in team_scores:
-            print(f"home: {home}:{team_scores[home]} away: {away}:{team_scores[away]}")
-            home_digit = team_scores[home][-1]
-            away_digit = team_scores[away][-1]
+        if home in team_scores_digit and away in team_scores_digit:
+            print(f"home: {home}:{team_scores_digit[home]} away: {away}:{team_scores_digit[away]}")
+            home_digit = team_scores_digit[home][-1]
+            away_digit = team_scores_digit[away][-1]
             print(home_digit, away_digit)
         else:
             print("one team is most likely on bye")
@@ -1255,7 +1256,7 @@ def display_box():
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
         final_payout = 'Current Final Payout: ' + str(final_payout)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type)
+        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
 
 
 @app.route("/select_box", methods=["GET", "POST"])
