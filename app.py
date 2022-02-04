@@ -33,6 +33,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 print(f"OS instance PATH {os.path.dirname(app.instance_path)}")
 print(f"OS root PATH {os.path.dirname(app.root_path)}")
+logging.info(f"OS instance PATH {os.path.dirname(app.instance_path)}")
+logging.info(f"OS root PATH {os.path.dirname(app.root_path)}")
 
 
 # ensure responses aren't caches
