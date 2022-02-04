@@ -23,14 +23,6 @@ from funnel_helper import elimination_check
 from email_helper import send_email
 from email_validator import validate_email, EmailNotValidError
 
-logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
-
-UPLOAD_FOLDER = 'static'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 path = '/home/ec2-user/dailybox'
 
 print(f"OS instance PATH {os.path.dirname(app.instance_path)}")
@@ -42,6 +34,16 @@ logging.info(f"OS CWD {os.getcwd()}")
 os.chdir(path)
 print(f"OS CWD after: {os.getcwd()}")
 logging.info(f"OS CWD after: {os.getcwd()}")
+
+logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
+
+UPLOAD_FOLDER = 'static'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
 
 # ensure responses aren't caches
 if app.config["DEBUG"]:
