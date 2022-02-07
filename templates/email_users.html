@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Email Users
+{% endblock %}
+
+
+
+{% block main %}
+
+<form action="{{ url_for('send_bygemail') }}" method="POST">
+    <label for="userid">Send E-Mail to Userid:</label>
+    <input type="text" name="userid" size="10">
+    <label for="subject">Subject</label>
+    <input type="text" name="subject" size="100">
+    <label for="body">Body</label>
+    <textarea name="body" cols="100" rows="5"></textarea>
+    <input type="submit">
+</form>
+
+{% endblock %}

@@ -8,7 +8,7 @@ def send_email(sndr=None, rcpt=None, subj=None, b_text=None, b_html=None):
     if sndr:
         SENDER = sndr
     else:
-        SENDER = "BYG Admin <dheslin@gmail.com>"
+        SENDER = "BYG Admin <dan@bygtech.com>"
 
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.

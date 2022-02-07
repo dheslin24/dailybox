@@ -3426,6 +3426,27 @@ def user_details():
     print(f"userid_dict:  {userid_dict}")
     return render_template("user_details.html", user_dict = user_dict, alias_dict = alias_dict, userid_dict=userid_dict) 
 
+@app.route("/email_users", methods=["GET", "POST"])
+@login_required
+def email_users():
+    return render_template("email_users.html")
+
+@app.route("/send_bygemail", methods=["GET", "POST"])
+@login_required
+def send_bygemail():
+    userid = request.form.get('userid')
+    subject = request.form.get('subject')
+    body = request.form.get('body')
+
+    print(f"sending email for userid: {userid}")
+    print(subject)
+    print(body)
+
+    if userid == 19 or userid == '19':
+        send_email()
+
+    return redirect(url_for('email_users'))
+
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
     if request.method == "POST":
