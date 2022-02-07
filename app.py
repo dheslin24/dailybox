@@ -32,12 +32,15 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 path = '/home/ec2-user/dailybox'
+dev_path = '/home/dheslin/bygtech/dailybox'
 
 print(f"OS instance PATH {os.path.dirname(app.instance_path)}")
 print(f"OS root PATH {os.path.dirname(app.root_path)}")
 print(f"OS CWD {os.getcwd()}")
-if os.getcwd() != path:
+if config.env == 'prod' and os.getcwd() != path:
     os.chdir(path)
+elif config.env == 'dev' and os.getcwd() != dev_path:
+    os.chdir(dev_path)
 print(f"OS CWD after: {os.getcwd()}")
 
 
@@ -711,6 +714,11 @@ def create_alias():
 def assign_alias():
     boxid = str(request.form.get('boxid'))
     boxnum = str(int(request.form.get('boxnum')) - 1) #boxes displayed start at 1.  boxes in db start at 0.
+    
+    user_aliases = eval(request.form.get('user_aliases'))
+    user_alias_dict = dict(user_aliases)
+    print(f"user_alias_dict: {user_alias_dict}")
+
     if request.form.get('existingAlias'):
         existing_alias = eval(request.form.get('existingAlias'))
     else:
@@ -722,6 +730,10 @@ def assign_alias():
     if existing_alias:
         query = "UPDATE boxes SET box%s = %s WHERE boxid = %s;"
         db2(query, (int(boxnum), existing_alias[1], int(boxid)))
+
+    elif new_alias in user_alias_dict:
+        query = "UPDATE boxes SET box%s = %s WHERE boxid = %s;"
+        db2(query, (int(boxnum), user_alias_dict[new_alias], int(boxid)))
 
     elif new_alias:
         new_user_q = "INSERT INTO users (username, password, first_name, last_name, active, alias_of_userid) values (%s, 'x', 'alias', %s, 1, %s);"
@@ -1025,7 +1037,7 @@ def display_box():
             grid[curr_win_row][curr_win_col] = (curr_winner_boxnum, curr_winner, curr_winner_userid)
             print(grid)
 
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, private_game_payment_link=private_game_payment_link)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, private_game_payment_link=private_game_payment_link, images=images)
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
         print(f'dh 1126 paytype {ptype} {winners}')

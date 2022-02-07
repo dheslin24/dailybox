@@ -18,7 +18,7 @@ espnid = 401326625
 espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
 espn_nfl_url_single = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={espnid}"
 season_type = 3 # post season
-week = 5
+week = 4
 espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
 espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 
@@ -30,10 +30,11 @@ r = requests.get(espn_nfl_url).json()
 # single espnid testing
 #print(r.keys())
 print("\n\n")
+print(r)
 
 # print(f"{r['boxscore']['teams']}")
 
-#print(r['scoringPlays'])
+# print(r['scoringPlays'])
 # for score in r['scoringPlays']:
 #     print(f"\n\n{score}")
 
