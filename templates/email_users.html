@@ -11,6 +11,8 @@
 <form action="{{ url_for('send_bygemail') }}" method="POST">
     <label for="userid">Send E-Mail to Userid:</label>
     <input type="text" name="userid" size="10">
+    <label for="rcpt">Recipient</label>
+    <input type="email" name="rcpt">
     <label for="subject">Subject</label>
     <input type="text" name="subject" size="100">
     <label for="body">Body</label>

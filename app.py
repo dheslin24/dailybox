@@ -3435,10 +3435,12 @@ def email_users():
 @login_required
 def send_bygemail():
     userid = request.form.get('userid')
+    rcpt = request.form.get('rcpt')
     subject = request.form.get('subject')
     body = request.form.get('body')
 
     print(f"sending email for userid: {userid}")
+    print(rcpt)
     print(subject)
     print(body)
 
