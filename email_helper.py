@@ -2,7 +2,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 
-def send_email(sndr=None, rcpt=None, subj=None, b_text=None, b_html=None):
+def send_email(sndr=None, rcpt=None, subj=None, b_text='', b_html=None, body_header=''):
     # Replace sender@example.com with your "From" address.
     # This address must be verified with Amazon SES.
     if sndr:
@@ -44,14 +44,11 @@ def send_email(sndr=None, rcpt=None, subj=None, b_text=None, b_html=None):
     if b_html:
         BODY_HTML = b_html
     else:
-        BODY_HTML = """<html>
+        BODY_HTML = f"""<html>
         <head></head>
         <body>
-        <h1>Amazon SES Test (SDK for Python)</h1>
-        <p>This email was sent with
-            <a href='https://aws.amazon.com/ses/'>Amazon SES</a> using the
-            <a href='https://aws.amazon.com/sdk-for-python/'>
-            AWS SDK for Python (Boto)</a>.</p>
+        <h1>{body_header}</h1>
+        <p>{b_text}</p>
         </body>
         </html>
                     """            

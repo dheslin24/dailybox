@@ -3445,7 +3445,7 @@ def send_bygemail():
     print(body)
 
     if userid == 19 or userid == '19':
-        send_email(rcpt=rcpt, subj=subject, b_text=body)
+        send_email(rcpt=rcpt, subj=subject, b_text=body, body_header=subject)
 
     return redirect(url_for('email_users'))
 
