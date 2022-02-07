@@ -3445,9 +3445,9 @@ def send_bygemail():
     print(body)
 
     if userid == 19 or userid == '19':
-        send_email(rcpt=rcpt, subj=subject, b_text=body, body_header=subject)
+        message_response = send_email(rcpt=rcpt, subj=subject, b_text=body, body_header=subject)
 
-    return redirect(url_for('email_users'))
+    return redirect(url_for('email_users', message_response=message_response))
 
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():

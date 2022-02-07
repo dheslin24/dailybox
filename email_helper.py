@@ -92,6 +92,8 @@ def send_email(sndr=None, rcpt=None, subj=None, b_text='', b_html=None, body_hea
     # Display an error if something goes wrong.	
     except ClientError as e:
         print(e.response['Error']['Message'])
+        return['Error sending email']
     else:
         print("Email sent! Message ID:"),
         print(response['MessageId'])
+        return response['MessageId']
