@@ -698,7 +698,7 @@ def create_alias():
     ud_string = "SELECT userid, username FROM users;"
     user_dict = dict(db2(ud_string))
 
-    alias_string = "SELECT userid FROM users WHERE alias_of_userid = {}".format(session['userid'])
+    alias_string = "SELECT userid FROM users WHERE alias_of_userid = {} and active = 1".format(session['userid'])
     aliases_result = db2(alias_string)
     user_aliases = []
     if aliases_result:
@@ -3429,7 +3429,12 @@ def user_details():
 @app.route("/email_users", methods=["GET", "POST"])
 @login_required
 def email_users():
-    return render_template("email_users.html")
+    if request.args['message_response']:
+        message_response = request.args['message_response']
+    else:
+        message_response = ''
+
+    return render_template("email_users.html", message_response=message_response)
 
 @app.route("/send_bygemail", methods=["GET", "POST"])
 @login_required
