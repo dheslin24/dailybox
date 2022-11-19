@@ -1,4 +1,4 @@
-import db_accessor.config
+import dailybox.db_accessor.config as config
 import mysql.connector
 from mysql.connector import errorcode
 
