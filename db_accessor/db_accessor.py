@@ -1,4 +1,4 @@
-import config
+import db_accessor.config
 import mysql.connector
 from mysql.connector import errorcode
 
