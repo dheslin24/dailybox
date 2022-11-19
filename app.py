@@ -9,7 +9,7 @@ from passlib.apps import custom_app_context as pwd_context
 import sys
 import random
 import json
-#import config  ## moved to db_accessor
+import config  ## moved to db_accessor
 from db_accessor.db_accessor import db, db2
 import sched, time
 from collections import OrderedDict
