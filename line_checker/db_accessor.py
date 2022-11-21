@@ -9,7 +9,7 @@ db_config = {'user':config.user, 'password':config.password, 'host':config.host,
 
 def db2(s, params=(), db_config=db_config):
     try:
-        cnx = mysql.connector.connect(**db_config)
+        cnx = mysql.connector.connect(auth_plugin='mysql_native_password', **db_config)
         #print("try succeeded")
 
     except mysql.connector.Error as err:
