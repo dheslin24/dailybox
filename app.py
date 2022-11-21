@@ -31,7 +31,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-path = '/home/ec2-user/dailybox'
+path = '/home/dheslin/dailybox'
 dev_path = '/home/dheslin/bygtech/dailybox'
 
 print(f"OS instance PATH {os.path.dirname(app.instance_path)}")
