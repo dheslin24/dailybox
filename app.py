@@ -934,19 +934,28 @@ def display_box():
     print(f"paytype:  {pay_type}")
     # check for final scores only
     if pay_type == 'single' or pay_type == 'ten_man' or pay_type == 'sattelite':
-        team_scores_digit = get_espn_scores(espnid = '')['team']
-        #game_dict = get_espn_score_by_qtr(espn_id)
-        print(f"team scores: {team_scores_digit}")
-        print(f"home and away: {home} {away}")
-        home_digit = str(0)
-        away_digit = str(0)
-        if home in team_scores_digit and away in team_scores_digit:
-            print(f"home: {home}:{team_scores_digit[home]} away: {away}:{team_scores_digit[away]}")
-            home_digit = team_scores_digit[home][-1]
-            away_digit = team_scores_digit[away][-1]
-            print(home_digit, away_digit)
+
+        if 'current_score' in team_scores[home]:
+            home_digit = team_scores[home]['current_score'][-1]
+            away_digit = team_scores[away]['current_score'][-1]
         else:
-            print("one team is most likely on bye")
+            home_digit = str(0)
+            away_digit = str(0)
+
+        # DH 11/25/22 - changing..
+        # team_scores_digit = get_espn_scores(espnid = '')['team']
+        # #game_dict = get_espn_score_by_qtr(espn_id)
+        # print(f"team scores: {team_scores_digit}")
+        # print(f"home and away: {home} {away}")
+        # home_digit = str(0)
+        # away_digit = str(0)
+        # if home in team_scores_digit and away in team_scores_digit:
+        #     print(f"home: {home}:{team_scores_digit[home]} away: {away}:{team_scores_digit[away]}")
+        #     home_digit = team_scores_digit[home][-1]
+        #     away_digit = team_scores_digit[away][-1]
+        #     print(home_digit, away_digit)
+        # else:
+        #     print("one team is most likely on bye")
 
     elif pay_type == 'four_qtr':
         home_digit = str(0)
