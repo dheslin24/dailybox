@@ -2,7 +2,7 @@ import requests
 from datetime import datetime, timedelta
 from db_accessor.db_accessor import db2
 
-def get_espn_scores(abbrev = True, season_type = 2, week = 11, league='nfl', espnid=False):
+def get_espn_scores(abbrev = True, season_type = 2, week = 12, league='nfl', espnid=False):
     season_type = 3  # 1: preseason, 2: regular, 3: post
     week = 1 # will make this an input soon
     espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
