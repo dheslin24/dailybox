@@ -1994,7 +1994,7 @@ def select_bowl_games():
 @login_required
 def view_all_picks():
 
-    season = 2021
+    season = 2022
     season_type = 3
     weeks = [1, 2, 3, 5] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
@@ -2122,10 +2122,15 @@ def view_all_picks():
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
 
     # check for winners, eliminated users, and tie break scenarios
-    eliminated_check = elimination_check(sorted_game_dict, sorted_d, user_dict)
-    eliminated_list = eliminated_check['elim']
-    winner = eliminated_check['winner']
-    tb_log = eliminated_check['tb_log']
+    if sorted_d:
+        eliminated_check = elimination_check(sorted_game_dict, sorted_d, user_dict)
+        eliminated_list = eliminated_check['elim']
+        winner = eliminated_check['winner']
+        tb_log = eliminated_check['tb_log']
+    else:
+        eliminated_list = []
+        winner = []
+        tb_log = []
 
     # get tiebreaks
     t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
