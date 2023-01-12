@@ -25,7 +25,7 @@ for f in flask_apps:
 
 print("starting flask")
 #subprocess.run(['flask', 'run', '-h', '0.0.0.0', '-p', '10001', '%'], shell=True)
-subprocess.run(["flask run -h 0.0.0.0 -p 10001 &"], shell=True)
+subprocess.run(["flask run -h 0.0.0.0 -p 10001 &"], shell=True, cwd="/home/dheslin/dailybox")
 
 time.sleep(5)
 
