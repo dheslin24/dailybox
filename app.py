@@ -3211,7 +3211,7 @@ def payment_status():
     for user in users_list:
         if user[0] in user_fees:
             users.append(user)
-            if user[0] in [67, 113, 15]:
+            if user[0] in [31]:
                 emoji[user[0]] = middle_finger
             elif user_fees[user[0]] > paid[user[0]]:
                 emoji[user[0]] = ex
