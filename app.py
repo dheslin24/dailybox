@@ -3359,7 +3359,7 @@ def priv_payment_status():
     admins = []
     for admin in a:
         admins.append(admin[0])
-        admins.append(19) # DH superuser
+        admins.append(3) # DH superuser
 
     return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=True, boxid=boxid, box_type=4)
 
