@@ -3083,6 +3083,22 @@ def admin():
     else:
         return apology("Sorry, you're not an admin")
 
+@app.route("/create_privategame_code", methods=["GET", "POST"])
+def create_privategame_code():
+    boxid = request.form.get('boxid')
+    passcode = request.form.get('passcode')
+    admin_id = request.form.get('admin_id')
+
+    s = "INSERT INTO privatepass (boxid, pswd, admin) VALUES (%s, %s, %s);"
+    db2(s, (boxid, passcode, admin_id))
+
+    # privatize the pool now that there's a code
+    s2 = "UPDATE boxes SET box_type = %s WHERE boxid = %s;"
+    db2(s2, (BOX_TYPE_ID['private'], boxid))
+
+    # return redirect(url_for(""))
+    return render_template("landing_page.html")
+
 @app.route("/bygzomo", methods=["GET", "POST"])
 @login_required
 @admin_required
