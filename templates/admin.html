@@ -98,5 +98,14 @@
         <input type="text" name="boxid" size="5">
         <input type="submit">
     </form>
+    <form action="{{ url_for('create_privategame_code') }}" method="POST">
+        <label for="boxid">Private Game ID</label>
+        <input type="text" name="boxid" size="5">
+        <label for="code">Passcode</label>
+        <input type="text" name="passcode" size="10">
+        <label for="admin_id">Admin ID</label>
+        <input type="text" name="admin_id" size="5">
+        <input type="submit">
+    </form>
 
 {% endblock %}
