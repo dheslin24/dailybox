@@ -2665,8 +2665,9 @@ def ncaab_games():
     for event in ncaab_games['events']:
         events.append((event['id'], event['date'], event['shortName']))
 
-        for competitor in event['competitions']['competitors']:
-            scores.append((competitor['team']['abbreviation'], competitor['score']))
+        for competition in event['competitions']:    
+            for competitor in competition['competitors']:
+                scores.append((competitor['team']['abbreviation'], competitor['score']))
 
     return render_template("ncaab_games.html", events=events, scores=scores)
 
