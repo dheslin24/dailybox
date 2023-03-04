@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from db_accessor.db_accessor import db2
 
 def get_ncaab_games():
-    espn_ncaab_url = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard"
+    espn_ncaab_url = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?dates=20230303"
 
     response = requests.get(espn_ncaab_url).json()
 
