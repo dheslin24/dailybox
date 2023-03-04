@@ -2658,7 +2658,13 @@ def pickem_all_picks():
 @app.route("/ncaab_games", methods=["GET", "POST"])
 def ncaab_games():
     ncaab_games = get_ncaab_games()
-    return render_template("ncaab_games.html", ncaab_games=ncaab_games)
+
+    events = []
+
+    for event in ncaab_games['events']:
+        events.append((event['id'], event['date'], event['shortName']))
+
+    return render_template("ncaab_games.html", events=events)
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
 def enter_pickem_scores():
