@@ -2,6 +2,13 @@ import requests
 from datetime import datetime, timedelta
 from db_accessor.db_accessor import db2
 
+def get_ncaab_games():
+    espn_ncaab_url = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard"
+
+    response = requests.get(espn_ncaab_url).json()
+
+    return response
+
 def get_espn_ids(season_type = 3, week = 1, league='ncaaf'):
     espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
     espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"

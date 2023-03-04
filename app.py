@@ -18,7 +18,7 @@ import re
 import os
 from operator import itemgetter, attrgetter
 from functools import wraps
-from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game
+from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game, get_ncaab_games
 from funnel_helper import elimination_check
 from email_helper import send_email
 from email_validator import validate_email, EmailNotValidError
@@ -2654,6 +2654,11 @@ def pickem_all_picks():
     print("eliminated list: {}".format(eliminated_list))
     
     return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown, eliminated_list=eliminated_list)
+
+@app.route("/ncaab_games", methods=["GET", "POST"])
+def ncaab_games():
+    ncaab_games = get_ncaab_games()
+    return render_template("ncaab_games.html", ncaab_games=ncaab_games)
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
 def enter_pickem_scores():
