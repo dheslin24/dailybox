@@ -2660,11 +2660,15 @@ def ncaab_games():
     ncaab_games = get_ncaab_games()
 
     events = []
+    scores = []
 
     for event in ncaab_games['events']:
         events.append((event['id'], event['date'], event['shortName']))
 
-    return render_template("ncaab_games.html", events=events)
+        for competitor in event['competitions']['competitors']:
+            scores.append((competitor['team']['abbreviation'], competitor['score']))
+
+    return render_template("ncaab_games.html", events=events, scores=scores)
 
 @app.route("/enter_pickem_scores", methods=["GET", "POST"])
 def enter_pickem_scores():
