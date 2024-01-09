@@ -1999,6 +1999,7 @@ def view_all_picks():
     weeks = [1, 2, 3, 5] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
     now = datetime.utcnow() - timedelta(hours=5)
+    annual = now.year - 2009
     # get list of active games first
     #game_dict = get_espn_scores(False)['game']
     game_dicts = []
@@ -2137,7 +2138,7 @@ def view_all_picks():
     tb_dict = dict(db2(t))
     print(f"tb_dict {tb_dict}")
 
-    return render_template("view_all_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now, last_line_time=last_line_time, emojis=EMOJIS, eliminated_list=eliminated_list, winner=winner, tb_log=tb_log)
+    return render_template("view_all_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now, last_line_time=last_line_time, emojis=EMOJIS, eliminated_list=eliminated_list, winner=winner, tb_log=tb_log, annual=annual)
 
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 @login_required
