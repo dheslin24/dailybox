@@ -2227,13 +2227,14 @@ def add_bowl_user():
 def bowl_mark_paid():
     userid = int(request.form.get("userid"))
     paid = request.form.get("paid")
+    season = datetime.utcnow().year - 1
 
-    s = "SELECT userid, payment_status FROM bowl_payment;"
+    s = f"SELECT userid, payment_status FROM bowl_payment where season = {season};"
     paid_status = dict(db2(s))
 
     if userid not in paid_status:
-        s = "INSERT INTO bowl_payment (userid, payment_status) VALUES (%s, %s);"
-        db2(s, (userid, True))
+        s = "INSERT INTO bowl_payment (userid, payment_status, season) VALUES (%s, %s, %s);"
+        db2(s, (userid, True, season))
     elif paid_status[userid] == False:
         s = "UPDATE bowl_payment SET payment_status = %s, payment_status_dh = %s WHERE userid = %s;"
         db2(s, (True, False, userid))
@@ -2247,13 +2248,14 @@ def bowl_mark_paid():
 def bowl_mark_paid_dh():
     userid = int(request.form.get("userid"))
     paid = request.form.get("paid_dh")
+    season = datetime.utcnow().year - 1
 
-    s = "SELECT userid, payment_status_dh FROM bowl_payment;"
+    s = f"SELECT userid, payment_status_dh FROM bowl_payment where season = {season};"
     paid_status = dict(db2(s))
 
     if userid not in paid_status:
-        s = "INSERT INTO bowl_payment (userid, payment_status, payment_status_dh) VALUES (%s, %s, %s);"
-        db2(s, (userid, True, True))
+        s = "INSERT INTO bowl_payment (userid, payment_status, payment_status_dh, season) VALUES (%s, %s, %s, %s);"
+        db2(s, (userid, True, True, season))
     elif paid_status[userid] == False:
         s = "UPDATE bowl_payment SET payment_status = %s, payment_status_dh = %s WHERE userid = %s;"
         db2(s, (True, True, userid))
