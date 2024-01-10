@@ -2181,7 +2181,7 @@ def bowl_payment_status():
     check = '\u2714'
     ex = '\u274c'
 
-    p = "SELECT userid, payment_status, payment_status_dh FROM bowl_payment;"
+    p = f"SELECT userid, payment_status, payment_status_dh FROM bowl_payment where season = {season};"
     payments = db2(p)
     payment_list = []
     payment_list_dh = []
