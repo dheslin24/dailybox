@@ -2143,9 +2143,9 @@ def view_all_picks():
 @app.route("/bowl_payment_status", methods=["GET", "POST"])
 @login_required
 def bowl_payment_status():
-    #season = 2021 
+    season = datetime.utcnow().year - 1  # will only ever be run after new yrs from the season that started prev yr
     # get list of espnids 
-    e = "SELECT espnid FROM latest_lines WHERE league = 'nfl';"
+    e = f"SELECT espnid FROM latest_lines WHERE season = {season} and league = 'nfl';"
     espnids = db2(e)
     espn_string = ''
     for espnid in espnids:
