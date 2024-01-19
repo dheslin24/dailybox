@@ -93,7 +93,7 @@
 
         <tr>
             <td class="BYG" colspan="2" style="border-bottom: solid blue;"><strong style="font-size: 30px;">BYG</td>
-            <td class="{{ home }}" colspan="10" style="border-bottom: 2px solid black;"><strong style="font-size:  30px; letter-spacing: 5px;"><img src="{{ team_scores[home]['logo'] }}" width="50" height="50"> {{ home[0:3] }} <img src="{{ team_scores[home]['logo'] }}" width="50" height="50"></td>
+            <td class="{{ home }}" colspan="10" style="border-bottom: 2px solid black;"><strong style="font-size:  30px; letter-spacing: 5px;"><img src="{{ home if home == 'TBD' else team_scores[home]['logo'] }}" width="50" height="50"> {{ home[0:3] }} <img src="{{ home if home == 'TBD' else team_scores[home]['logo'] }}" width="50" height="50"></td>
         </tr>
         <tr>
         <td class="BYG" colspan="2" style="border-bottom: 1px solid black;">Box: {{ boxid }} </td>
@@ -108,13 +108,13 @@
         <tr>
             {% if away|length > 2 %}
                 {% if outer_loop.index0 == 2 or outer_loop.index0  == 6 %}
-                    <h1><td class="{{ away }}"><strong style="font-size: 30px"> <img src="{{ team_scores[away]['logo'] }}" width="50" height="50"></strong></td></h1>
+                    <h1><td class="{{ away }}"><strong style="font-size: 30px"> <img src="{{ away if away == 'TBD' else team_scores[away]['logo'] }}" width="50" height="50"></strong></td></h1>
                 {% else %}
                     <h1><td class="{{ away }}"><strong style="font-size: 30px"> {{ away_team[outer_loop.index0|string] }} </strong></td></h1>
                 {% endif %}
             {% else %}
                 {% if outer_loop.index0 == 3 or outer_loop.index0 == 6 %}
-                    <h1><td class="{{ away }}"><strong style="font-size: 30px"> <img src="{{ team_scores[away]['logo'] }}" width="50" height="50"></strong></td></h1>
+                    <h1><td class="{{ away }}"><strong style="font-size: 30px"> <img src="{{ away if away == 'TBD' else team_scores[away]['logo'] }}" width="50" height="50"></strong></td></h1>
                 {% else %}
                     <h1><td class="{{ away }}"><strong style="font-size: 30px"> {{ away_team[outer_loop.index0|string] }} </strong></td></h1>
                 {% endif %}
