@@ -93,7 +93,11 @@
 
         <tr>
             <td class="BYG" colspan="2" style="border-bottom: solid blue;"><strong style="font-size: 30px;">BYG</td>
+            {% if home != 'TBD' %}
             <td class="{{ home }}" colspan="10" style="border-bottom: 2px solid black;"><strong style="font-size:  30px; letter-spacing: 5px;"><img src="{{ team_scores[home]['logo'] }}" width="50" height="50"> {{ home[0:3] }} <img src="{{ team_scores[home]['logo'] }}" width="50" height="50"></td>
+            {% else %}
+            <td class="{{ home }}" colspan="10" style="border-bottom: 2px solid black;"><strong style="font-size:  30px; letter-spacing: 5px;">{{ home[0:3] }} </td>
+            {% endif %}
         </tr>
         <tr>
         <td class="BYG" colspan="2" style="border-bottom: 1px solid black;">Box: {{ boxid }} </td>
