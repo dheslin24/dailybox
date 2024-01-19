@@ -107,13 +107,13 @@
         {% set outer_loop = loop %}
         <tr>
             {% if away|length > 2 %}
-                {% if outer_loop.index0 == 2 or outer_loop.index0  == 6 and away != 'TBD' %}
+                {% if away != 'TBD' and outer_loop.index0 == 2 or outer_loop.index0  == 6 %}
                     <h1><td class="{{ away }}"><strong style="font-size: 30px"> <img src="{{ team_scores[away]['logo'] }}" width="50" height="50"></strong></td></h1>
                 {% else %}
                     <h1><td class="{{ away }}"><strong style="font-size: 30px"> {{ away_team[outer_loop.index0|string] }} </strong></td></h1>
                 {% endif %}
             {% else %}
-                {% if outer_loop.index0 == 3 or outer_loop.index0 == 6 and away != 'TBD' %}
+                {% if away != 'TBD' and outer_loop.index0 == 3 or outer_loop.index0 == 6 %}
                     <h1><td class="{{ away }}"><strong style="font-size: 30px"> <img src="{{ team_scores[away]['logo'] }}" width="50" height="50"></strong></td></h1>
                 {% else %}
                     <h1><td class="{{ away }}"><strong style="font-size: 30px"> {{ away_team[outer_loop.index0|string] }} </strong></td></h1>
