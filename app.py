@@ -21,6 +21,7 @@ from functools import wraps
 from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game, get_ncaab_games
 from funnel_helper import elimination_check
 from email_helper import send_email
+from gd_email_helper import send_gd_email
 from email_validator import validate_email, EmailNotValidError
 
 
