@@ -77,7 +77,8 @@ PAY_TYPE_ID = {
     'touch' : 4,
     'ten_man' : 5, 
     'satellite' : 6,
-    'ten_man_final_reverse': 7
+    'ten_man_final_reverse': 7,
+    'every_minute': 8
 }
 
 BOX_TYPE_ID = {
@@ -108,6 +109,7 @@ EMOJIS = {
     # |           5 | 10-Man                   |
     # |           6 | Satellite
     # |           7 | 10-Man Final/Reverse 75/25
+    # |           8 | Every Minute             |
     # +-------------+--------------------------+
 
 def apology(message, code=400):
@@ -236,6 +238,7 @@ def payout_calc(pay_type, fee):
     |           5 | 10-Man                   |
     |           6 | Satellite
     |           7 | 10-Man Final/Reverse 75/25
+    |           8 | Every Minute             |
     +-------------+--------------------------+
     '''
     if pay_type == PAY_TYPE_ID['four_qtr']:
@@ -253,6 +256,8 @@ def payout_calc(pay_type, fee):
         s = 'Final: {}  /  Reverse Final: {}'.format(int((fee * 10) *.75), int((fee * 10) *.25))
     elif pay_type == PAY_TYPE_ID['every_score']:
         s = Markup('Every score wins {} up to 27 scores.  Final gets remainder after all payouts, min {}.  <br>Reverse final wins min {} / max {} (see TW email).  Anything touching reverse or final wins {}.'.format(fee * 3, fee * 10, fee, fee * 10, fee))
+    elif pay_type == PAY_TYPE_ID['every_minute']:
+        s = Markup('Winner Every Minute - Tell dan to update this more when ready, line 260')
     else:
         s = 'Payouts for Game Type not yet supported' # will add later date
 
@@ -295,7 +300,7 @@ def calc_winner(boxid):  # all this does is strip all beginning digits from the 
                     else:
                         winner_list.append(str(score))
 
-    # pay_type == 3:  #  will do this elsewhere
+    # pay_type == 3 or 8:  #  will do this elsewhere
 
     print(winner_list)
     return winner_list
@@ -436,7 +441,7 @@ def start_game():
             # and... update the db with winner - in scores
             w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid)[0], boxid)
             db(w)
-        if pay_type == PAY_TYPE_ID['every_score']:  # this is everyscore pool, so set 0, 0 as initial winning score
+        if pay_type == PAY_TYPE_ID['every_score'] or PAY_TYPE_ID['every_minute']:  # this is everyscore or everymin pool, so set 0, 0 as initial winning score
             winner = find_winning_box(boxid, 0, 0)
             win_box = winner[0]
             win_uid = winner[1]
@@ -1026,9 +1031,9 @@ def display_box():
         print(f"xy: {x} -- {y}")
             
         winners = calc_winner(boxid)
-        # no winners and not an every score (paytype = 3)
+        # no winners and not an every score (paytype = 3 or 8)
         print(f"pay type 1/8 debug {ptype} {winners}")
-        if len(winners) == 0 and (ptype != PAY_TYPE_ID['every_score'] and ptype != PAY_TYPE_ID['four_qtr']):
+        if len(winners) == 0 and (ptype != PAY_TYPE_ID['every_score'] and ptype != PAY_TYPE_ID['four_qtr'] and ptype != PAY_TYPE_ID['every_minute']):
 
             for col in x:   
                 if str(x[col]) == home_digit:
@@ -1275,6 +1280,11 @@ def display_box():
             # final every score (paytype =3)
             return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
 
+        if ptype == PAY_TYPE_ID["every_minute"]:
+            # TODO DH HERE IT IS!
+            # probably just look up some db table to see who won
+            # have an offline that updates it
+            pass
 
     if box_type == BOX_TYPE_ID['dailybox']:
         sf = ['' for x in range(10)]
@@ -3224,7 +3234,7 @@ def payment_status():
         fee = game[0]
         pay_type = game[1]
         if pay_type == 5 or pay_type == 6 or pay_type == 7:
-            fee = fee // 10
+            fee = fee // 10 # these are 10-man pools
         for b in game[2:]:
             if b in aliases:
                 userid = aliases[b]
@@ -3425,7 +3435,7 @@ def admin_summary():
     for _ in box_list:
         box_string += _
     box_string = box_string[:-2]
-    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1 or boxid between 26 and 36;".format(box_string)
+    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1 or boxid between 26 and 36;".format(box_string) # TODO no way this is still valid
     all_boxes = db(box)
     user_box_count = {}
     user_fees = {}
@@ -3433,7 +3443,7 @@ def admin_summary():
         fee = game[0]
         pay_type = game[1]
         if pay_type == 5 or pay_type == 6 or pay_type == 7:
-            fee = fee // 10
+            fee = fee // 10  # these are 10-man pools
             print("fee {}".format(fee))
         for box in game[2:]:
             if box != 0 and box != 1:
