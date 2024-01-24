@@ -1304,8 +1304,8 @@ def display_box():
             minute_winner_list = []  # (minute, home_num, away_num, description, userid, winning box)
             def _update_minute_winner_list(win_details, n):
                 new_details = win_details[1:]
+                new_min = minute
                 for _ in range(n):
-                    new_min = minute
                     minute_winner_list.append((new_min,) + new_details)
                     new_min += 1
 
