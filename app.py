@@ -1322,7 +1322,7 @@ def display_box():
                 box_winners[winner_boxnum] += winning_minutes
                 winner_markup = Markup(f'WINNER</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
             
-                grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_username, winner_userid)
+                grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
 
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
 
