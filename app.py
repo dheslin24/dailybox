@@ -19,6 +19,7 @@ import os
 from operator import itemgetter, attrgetter
 from functools import wraps
 from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game, get_ncaab_games
+from espn_every_minute.get_espn_score import get_espn_every_min_scores
 from funnel_helper import elimination_check
 from email_helper import send_email
 from gd_email_helper import send_gd_email
@@ -1285,7 +1286,42 @@ def display_box():
             # TODO DH HERE IT IS!
             # probably just look up some db table to see who won
             # have an offline that updates it
-            pass
+            # must return here
+
+            """
+            winner = {
+                "away_score": score.get("away_score"),
+                "home_score": score.get("home_score"),
+                "winning_minutes": winning_minutes
+            }
+            """
+            winners = get_espn_every_min_scores(espn_id)
+            if not winners:
+                return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
+
+            for winner in winners:
+                away_num = str(winner["away_score"])[-1]
+                home_num = str(winner["home_score"])[-1]
+                winning_minutes = winner["winning_minutes"]
+
+                for col in x:
+                    if str(x[col]) == home_num:
+                        win_col = int(col)
+                for row in y:
+                    if str(y[row]) == away_num:
+                        win_row = int(row)
+                
+                winner_user = grid[win_row][win_col]
+                winner_markup = Markup(f"WINNER</br>{winner_user}</br>{winning_minutes}") # TODO figure out $ value
+                winner_boxnum = grid[win_row][win_col][0]
+                winner_userid = grid[win_row][win_col][2]
+
+                grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
+
+                return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
+                # (boxnum, winner markup, userid)
+
+            
 
     if box_type == BOX_TYPE_ID['dailybox']:
         sf = ['' for x in range(10)]

@@ -51,13 +51,14 @@ example espn api scoringPlays response below:
  'text': 'Michael Badgley Made 23 Yd Field Goal',
  'type': {'abbreviation': 'FG', 'id': '59', 'text': 'Field Goal Good'}}
 '''
-def find_game_second(qtr: int, clock: int):
+
+def _find_game_second(qtr: int, clock: int):
     elapsed_seconds_in_qtr = 900 - clock
     game_second = elapsed_seconds_in_qtr + ((qtr - 1) * 900)
 
     return game_second
 
-def get_espn_scores(espnid):
+def get_espn_every_min_scores(espnid):
     espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={espnid}"
 
     r = requests.get(espn_url)
@@ -68,12 +69,15 @@ def get_espn_scores(espnid):
 
     game_status = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('type', {}).get("name")
     print(f"GAME STATUS {game_status}")
+
+    if game_status not in ["STATUS_IN_PROGRESS", "STATUS_FINAL"]:
+        return None
+
     current_clock = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('displayClock')
     current_qtr = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('period')
     if current_clock:
         current_min, current_second = current_clock.split(current_clock, ":")
         current_game_second = ((int(current_qtr) - 1) * 900) + (int(current_min) * 60) + (int(current_second))
-
 
     for play in response.get('scoringPlays', {}):
         
@@ -88,16 +92,13 @@ def get_espn_scores(espnid):
         }
         scores.append(scoring_play)
 
-        # pprint(scoring_play)
-
     winners = []
-    # start = 3600
     last_score_second = 0
     next_winner = {"away_score": 0, "home_score": 0}
     total_winning_minutes = 0
     i = 0
     for idx, score in enumerate(scores):
-        game_second = find_game_second(int(score["quarter"]), int(score["clock_value"]))
+        game_second = _find_game_second(int(score["quarter"]), int(score["clock_value"]))
         winning_minutes = (game_second - last_score_second) // 60
         if last_score_second == 0:
             winning_minutes += 1 # start of game, 0/0 won the 0th minute
@@ -127,13 +128,12 @@ def get_espn_scores(espnid):
             "home_score": score.get("home_score"),
             "winning_minutes": winning_minutes
         }
+
+        winners.append(winner)
         
         total_winning_minutes += winning_minutes
         print(f"game second: {current_game_second}  last_score second: {last_score_second}  clock: IN PROG WINNER")
         print(f"{i}: {winner}\n")
-
-        pass
-
 
     if game_status == "STATUS_FINAL" and last_score_second < 3540:
         winning_minutes = (3540 - last_score_second) // 60
@@ -142,17 +142,20 @@ def get_espn_scores(espnid):
             "home_score": next_winner["home_score"],
             "winning_minutes": winning_minutes
         }
+
+        winners.append(winner)
+
         total_winning_minutes += winning_minutes
         print(f"game second: 3540  last_score second: {last_score_second}  clock: FINAL")
         print(f"{i}: {winner}\n")
 
-
+    # print(winners)
     print(f"Total winning minutes: {total_winning_minutes}")
 
     return winners
 
-
-
-
-# get_espn_scores(401547757) #det/tb
-get_espn_scores(401547758)  #kc/buf
+# get_espn_every_min_scores(401547757) #det/tb
+# get_espn_every_min_scores(401547758)  #kc/buf
+# get_espn_every_min_scores(401547379)  #kc/bal
+# get_espn_every_min_scores(401547380) # det/sf
+# get_espn_every_min_scores(401547378) # superbowl
