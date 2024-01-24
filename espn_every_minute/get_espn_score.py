@@ -160,7 +160,7 @@ def get_espn_every_min_scores(espnid):
             "type": "final"
         }
 
-        winners.extend(winner, reverse_winner, final_winner)
+        winners.extend([winner, reverse_winner, final_winner])
         
         total_winning_minutes += winning_minutes
         print(f"game second: 3540  last_score second: {last_score_second}  clock: FINAL")
