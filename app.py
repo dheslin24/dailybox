@@ -1330,7 +1330,7 @@ def display_box():
                 win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute)}", winner_userid, winner_boxnum)
                 
                 if win_type == "minute":
-                    win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute) {str(fee * 1.5)}}", winner_userid, winner_boxnum)
+                    win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute)} {str(fee * 1.5)}", winner_userid, winner_boxnum)
                     _update_minute_winner_list(win_detail, winning_minutes)
                     minute += winning_minutes
                     box_winners[winner_boxnum] += winning_minutes * (fee * 1.5)
