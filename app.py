@@ -1313,6 +1313,8 @@ def display_box():
                 for row in y:
                     if str(y[row]) == away_num:
                         win_row = int(row)
+
+                print(f"DH GRID!!!!!!!!!! {grid}")
                 
                 winner_boxnum = grid[win_row][win_col][0]
                 winner_userid = grid[win_row][win_col][3]
