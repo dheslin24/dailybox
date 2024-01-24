@@ -1300,7 +1300,7 @@ def display_box():
                 return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
 
             box_winners = defaultdict(int)  # {boxnum : minutes}
-            for winner in winners:
+            for i, winner in enumerate(winners):
                 away_num = str(winner["away_score"])[-1]
                 home_num = str(winner["home_score"])[-1]
                 winning_minutes = winner["winning_minutes"]
@@ -1316,7 +1316,7 @@ def display_box():
                 winner_boxnum = grid[win_row][win_col][0]
                 winner_userid = grid[win_row][win_col][2]
                 box_winners[winner_boxnum] += winning_minutes
-                winner_markup = Markup(f'WINNER</br>{winner_username}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
+                winner_markup = Markup(f'WINNER{i}</br>{winner_username}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
 
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
 
