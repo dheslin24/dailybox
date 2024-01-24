@@ -1308,7 +1308,7 @@ def display_box():
                 new_end = win_details[4:]
                 
                 for _ in range(n):
-                    new_desc = (f"MINUTE {new_min} {str(int(fee * 1.5))}", )
+                    new_desc = (f"MINUTE {new_min}    {str(int(fee * 1.5))}", )
                     minute_winner_list.append((new_min,) + new_start + new_desc + new_end)
                     new_min += 1
 
@@ -1336,7 +1336,7 @@ def display_box():
                     win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute)} {str(int(fee * 1.5))}", winner_userid, winner_boxnum)
                     _update_minute_winner_list(win_detail, winning_minutes)
                     minute += winning_minutes
-                    box_winners[winner_boxnum] += winning_minutes * (fee * 1.5)
+                    box_winners[winner_boxnum] += int(winning_minutes * (fee * 1.5))
                     winner_markup = Markup(f'WINNER</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
                 elif win_type == "final":
                     win_detail = (200, home_num, away_num, f"{win_type.upper()} {str(fee * 5)}", winner_userid, winner_boxnum)
