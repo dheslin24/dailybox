@@ -1345,8 +1345,8 @@ def display_box():
                     winner_markup = Markup(f'WINNER</br>FINAL</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 elif win_type == "reverse":
                     box_winners[winner_boxnum] += reverse_payout
-                    minute_winner_list.append(win_detail)
                     win_detail = (100, home_num, away_num, f"{win_type.upper()} {str(fee * 5)}", winner_userid, winner_boxnum)
+                    minute_winner_list.append(win_detail)
                     winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
 
