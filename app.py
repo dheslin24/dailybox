@@ -1315,7 +1315,7 @@ def display_box():
                         win_row = int(row)
                 
                 winner_boxnum = grid[win_row][win_col][0]
-                winner_userid = grid[win_row][win_col][2]
+                winner_userid = grid[win_row][win_col][3]
                 winner_username = user_dict[winner_userid]
                 box_winners[winner_boxnum] += winning_minutes
                 winner_markup = Markup(f'WINNER</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
