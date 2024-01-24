@@ -1303,10 +1303,13 @@ def display_box():
             minute = 0
             minute_winner_list = []  # (minute, home_num, away_num, description, userid, winning box)
             def _update_minute_winner_list(win_details, n):
-                new_details = win_details[1:]
                 new_min = minute
+                new_start = win_details[1:2]
+                new_desc = f"MINUTE {new_min} {str(int(fee * 1.5))}"
+                new_end = win_details[4:]
+                
                 for _ in range(n):
-                    minute_winner_list.append((new_min,) + new_details)
+                    minute_winner_list.append((new_min,) + new_start + new_desc + new_end)
                     new_min += 1
 
             for winner in winners:
@@ -1330,7 +1333,7 @@ def display_box():
                 win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute)}", winner_userid, winner_boxnum)
                 
                 if win_type == "minute":
-                    win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute)} {str(fee * 1.5)}", winner_userid, winner_boxnum)
+                    win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute)} {str(int(fee * 1.5))}", winner_userid, winner_boxnum)
                     _update_minute_winner_list(win_detail, winning_minutes)
                     minute += winning_minutes
                     box_winners[winner_boxnum] += winning_minutes * (fee * 1.5)
