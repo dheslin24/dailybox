@@ -1304,7 +1304,7 @@ def display_box():
             minute_winner_list = []  # (minute, home_num, away_num, description, userid, winning box)
             def _update_minute_winner_list(win_details, n):
                 new_min = minute
-                new_start = win_details[1:2]
+                new_start = win_details[1:3]
                 new_desc = (f"MINUTE {new_min} {str(int(fee * 1.5))}", )
                 new_end = win_details[4:]
                 
