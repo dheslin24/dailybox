@@ -12,7 +12,7 @@ import json
 import config  ## moved to db_accessor
 from db_accessor.db_accessor import db, db2
 import sched, time
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from datetime import datetime, timedelta, date
 import re
 import os
@@ -1299,6 +1299,7 @@ def display_box():
             if not winners:
                 return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
 
+            box_winners = defaultdict(0)  # {boxnum : minutes}
             for winner in winners:
                 away_num = str(winner["away_score"])[-1]
                 home_num = str(winner["home_score"])[-1]
@@ -1312,9 +1313,10 @@ def display_box():
                         win_row = int(row)
                 
                 winner_username = grid[win_row][win_col][1][:10]
-                winner_markup = Markup(f'WINNER</br>{winner_username}</br>{winning_minutes}') # TODO figure out $ value
                 winner_boxnum = grid[win_row][win_col][0]
                 winner_userid = grid[win_row][win_col][2]
+                box_winners[winner_boxnum] += winning_minutes
+                winner_markup = Markup(f'WINNER</br>{winner_username}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
 
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
 
