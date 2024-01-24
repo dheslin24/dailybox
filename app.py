@@ -1283,11 +1283,6 @@ def display_box():
             return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
 
         if ptype == PAY_TYPE_ID["every_minute"]:
-            # TODO DH HERE IT IS!
-            # probably just look up some db table to see who won
-            # have an offline that updates it
-            # must return here
-
             """
             winner = {
                 "away_score": score.get("away_score"),
@@ -1302,10 +1297,13 @@ def display_box():
                 return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
 
             box_winners = defaultdict(int)  # {boxnum : minutes}
+            reverse_payout = fee * 5
+            final_payout = fee * 5
             for winner in winners:
                 away_num = str(winner["away_score"])[-1]
                 home_num = str(winner["home_score"])[-1]
                 winning_minutes = winner["winning_minutes"]
+                win_type = winner["type"]
 
                 for col in x:
                     if str(x[col]) == home_num:
@@ -1314,17 +1312,22 @@ def display_box():
                     if str(y[row]) == away_num:
                         win_row = int(row)
 
-                print(f"DH GRID!!!!!!!!!! {grid}")
+                # print(f"DH GRID!!!!!!!!!! {grid}")
                 
                 winner_boxnum = grid[win_row][win_col][0]
                 winner_userid = grid[win_row][win_col][2]
                 winner_username = user_dict[winner_userid]
-                box_winners[winner_boxnum] += winning_minutes
-                winner_markup = Markup(f'WINNER</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
-            
+                
+                if win_type == "minute":
+                    box_winners[winner_boxnum] += winning_minutes * 150
+                    winner_markup = Markup(f'WINNER</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
+                elif win_type == "final":
+                    box_winners[winner_boxnum] += final_payout
+                    winner_markup = Markup(f'FINAL</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
+                elif win_type == "reverse":
+                    box_winners[winner_boxnum] += reverse_payout
+                    winner_markup = Markup(f'REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
-
-            # return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
 
             return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
                 
