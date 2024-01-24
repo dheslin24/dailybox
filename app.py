@@ -1293,6 +1293,8 @@ def display_box():
                 "away_score": score.get("away_score"),
                 "home_score": score.get("home_score"),
                 "winning_minutes": winning_minutes
+
+            grid = [(box_num, name(user), userid, alias)]  <-- name is overloaded to include winning totals for display purposes
             }
             """
             winners = get_espn_every_min_scores(espn_id)
@@ -1300,7 +1302,7 @@ def display_box():
                 return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
 
             box_winners = defaultdict(int)  # {boxnum : minutes}
-            for i, winner in enumerate(winners):
+            for winner in winners:
                 away_num = str(winner["away_score"])[-1]
                 home_num = str(winner["home_score"])[-1]
                 winning_minutes = winner["winning_minutes"]
@@ -1312,13 +1314,14 @@ def display_box():
                     if str(y[row]) == away_num:
                         win_row = int(row)
                 
-                winner_username = grid[win_row][win_col][1][:10]
                 winner_boxnum = grid[win_row][win_col][0]
+                winner_username = grid[win_row][win_col][1][:10]
+
                 winner_userid = grid[win_row][win_col][2]
                 box_winners[winner_boxnum] += winning_minutes
-                winner_markup = Markup(f'WINNER{i}</br>{winner_username}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
-
-                grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
+                winner_markup = Markup(f'WINNER</br>{winner_username}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
+            
+                grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_username, winner_userid)
 
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
 
