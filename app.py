@@ -1280,7 +1280,27 @@ def display_box():
             scores = db2(s)
 
             # final every score (paytype =3)
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
+            # return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, winner_dict=winner_dict, scores=scores, rev_payout=rev_payout, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
+            return render_template(
+                "display_box.html",
+                grid=grid,
+                boxid=boxid,
+                box_name=box_name,
+                fee=fee,
+                avail=avail,
+                payout=payout,
+                final_payout=final_payout,
+                x=x, y=y,
+                home=home, away=away, away_team=away_team,
+                winner_dict=winner_dict,
+                scores=scores,
+                rev_payout=rev_payout,
+                team_scores=team_scores,
+                images=images,
+                private_game_payment_link=private_game_payment_link,
+                box_type=box_type,
+                pay_type=pay_type
+            )
 
         if ptype == PAY_TYPE_ID["every_minute"]:
             """
@@ -1295,8 +1315,26 @@ def display_box():
             """
             winners = get_espn_every_min_scores(espn_id)
             if not winners:
-                return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
-
+                # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
+                return render_template(
+                    "display_box.html",
+                    grid=grid,
+                    boxid=boxid,
+                    box_name = box_name,
+                    fee=fee,
+                    avail=avail,
+                    payout=payout,
+                    final_payout=final_payout,
+                    x=x, y=y,
+                    home=home, away=away, away_team=away_team,
+                    num_selection=num_selection,
+                    team_scores=team_scores,
+                    images=images,
+                    private_game_payment_link=private_game_payment_link,
+                    box_type=box_type,
+                    game_dict=game_dict,
+                    pay_type=pay_type
+                )
             box_winners = defaultdict(int)  # {boxnum : minutes}
             reverse_payout = fee * 5
             final_payout = fee * 5
@@ -1349,8 +1387,25 @@ def display_box():
                     winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
 
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, scores=minute_winner_list ,team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
-                
+            # return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, scores=minute_winner_list ,team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
+            return render_template(
+                "display_box.html", 
+                grid=grid,
+                boxid=boxid,
+                box_name=box_name,
+                fee=fee,
+                avail=avail,
+                payout=payout,
+                final_payout=final_payout,
+                x=x, y=y,
+                home=home, away=away, away_team=away_team,
+                scores=minute_winner_list,
+                team_scores=team_scores,
+                images=images,
+                private_game_payment_link=private_game_payment_link,
+                box_type=box_type,
+                pay_type=pay_type
+            )    
 
     if box_type == BOX_TYPE_ID['dailybox']:
         sf = ['' for x in range(10)]

@@ -219,9 +219,15 @@
         {% if scores|length > 0 %}
         <div class="col-lg-4 col-md-6 col-xs-12">
         <p class="text-center"> Live IN-Game Updates (must refresh) </p>
+        {% if pay_type == 3 %}
         <p class="text-center"> Curious about how payouts work??  Click <a href="{{ url_for('es_payout_details', fee=fee) }}"> here</a></p>
+        {% endif %}
         <table class="table table-striped" style="padding-top: 30px; table-layout: fixed;">
+            {% if pay_type == 8 %}
+            <th style="width: 5px;">Minute</th>
+            {% else %}
             <th style="width: 5px;">#</th>
+            {% endif %}
             <th style="width: 10px;">PHI</th>
             <th style="width: 10px;">KC</th>
             <th style="width: 50px;">Desc</th>
