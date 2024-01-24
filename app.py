@@ -259,7 +259,7 @@ def payout_calc(pay_type, fee):
     elif pay_type == PAY_TYPE_ID['every_score']:
         s = Markup('Every score wins {} up to 27 scores.  Final gets remainder after all payouts, min {}.  <br>Reverse final wins min {} / max {} (see TW email).  Anything touching reverse or final wins {}.'.format(fee * 3, fee * 10, fee, fee * 10, fee))
     elif pay_type == PAY_TYPE_ID['every_minute']:
-        s = Markup('Winner Every Minute - Tell dan to update this more when ready, line 260')
+        s = Markup(f'Every minute you are winning {int(fee*1.5)} - Final and Reverse Final {int(fee*5)}')
     else:
         s = 'Payouts for Game Type not yet supported' # will add later date
 

@@ -57,7 +57,7 @@
     <h5>
         <p class="text-center"> Click your selection again to 'undo' pick. </p>
     </h5>
-        {% else %}
+        {% elif pay_type != 8 %}
             <h3>
             {% if scores|length > 0 %}
             <p class="text-center">Current Final Payout: <span style="color: darkgreen;"><strong>{{ final_payout }}</strong></span>           Current Reverse Final Payout: <span style="color: darkgreen;"><strong>{{ rev_payout }}</strong></span></p>
