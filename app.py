@@ -1311,8 +1311,8 @@ def display_box():
                     if str(y[row]) == away_num:
                         win_row = int(row)
                 
-                winner_user = grid[win_row][win_col]
-                winner_markup = Markup(f"WINNER</br>{winner_user}</br>{winning_minutes}") # TODO figure out $ value
+                winner_username = grid[win_row][win_col][1][:10]
+                winner_markup = Markup(f'WINNER</br>{winner_username}</br>{winning_minutes}') # TODO figure out $ value
                 winner_boxnum = grid[win_row][win_col][0]
                 winner_userid = grid[win_row][win_col][2]
 
