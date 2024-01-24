@@ -1323,10 +1323,10 @@ def display_box():
                     winner_markup = Markup(f'WINNER</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
                 elif win_type == "final":
                     box_winners[winner_boxnum] += final_payout
-                    winner_markup = Markup(f'FINAL</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
+                    winner_markup = Markup(f'WINNER</br>FINAL</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 elif win_type == "reverse":
                     box_winners[winner_boxnum] += reverse_payout
-                    winner_markup = Markup(f'REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
+                    winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
 
             return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
