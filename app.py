@@ -1287,7 +1287,8 @@ def display_box():
             winner = {
                 "away_score": score.get("away_score"),
                 "home_score": score.get("home_score"),
-                "winning_minutes": winning_minutes
+                "winning_minutes": winning_minutes,
+                "win_type": ["minute", "final", "reverse"]
 
             grid = [(box_num, name(user), userid, alias)]  <-- name is overloaded to include winning totals for display purposes
             }
@@ -1299,6 +1300,15 @@ def display_box():
             box_winners = defaultdict(int)  # {boxnum : minutes}
             reverse_payout = fee * 5
             final_payout = fee * 5
+            minute = 0
+            minute_winner_list = []  # (minute, home_num, away_num, description, userid, winning box)
+            def _update_minute_winner_list(win_details, n):
+                new_details = win_details[1:]
+                for _ in range(n):
+                    new_min = minute
+                    minute_winner_list.append((new_min,) + new_details)
+                    new_min += 1
+
             for winner in winners:
                 away_num = str(winner["away_score"])[-1]
                 home_num = str(winner["home_score"])[-1]
@@ -1317,19 +1327,27 @@ def display_box():
                 winner_boxnum = grid[win_row][win_col][0]
                 winner_userid = grid[win_row][win_col][2]
                 winner_username = user_dict[winner_userid]
+                win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute)}", winner_userid, winner_boxnum)
                 
                 if win_type == "minute":
-                    box_winners[winner_boxnum] += winning_minutes * 150
+                    win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute) {str(fee * 1.5)}}", winner_userid, winner_boxnum)
+                    _update_minute_winner_list(win_detail, winning_minutes)
+                    minute += winning_minutes
+                    box_winners[winner_boxnum] += winning_minutes * (fee * 1.5)
                     winner_markup = Markup(f'WINNER</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
                 elif win_type == "final":
+                    win_detail = (200, home_num, away_num, f"{win_type.upper()} {str(fee * 5)}", winner_userid, winner_boxnum)
+                    minute_winner_list.append(win_detail)
                     box_winners[winner_boxnum] += final_payout
                     winner_markup = Markup(f'WINNER</br>FINAL</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 elif win_type == "reverse":
                     box_winners[winner_boxnum] += reverse_payout
+                    minute_winner_list.append(win_detail)
+                    win_detail = (100, home_num, away_num, f"{win_type.upper()} {str(fee * 5)}", winner_userid, winner_boxnum)
                     winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
 
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
+            return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, scores=minute_winner_list ,team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
                 
 
     if box_type == BOX_TYPE_ID['dailybox']:
