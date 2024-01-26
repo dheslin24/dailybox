@@ -1327,7 +1327,7 @@ def display_box():
                     winner_userid = grid[win_row][win_col][2]
                     winner_username = user_dict[winner_userid]
 
-                    win_detail = (minute, 0, 0, f"Pre-Game 0/0 Winner {str(int(fee * 1.5))}", winner_username, winner_boxnum)
+                    win_detail = (0, 0, 0, f"Pre-Game 0/0 Winner {str(int(fee * 1.5))}", winner_username, winner_boxnum)
                     minute_winner_list = [win_detail]
 
                 # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
