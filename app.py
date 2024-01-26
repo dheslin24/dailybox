@@ -1317,10 +1317,10 @@ def display_box():
             if not winners:
                 if x['0'] != '?':
                     for col in x:
-                        if str(x[col]) == 0:
+                        if str(x[col]) == '0':
                             win_col = int(col)
                     for row in y:
-                        if str(y[row]) == 0:
+                        if str(y[row]) == '0':
                             win_row = int(row)
 
                     winner_boxnum = grid[win_row][win_col][0]
@@ -1328,6 +1328,7 @@ def display_box():
                     winner_username = user_dict[winner_userid]
 
                     win_detail = (minute, 0, 0, f"Pre-Game 0/0 Winner {str(int(fee * 1.5))}", winner_username, winner_boxnum)
+                    minute_winner_list = [win_detail]
 
                 # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
                 return render_template(
@@ -1343,6 +1344,7 @@ def display_box():
                     home=home, away=away, away_team=away_team,
                     num_selection=num_selection,
                     team_scores=team_scores,
+                    scores=minute_winner_list,
                     images=images,
                     private_game_payment_link=private_game_payment_link,
                     box_type=box_type,
