@@ -1012,7 +1012,7 @@ def display_box():
 
     xy_string = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
     if avail != 0 or len(db(xy_string)) == 0:
-        num_selection = "Row/Column numbers will be randomly generated after the last box is selected."
+        num_selection = "Row/Column numbers will be randomly generated after all participants have paid."
         x = {}
         for n in range(10):
             x[str(n)] = '?'
