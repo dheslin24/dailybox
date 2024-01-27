@@ -986,6 +986,7 @@ def display_box():
     row = 0 
     avail = 0
     alias = None
+    current_user_box_count = 0
     # create a list (grid) of 10 lists (rows) of 10 tuples (boxes)
     for _ in range(10):
         l = []
@@ -1001,6 +1002,8 @@ def display_box():
 
             l.append((box_num, name, box_userid, alias))
             box_num += 1
+            if box_userid == session.get("userid"):
+                current_user_box_count += 1
         grid.append(l)
         row += 10
 
@@ -1057,7 +1060,7 @@ def display_box():
             grid[curr_win_row][curr_win_col] = (curr_winner_boxnum, curr_winner, curr_winner_userid)
             print(grid)
 
-            return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, private_game_payment_link=private_game_payment_link, images=images)
+            return render_template("display_box.html", current_user_box_count=current_user_box_count, grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, private_game_payment_link=private_game_payment_link, images=images)
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away)
 
         print(f'dh 1126 paytype {ptype} {winners}')
@@ -1299,7 +1302,8 @@ def display_box():
                 images=images,
                 private_game_payment_link=private_game_payment_link,
                 box_type=box_type,
-                pay_type=ptype
+                pay_type=ptype,
+                current_user_box_count=current_user_box_count
             )
 
         if ptype == PAY_TYPE_ID["every_minute"]:
@@ -1352,7 +1356,8 @@ def display_box():
                     private_game_payment_link=private_game_payment_link,
                     box_type=box_type,
                     game_dict=game_dict,
-                    pay_type=ptype
+                    pay_type=ptype,
+                    current_user_box_count=current_user_box_count
                 )
             box_winners = defaultdict(int)  # {boxnum : minutes}
             reverse_payout = fee * 5
@@ -1423,13 +1428,14 @@ def display_box():
                 images=images,
                 private_game_payment_link=private_game_payment_link,
                 box_type=box_type,
-                pay_type=ptype
+                pay_type=ptype,
+                current_user_box_count=current_user_box_count
             )    
 
     if box_type == BOX_TYPE_ID['dailybox']:
         sf = ['' for x in range(10)]
         final_payout = ''
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, sf=sf, home=home, away=away, away_team=away_team)
+        return render_template("display_box.html", current_user_box_count=current_user_box_count, grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, sf=sf, home=home, away=away, away_team=away_team)
     
     elif pay_type == 'four_qtr':
         print("xy {} {}".format(x,y))
@@ -1437,14 +1443,14 @@ def display_box():
         print(f"GRID!! 4qtr {grid}")
         #final_payout = 'Current Final Payout: ' + str(final_payout)
         print(f"avail {avail}")
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type)
+        return render_template("display_box.html", current_user_box_count=current_user_box_count, grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=game_dict, game_clock=game_clock, kickoff_time=kickoff_time, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type)
 
     # display box for all except every score, 4qtr, or dailybox
     else:
         print("xy {} {}".format(x,y))
         print("home/away: {} {}".format(home,away))
         final_payout = 'Current Final Payout: ' + str(final_payout)
-        return render_template("display_box.html", grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
+        return render_template("display_box.html", current_user_box_count=current_user_box_count, grid=grid, boxid=boxid, box_name = box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, num_selection=num_selection, team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link, box_type=box_type, game_dict=game_dict)
 
 
 @app.route("/select_box", methods=["GET", "POST"])
