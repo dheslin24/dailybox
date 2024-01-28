@@ -74,6 +74,7 @@ def get_espn_every_min_scores(espnid):
         return None
 
     current_clock = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('displayClock')
+    print(f"DH curr clock {current_clock}")
     current_qtr = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('period')
     if current_clock:
         current_min, current_second = current_clock.split(current_clock, ":")
