@@ -1051,7 +1051,7 @@ def display_box():
 
             curr_winner_user = grid[curr_win_row][curr_win_col][1]
             #curr_winner = ['Current', 'WINNER', curr_winner_user]
-            curr_winner = Markup(f'Current</br>WINNER</br>{curr_winner_user}')
+            curr_winner = Markup(f'Current</br>WINNER</br>{curr_winner_user}') if status != 'Final' else Markup(f'WINNER</br>{curr_winner_user}')
 
             #f"this one here: {grid[curr_win_row][curr_win_col][0]}")
             curr_winner_boxnum = grid[curr_win_row][curr_win_col][0]
