@@ -78,7 +78,7 @@ def get_espn_every_min_scores(espnid):
     current_qtr = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('period')
     if current_clock:
         current_min, current_second = current_clock.split(":")
-        current_game_second = ((int(current_qtr) - 1) * 900) + (int(current_min) * 60) + (int(current_second))
+        current_game_second = ((int(current_qtr) - 1) * 900) + (900 - (int(current_min) * 60) + (int(current_second)))
 
     for play in response.get('scoringPlays', {}):
         
