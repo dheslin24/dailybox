@@ -43,6 +43,9 @@
             {{ final_payout }}
             -->
         </p>
+        {% if pay_type == 8 and game_clock %}
+            {{ game_clock }}
+        {% endif %}
         <table style="table-layout: fixed;"  align="center">
             <td class="BYG">BYG</td><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Total</th>
             <tr>

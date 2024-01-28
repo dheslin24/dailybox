@@ -1357,7 +1357,8 @@ def display_box():
                     box_type=box_type,
                     game_dict=game_dict,
                     pay_type=ptype,
-                    current_user_box_count=current_user_box_count
+                    current_user_box_count=current_user_box_count,
+                    game_clock=game_clock
                 )
             box_winners = defaultdict(int)  # {boxnum : minutes}
             reverse_payout = fee * 5
@@ -1429,7 +1430,8 @@ def display_box():
                 private_game_payment_link=private_game_payment_link,
                 box_type=box_type,
                 pay_type=ptype,
-                current_user_box_count=current_user_box_count
+                current_user_box_count=current_user_box_count,
+                game_clock=game_clock
             )    
 
     if box_type == BOX_TYPE_ID['dailybox']:
