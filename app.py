@@ -674,8 +674,8 @@ def my_games():
 
             if box == session['userid'] and active == 1:
                 if gameid in boxnum_x:
-                    h_num = str(boxnum_x[gameid][str(box_index % 10)]) + teams_dict.get(gameid).get("home")
-                    a_num = str(boxnum_y[gameid][str(box_index // 10)]) + teams_dict.get(gameid).get("away")
+                    h_num = teams_dict.get(gameid).get("home") + " " + str(boxnum_x[gameid][str(box_index % 10)])
+                    a_num = teams_dict.get(gameid).get("away") + " " + str(boxnum_y[gameid][str(box_index // 10)])
                 else:
                     h_num = "TBD"
                     a_num = "TBD"
