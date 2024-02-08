@@ -612,6 +612,13 @@ def my_games():
     alias_string = "SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"
     aliases = dict(db2(alias_string))
 
+    t = "SELECT boxid, home, away from teams;"
+    teams_list = db2(t)
+
+    teams_dict = {}
+    for t_boxid, t_home, t_away in teams_list:
+        teams_dict[t_boxid] = {"home": t_home, "away": t_away}
+
     # create dict of boxid:{x:{json}, y:{json}}
     boxnum_x = {}
     boxnum_y = {}
@@ -667,8 +674,8 @@ def my_games():
 
             if box == session['userid'] and active == 1:
                 if gameid in boxnum_x:
-                    h_num = boxnum_x[gameid][str(box_index % 10)]
-                    a_num = boxnum_y[gameid][str(box_index // 10)]
+                    h_num = boxnum_x[gameid][teams_dict.get("gameid").get("home") + str(box_index % 10)]
+                    a_num = boxnum_y[gameid][teams_dict.get("gameid").get("away") + str(box_index // 10)]
                 else:
                     h_num = "TBD"
                     a_num = "TBD"
