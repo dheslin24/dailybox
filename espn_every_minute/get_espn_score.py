@@ -142,7 +142,24 @@ def get_espn_every_min_scores(espnid):
         print(f"game second: {current_game_second}  last_score second: {last_score_second}  clock: IN PROG WINNER")
         print(f"{i}: {winner}\n")
 
-    if game_status == "STATUS_FINAL" and last_score_second < 3540:
+    elif not score and game_status == "STATUS_IN_PROGRESS":
+        # get current game time
+        # calc current minutes won so far
+        winning_minutes = (current_game_second - last_score_second) // 60
+        winner = {
+            "away_score": 0,
+            "home_score": 0,
+            "winning_minutes": winning_minutes,
+            "type": "minute"
+        }
+
+        winners.append(winner)
+
+        total_winning_minutes += winning_minutes
+        print(f"game second: {current_game_second}  last_score second: {last_score_second}  clock: IN PROG WINNER")
+        print(f"{i}: {winner}\n")
+
+    elif game_status == "STATUS_FINAL" and last_score_second < 3540:
         winning_minutes = (3540 - last_score_second) // 60
         winner = {
             "away_score": next_winner["away_score"],
