@@ -100,6 +100,7 @@ def get_espn_every_min_scores(espnid):
 
     # for OT - don't do any more than 60 scores
     i = 0
+    score = None
     for idx, score in enumerate(scores):
         game_second = _find_game_second(int(score["quarter"]), int(score["clock_value"]))
         winning_minutes = (game_second - last_score_second) // 60
