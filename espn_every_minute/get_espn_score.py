@@ -97,6 +97,8 @@ def get_espn_every_min_scores(espnid):
     last_score_second = 0
     next_winner = {"away_score": 0, "home_score": 0}
     total_winning_minutes = 0
+
+    # for OT - don't do any more than 60 scores
     i = 0
     for idx, score in enumerate(scores):
         game_second = _find_game_second(int(score["quarter"]), int(score["clock_value"]))
@@ -117,8 +119,9 @@ def get_espn_every_min_scores(espnid):
         winners.append(winner)
         total_winning_minutes += winning_minutes
 
-        print(f"game second: {game_second}  last_score second: {last_score_second}  clock: {score['clock_display']}  qtr {score['quarter']}")
-        print(f"{i}: {winner}\n")
+        if score:
+            print(f"game second: {game_second}  last_score second: {last_score_second}  clock: {score['clock_display']}  qtr {score['quarter']}")
+            print(f"{i}: {winner}\n")
         i += 1
 
     if score and game_status == "STATUS_IN_PROGRESS":
