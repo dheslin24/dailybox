@@ -16,8 +16,8 @@
                 <!--<input autocomplete="off" autofocus class="form-control" name="boxid" placeholder="boxid" type="text" size="5"/>-->
                 <input autocomplete="off" class="form-control" name="score_num" placeholder="score number" type="text" size="5"/>
                 </br>
-                <input class="form-control" name="home" placeholder="PHI" type="text" size="5"/>
-                <input class="form-control" name="away" placeholder="KC" type="text" size="5"/>
+                <input class="form-control" name="home" placeholder="KC" type="text" size="5"/>
+                <input class="form-control" name="away" placeholder="SF" type="text" size="5"/>
                 </br>
                 <button type="submit">Submit</button>
                 </br>
@@ -28,16 +28,16 @@
     <form action="{{ url_for('enter_every_score') }}" method="POST">
         <fieldset>
         <div class="form-group">
-            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="1">PHI 1</button>
-            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="2">PHI 2</button>
-            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="3">PHI 3</button>
-            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="6">PHI 6</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="1">KC 1</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="2">KC 2</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="3">KC 3</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="6">KC 6</button>
             </br>
             </br>
-            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="1">KC 1</button>
-            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="2">KC 2</button>
-            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="3">KC 3</button>
-            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="6">KC 6</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="1">SF 1</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="2">SF 2</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="3">SF 3</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="6">SF 6</button>
         </div>
         </fieldset>
     </form>

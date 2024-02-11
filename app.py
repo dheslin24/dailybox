@@ -80,7 +80,8 @@ PAY_TYPE_ID = {
     'ten_man' : 5, 
     'satellite' : 6,
     'ten_man_final_reverse': 7,
-    'every_minute': 8
+    'every_minute': 8,
+    'ten_man_final_half': 9
 }
 
 BOX_TYPE_ID = {
@@ -112,6 +113,7 @@ EMOJIS = {
     # |           6 | Satellite
     # |           7 | 10-Man Final/Reverse 75/25
     # |           8 | Every Minute             |
+    # |           9 | 10-Man Final/Half 75/2   |
     # +-------------+--------------------------+
 
 def apology(message, code=400):
@@ -241,6 +243,7 @@ def payout_calc(pay_type, fee):
     |           6 | Satellite
     |           7 | 10-Man Final/Reverse 75/25
     |           8 | Every Minute             |
+    |           9 | 10-man Final/Half 75/25  |
     +-------------+--------------------------+
     '''
     if pay_type == PAY_TYPE_ID['four_qtr']:
@@ -256,6 +259,8 @@ def payout_calc(pay_type, fee):
         s = 'Satellite'
     elif pay_type == PAY_TYPE_ID['ten_man_final_reverse']:
         s = 'Final: {}  /  Reverse Final: {}'.format(int((fee * 10) *.75), int((fee * 10) *.25))
+    elif pay_type == PAY_TYPE_ID['ten_man_final_half']:
+        s = 'Final: {}  / Half: {}'.format(int((fee * 10) *.75), int((fee * 10) *.25))
     elif pay_type == PAY_TYPE_ID['every_score']:
         s = Markup('Every score wins {} up to 27 scores.  Final gets remainder after all payouts, min {}.  <br>Reverse final wins min {} / max {} (see TW email).  Anything touching reverse or final wins {}.'.format(fee * 3, fee * 10, fee, fee * 10, fee))
     elif pay_type == PAY_TYPE_ID['every_minute']:
