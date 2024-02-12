@@ -73,6 +73,7 @@ def get_espn_every_min_scores(espnid):
     if game_status not in ["STATUS_IN_PROGRESS", "STATUS_FINAL", "STATUS_END_PERIOD", "STATUS_HALFTIME"]:
         return None
 
+
     current_clock = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('displayClock')
     print(f"DH curr clock {current_clock}")
     current_qtr = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('period')
@@ -201,19 +202,21 @@ def get_espn_every_min_scores(espnid):
         print(f"{i}: {winner}\n")
 
     elif game_status == "STATUS_FINAL" and last_score_second >= 3540: # we in OT
+        print(f"DH IN OT {last_score_second}")
         winning_minutes = 0
-        ot_winner = {
+        ot_final_winner = {
             "away_score": next_winner["away_score"],
             "home_score": next_winner["home_score"],
             "winning_minutes": winning_minutes,
             "type": "OT FINAL"
         }
-        ot_dreverse_winner = {
+        ot_reverse_winner = {
             "away_score": next_winner["home_score"],  # reversed away/home number
             "home_score": next_winner["away_score"],
             "winning_minutes": None,
             "type": "OT FINAL REVERSE"
         }
+        winners.extend([winner, ot_reverse_winner, ot_final_winner])
 
     # print(winners)
     print(f"Total winning minutes: {total_winning_minutes}")
