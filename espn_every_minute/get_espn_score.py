@@ -98,6 +98,9 @@ def get_espn_every_min_scores(espnid):
         if current_qtr != 5 or current_qtr != "5":
             scores.append(scoring_play)
 
+    if game_status == "STATUS_FINAL":
+        last_scoring_play = scoring_play
+
     winners = []
     last_score_second = 0
     next_winner = {"away_score": 0, "home_score": 0}
@@ -196,6 +199,21 @@ def get_espn_every_min_scores(espnid):
         total_winning_minutes += winning_minutes
         print(f"game second: 3540  last_score second: {last_score_second}  clock: FINAL")
         print(f"{i}: {winner}\n")
+
+    elif game_status == "STATUS_FINAL" and last_score_second >= 3540: # we in OT
+        winning_minutes = 0
+        ot_winner = {
+            "away_score": next_winner["away_score"],
+            "home_score": next_winner["home_score"],
+            "winning_minutes": winning_minutes,
+            "type": "OT FINAL"
+        }
+        ot_dreverse_winner = {
+            "away_score": next_winner["home_score"],  # reversed away/home number
+            "home_score": next_winner["away_score"],
+            "winning_minutes": None,
+            "type": "OT FINAL REVERSE"
+        }
 
     # print(winners)
     print(f"Total winning minutes: {total_winning_minutes}")

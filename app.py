@@ -1423,7 +1423,18 @@ def display_box():
                     win_detail = (100, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
                     minute_winner_list.append(win_detail)
                     winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
+                elif win_type == "OT FINAL":
+                    box_winners[winner_boxnum] += reverse_payout
+                    win_detail = (200, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
+                    minute_winner_list.append(win_detail)
+                    winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
+                elif win_type == "OT FINAL REVERSE":
+                    box_winners[winner_boxnum] += reverse_payout
+                    win_detail = (200, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
+                    minute_winner_list.append(win_detail)
+                    winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
+
 
             # return render_template("display_box.html", grid=grid, boxid=boxid, box_name=box_name, fee=fee, avail=avail, payout=payout, final_payout=final_payout, x=x, y=y, home=home, away=away, away_team=away_team, scores=minute_winner_list ,team_scores=team_scores, images=images, private_game_payment_link=private_game_payment_link,box_type=box_type)
             return render_template(
