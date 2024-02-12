@@ -95,7 +95,7 @@ def get_espn_every_min_scores(espnid):
 
         print(f"DH QUARTER {scoring_play['quarter']}")
             
-        if current_qtr != 5:
+        if current_qtr != 5 or current_qtr != "5":
             scores.append(scoring_play)
 
     winners = []
