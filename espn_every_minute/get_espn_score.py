@@ -205,14 +205,14 @@ def get_espn_every_min_scores(espnid):
         print(f"DH IN OT {last_score_second}")
         winning_minutes = 0
         ot_final_winner = {
-            "away_score": next_winner["away_score"],
-            "home_score": next_winner["home_score"],
+            "away_score": last_scoring_play["away_score"],
+            "home_score": last_scoring_play["home_score"],
             "winning_minutes": winning_minutes,
             "type": "OT FINAL"
         }
         ot_reverse_winner = {
-            "away_score": next_winner["home_score"],  # reversed away/home number
-            "home_score": next_winner["away_score"],
+            "away_score": last_scoring_play["home_score"],  # reversed away/home number
+            "home_score": last_scoring_play["away_score"],
             "winning_minutes": None,
             "type": "OT FINAL REVERSE"
         }
