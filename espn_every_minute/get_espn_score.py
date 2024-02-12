@@ -112,19 +112,22 @@ def get_espn_every_min_scores(espnid):
         winning_minutes = (game_second - last_score_second) // 60
         if last_score_second == 0:
             winning_minutes += 1 # start of game, 0/0 won the 0th minute
-        last_score_second = game_second - (game_second % 60)  # round down to last minute
-        winner = {
-            "away_score": next_winner["away_score"],
-            "home_score": next_winner["home_score"],
-            "winning_minutes": winning_minutes,
-            "type": "minute"
-        }
-        next_winner = {
-            "away_score": score.get("away_score"),
-            "home_score": score.get("home_score"),
-        }
-        winners.append(winner)
         total_winning_minutes += winning_minutes
+        if total_winning_minutes < 60:
+            last_score_second = game_second - (game_second % 60)  # round down to last minute
+            winner = {
+                "away_score": next_winner["away_score"],
+                "home_score": next_winner["home_score"],
+                "winning_minutes": winning_minutes,
+                "type": "minute"
+            }
+            next_winner = {
+                "away_score": score.get("away_score"),
+                "home_score": score.get("home_score"),
+            }
+            winners.append(winner)
+        
+            
 
         if score:
             print(f"game second: {game_second}  last_score second: {last_score_second}  clock: {score['clock_display']}  qtr {score['quarter']}")
