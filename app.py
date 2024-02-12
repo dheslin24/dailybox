@@ -1389,6 +1389,7 @@ def display_box():
                     new_min += 1
 
             for winner in winners:
+                print(f"win {winner}")
                 away_num = str(winner["away_score"])[-1]
                 home_num = str(winner["home_score"])[-1]
                 winning_minutes = winner["winning_minutes"]
@@ -1430,7 +1431,7 @@ def display_box():
                     winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 elif win_type == "OT FINAL REVERSE":
                     box_winners[winner_boxnum] += reverse_payout
-                    win_detail = (200, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
+                    win_detail = (100, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
                     minute_winner_list.append(win_detail)
                     winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
