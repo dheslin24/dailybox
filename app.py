@@ -930,7 +930,8 @@ def display_box():
     status = game_status['game_status']
     game_clock = game_status['game_clock']
     kickoff_time = game_status['kickoff_time']
-    team_scores = get_espn_score_by_qtr(espn_id)
+    team_scores = get_espn_score_by_qtr(espn_id) # team_scpre[abbr] = current_score, qtr_scores, name, nickname, logo
+
     print(f"team scores: {team_scores}")
     game_dict = get_espn_score_by_qtr(espn_id)
 
@@ -1407,19 +1408,19 @@ def display_box():
                 winner_username = user_dict[winner_userid]
                 
                 if win_type == "minute":
-                    win_detail = (minute, home_num, away_num, f"{win_type.upper()} {str(minute)} {str(int(fee * 1.5))}", winner_username, winner_boxnum)
+                    win_detail = (minute, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} {str(minute)} {str(int(fee * 1.5))}", winner_username, winner_boxnum)
                     _update_minute_winner_list(win_detail, winning_minutes)
                     minute += winning_minutes
                     box_winners[winner_boxnum] += int(winning_minutes * (fee * 1.5))
                     winner_markup = Markup(f'WINNER</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}') # TODO figure out $ value
                 elif win_type == "final":
-                    win_detail = (200, home_num, away_num, f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
+                    win_detail = (200, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
                     minute_winner_list.append(win_detail)
                     box_winners[winner_boxnum] += final_payout
                     winner_markup = Markup(f'WINNER</br>FINAL</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 elif win_type == "reverse":
                     box_winners[winner_boxnum] += reverse_payout
-                    win_detail = (100, home_num, away_num, f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
+                    win_detail = (100, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} {str(fee * 5)}", winner_username, winner_boxnum)
                     minute_winner_list.append(win_detail)
                     winner_markup = Markup(f'WINNER</br>REVERSE</br>{user_dict[winner_userid]}</br>{box_winners[winner_boxnum]}')
                 grid[win_row][win_col] = (winner_boxnum, winner_markup, winner_userid)
