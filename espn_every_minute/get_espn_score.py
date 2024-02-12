@@ -70,7 +70,7 @@ def get_espn_every_min_scores(espnid):
     game_status = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('type', {}).get("name")
     print(f"GAME STATUS {game_status}")
 
-    if game_status not in ["STATUS_IN_PROGRESS", "STATUS_FINAL", "STATUS_END_PERIOD"]:
+    if game_status not in ["STATUS_IN_PROGRESS", "STATUS_FINAL", "STATUS_END_PERIOD", "STATUS_HALFTIME"]:
         return None
 
     current_clock = response.get('header', {}).get('competitions', [])[0].get('status', {}).get('displayClock')
@@ -102,6 +102,7 @@ def get_espn_every_min_scores(espnid):
     i = 0
     score = None
     for idx, score in enumerate(scores):
+        # print(f"DH SCORE {score}")
         game_second = _find_game_second(int(score["quarter"]), int(score["clock_value"]))
         winning_minutes = (game_second - last_score_second) // 60
         if last_score_second == 0:
