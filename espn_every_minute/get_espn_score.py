@@ -93,7 +93,7 @@ def get_espn_every_min_scores(espnid):
             "scoring_team" : play.get("team", {}).get("abbreviation"),
         }
 
-        print(f"DH QUARTER {scoring_play["quarter"]}")
+        print(f"DH QUARTER {scoring_play['quarter']}")
             
         # if current_qtr != 5:
         #     scores.append(scoring_play)
