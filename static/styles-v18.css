@@ -587,7 +587,7 @@ main td.LSU {
 
 main td.pick {
     width: 60px; 
-    background-color: #aaa;
+    background-color: #91A191;
     border-left-width: thick;
     font-weight: bold;
 }
@@ -606,7 +606,7 @@ main td.eliminated {
 
 main td.pick > input {
     width: 60px;
-    background-color: #aaa;
+    background-color: #91A191;
     font-size: 16px;
     border: 0px;
     text-align: center;
