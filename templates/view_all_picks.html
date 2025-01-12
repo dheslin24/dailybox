@@ -17,7 +17,6 @@
             <p style="color: green; font-weight: bold"> Only admins can see this line below! </p>
             </h3>
             <p style="color: green; font-weight: bold"> Last line update in DB is: {{ last_line_time }}  and should never be more than 15 min old! </p>
-
             {% endif %}
 
         <p> {{ d|length }} users in the pool.  Total prize pool is {{ d|length * 50 }}. </p>
@@ -150,8 +149,8 @@
             {% if user_dict[user]['username'] == session['username'] %}
                 {% if user in winner %}
                 <td class="winning_user" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}  {{ emojis['crown'] }}</td>
-                {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'ruffruss13') and user not in eliminated_list %}
-                <td class="current_user" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }} {{ emojis['middle_finger'] }}
+                {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'RuffRuss13') and user not in eliminated_list %}
+                <td class="current_user" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}
                 <span class="CellComment">
                     Hi - My name is Pete.  I call myself RuffRuss.  I'm an asshole.
                 </span></td>
@@ -163,13 +162,18 @@
             {% elif user != 'key' and user != 'reverse' %}
                 {% if user in winner %}
                 <td class="winning_user" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}  {{ emojis['crown'] }}</td>
-                {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'ruffruss13') and user not in eliminated_list %}
-                <td class="CellWithComment" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }} {{ emojis['middle_finger'] }}
+                {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'RuffRuss13') and user not in eliminated_list %}
+                <td class="CellWithComment" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}
                     <span class="CellComment">
                         Hi - My name is Pete.  I call myself RuffRuss.  I'm an asshole.
                     </span></td>
                 {% elif user in eliminated_list %}
                 <td class="eliminated" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}</td>
+                {% elif user_dict[session['userid']]['is_admin'] == 1 %}
+                <td class="CellWithComment" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}
+                    <span class="CellComment">
+                        {{ user_dict[user]['name'] }}
+                    </span></td>
                 {% else %}
                 <td style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}</td>
                 {% endif %}
