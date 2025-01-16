@@ -2347,9 +2347,16 @@ def bowl_payment_status():
     bu = "SELECT userid, username FROM users WHERE is_bowl_user = 1"
     no_picks_users = db2(bu)
 
+    # get actual names for our demanding 'admin'
+    uname_string = "SELECT userid, username, first_name, last_name FROM users;"
+    usernames = db2(uname_string)
+    user_dict = {}
+    for userid, username, first_name, last_name in usernames:
+        user_dict[userid] = {"username": username, "first_name": first_name, "last_name": last_name}
+
     for user in no_picks_users:
         if user[0] not in bowl_users:
-            bowl_users[user[0]] = user[1]   
+            bowl_users[user[0]] = user[1]
     
     entry = 50
     prize_pool = entry * len(bowl_users)
@@ -2399,7 +2406,7 @@ def bowl_payment_status():
 
     logging.info(f"{session['username']} just hit view bowl payment status")
                 
-    return render_template("bowl_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list), prize_pool=prize_pool) 
+    return render_template("bowl_payment_status.html", display_list=display_list, user_dict=user_dict, admins=admins, total_users=len(display_list), prize_pool=prize_pool) 
 
 @app.route("/add_bowl_user", methods=["GET", "POST"])
 def add_bowl_user():
