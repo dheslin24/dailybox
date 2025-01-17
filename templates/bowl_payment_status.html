@@ -22,6 +22,35 @@
     <img src="https://static.simpsonswiki.com/images/d/dd/Rain_man.png">
     </br>
 
+    <p>Sort By:</p>
+    <form action="{{ url_for("bowl_payment_status") }}", method="POST", name="sort_method_form">
+        {% if sort_method == "id" %}
+        <input type="radio" id="ID" name="sort_method" value="id" onclick="this.form.submit()" checked>
+        {% else %}
+        <input type="radio" id="ID" name="sort_method" value="id" onclick="this.form.submit()">
+        {% endif %}
+        <label for="ID">ID</label>
+        {% if sort_method == "user" %}
+        <input type="radio" id="username" name="sort_method" value="user" onclick="this.form.submit()" checked>
+        {% else %}
+        <input type="radio" id="username" name="sort_method" value="user" onclick="this.form.submit()">
+        {% endif %}
+        <label for="username">Username</label>
+        {% if sort_method == "pay_status" %}
+        <input type="radio" id="pay_status" name="sort_method" value="pay_status" onclick="this.form.submit()" checked>
+        {% else %}
+        <input type="radio" id="pay_status" name="sort_method" value="pay_status" onclick="this.form.submit()">
+        {% endif %}
+        <label for="pay_status">Payment Status</label>
+        {% if sort_method == "real_name" %}
+        <input type="radio" id="real_name" name="sort_method" value="real_name" onclick="this.form.submit()" checked>
+        {% else %}
+        <input type="radio" id="real_name" name="sort_method" value="real_name" onclick="this.form.submit()">
+        {% endif %}
+        <label for="real_name">Name</label>
+        <!-- <input type="hidden" value="{{ boxid }}" name="boxid"> -->
+    </form>
+
     {% if session['userid'] in admins %}
     <br><br>
     <form action="{{ url_for('add_bowl_user') }}" method="POST">
