@@ -48,6 +48,7 @@
                 <th> amt paid </th>
                 <th> paid in full?</th>
                 <th> mark paid </th>
+                <th> name </th>
             </tr>
             {% for user in users %}
             <tr>
@@ -70,6 +71,7 @@
                     <input type="hidden" value="{{ paid[user[0]] }}" name="amt_paid">
                     <input type="hidden" value="{{ boxid }}" name="boxid">
                 </form></td>
+                <td> {{ user_dict[user[0]]['first_name'] }} {{ user_dict[user[0]]['last_name']}}</td>
             </tr>
             {% endfor %}
         </table>

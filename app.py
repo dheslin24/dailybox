@@ -3389,6 +3389,13 @@ def payment_status():
     s = "SELECT userid, username FROM users WHERE active = 1;"
     users_list = db(s)
 
+    # get actual names for our demanding 'admin'
+    uname_string = "SELECT userid, username, first_name, last_name FROM users;"
+    usernames = db2(uname_string)
+    user_dict = {}
+    for userid, username, first_name, last_name in usernames:
+        user_dict[userid] = {"username": username, "first_name": first_name, "last_name": last_name}
+
     p = "SELECT userid, amt_paid FROM users;"
     paid = dict(db(p))
     for item in paid:
@@ -3461,7 +3468,7 @@ def payment_status():
     for admin in a:
         admins.append(admin[0])
 
-    return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=False)
+    return render_template("payment_status.html", users=users, user_dict=user_dict, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=False)
 
 @app.route("/mark_paid", methods=["GET", "POST"])
 def mark_paid():
