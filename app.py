@@ -2331,10 +2331,10 @@ def view_all_picks():
 @login_required
 def bowl_payment_status():
 
-    if request.method == "POST":
-        sort_method = request.form.get('sort_method')
-    else:
-        sort_method = request.args['sort_method']
+    # if request.method == "POST":
+    #     sort_method = request.form.get('sort_method')
+    # else:
+    #     sort_method = request.args['sort_method']
 
     season = datetime.utcnow().year - 1  # will only ever be run after new yrs from the season that started prev yr
     # get list of espnids 
@@ -2405,20 +2405,20 @@ def bowl_payment_status():
         else:
             display_list.append((user, bowl_users[user], check, thumbs_down))
 
-    print("before {}".format(display_list))
+    # print("before {}".format(display_list))
 
-    if sort_method == 'user':
-        display_list.sort(key=lambda x:x[1].upper())
-    elif sort_method == 'pay_status':
-        display_list.sort(key=lambda x:x[2], reverse=True)
+    # if sort_method == 'user':
+    #     display_list.sort(key=lambda x:x[1].upper())
+    # elif sort_method == 'pay_status':
+    #     display_list.sort(key=lambda x:x[2], reverse=True)
 
-    print("after {}".format(display_list))
+    # print("after {}".format(display_list))
 
     print("payment stuff")
     print(bowl_users)
     print(payment_list)
     print(payment_list_dh)
-    # print(display_list)
+    print(display_list)
 
     logging.info(f"{session['username']} just hit view bowl payment status")
                 
