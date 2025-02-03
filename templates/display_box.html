@@ -243,9 +243,10 @@
                 {% if score[0] == 100 %}
                     <tr>
                     <td style="background-color: blue; color: white;">RF</td>
-                    {% for field in score[1:-1] %}
+                    {% for field in score[1:-2] %}
                     <td class="revfinal" style="background-color: blue; color: white;">{{ field }}</td>
                     {% endfor %}
+                    <td style="background-color: blue; color: white;">{{- score[-2][:10] -}}</td>
                     <td style="background-color: blue; color: white;">{{ score[-1]|int  + 1 }}</td>
                     </tr>
                 {% elif score[0] == 101 %}
@@ -253,17 +254,19 @@
                     <td style="background-color: lightblue;">RFT</td>
                     <td style="background-color: lightblue;">n/a</td>
                     <td style="background-color: lightblue;">n/a</td>
-                    {% for field in score[3:-1] %}
+                    {% for field in score[3:-2] %}
                     <td style="background-color: lightblue;">{{ field }}</td>
                     {% endfor %}
+                    <td style="background-color: lightblue;">{{- score[-2][:10] -}}</td>
                     <td style="background-color: lightblue;">{{ score[-1]|int  + 1 }}</td>
                     </tr>
                 {% elif score[0] == 200 %}
                     <tr>
                     <td style="background-color: darkgreen; color: white;">F</td>
-                    {% for field in score[1:-1] %}
+                    {% for field in score[1:-2] %}
                     <td style="background-color: darkgreen; color: white;">{{ field }}</td>
                     {% endfor %}
+                    <td style="background-color: darkgreen; color: white;">{{- score[-2][:10] -}}</td>
                     <td style="background-color: darkgreen; color: white;">{{ score[-1]|int  + 1 }}</td>
                     </tr>
                 {% elif score[0] == 201 %}
@@ -271,20 +274,22 @@
                     <td style="background-color: lightgreen;">FT</td>
                     <td style="background-color: lightgreen;">n/a</td>
                     <td style="background-color: lightgreen;">n/a</td>
-                    {% for field in score[3:-1] %}
+                    {% for field in score[3:-2] %}
                     <td style="background-color: lightgreen;">{{ field }}</td>
                     {% endfor %}
+                    <td style="background-color: lightgreen;">{{- score[-2][:10] -}}</td>
                     <td style="background-color: lightgreen;">{{ score[-1]|int  + 1 }}</td>
                     </tr>
                 {% else %}
                     <tr>
-                    {% for field in score[:-1] %}
+                    {% for field in score[:-2] %}
                         {% if field == None %}
                         <td>n/a</td>
                         {% else %}
                         <td>{{ field }}</td>
                         {% endif %}
                     {% endfor %}
+                        <td>{{- score[-2][:10] -}}</td>
                         <td>{{ score[-1]|int + 1 }}</td>
                     </tr>
                 {% endif %}
