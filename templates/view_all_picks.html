@@ -163,7 +163,7 @@
                 <td class="current_user" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}</td>
                 {% endif %}
             {% elif user != 'key' and user != 'reverse' %}
-                {% if user in winner %}
+                {% if user == 33 %}
                 <td class="winning_user" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}  {{ emojis['crown'] }}</td>
                 {% elif (user_dict[user]['username'] == 'dh2' or user_dict[user]['username'] == 'RuffRuss13') and user not in eliminated_list %}
                 <td class="CellWithComment" style="white-space: nowrap; text-align: left; border-right: 15px; border-right-width: 3px;">{{ user_dict[user]['username'] }}
