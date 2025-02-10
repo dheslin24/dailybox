@@ -231,8 +231,13 @@
                 <!-- tie break and win totals -->
                 {% if user != session['userid'] %}
                     {% if user in tb_dict %}
-                        <td style="font-size: 12px; background-color: gray; border-left-width: 3px;"> X </td>
-                        <td style="font-size: 12px; background-color: gray;"> {{ d[user]['wins'] }}</td>
+                        {% if game_dict[401671889]['datetime'] > now %}
+                            <td style="font-size: 12px; background-color: gray; border-left-width: 3px;"> X </td>
+                            <td style="font-size: 12px; background-color: gray;"> {{ d[user]['wins'] }}</td>
+                        {% else %}
+                            <td style="font-size: 12px; background-color: gray; border-left-width: 3px;"> {{ tb_dict[user] }} </td>
+                            <td style="font-size: 12px; background-color: gray;"> {{ d[user]['wins'] }}</td>
+                        {% endif %}
                     {% else %}
                         <td style="font-size: 12px; background-color: gray; border-left-width: 3px;"></th>
                         <td style="font-size: 12px; background-color: gray;"> {{ d[user]['wins'] }}</td>
