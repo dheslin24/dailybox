@@ -41,9 +41,12 @@
     {% if tb_log|length > 0 %}
         Tie Break Details: </br>
         {% for log in tb_log[:1] %}
+            <p style="color: maroon; margin: 0; padding: 0"> {{ log }} </p>
+        {% endfor %}
+        {% for log in tb_log[1:2] %}
             <p style="color: green; margin: 0; padding: 0"> {{ log }} </p>
         {% endfor %}
-        {% for log in tb_log[1:] %}
+        {% for log in tb_log[2:] %}
             <p style="color: maroon; margin: 0; padding: 0"> {{ log }} </p>
         {% endfor %}
     {% endif %}
