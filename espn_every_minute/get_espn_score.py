@@ -194,7 +194,7 @@ def get_espn_every_min_scores(espnid):
             # "away_score": next_winner["away_score"],
             # "home_score": next_winner["home_score"],
             "away_score": 22,
-            "home_score": 25,
+            "home_score": 40,
             "winning_minutes": None,
             "type": "final"
         }
