@@ -1,3 +1,7 @@
+
+from espnapi import get_all_games_for_week
+
+
 from ast import alias
 from flask import Flask, flash, redirect, render_template, request, session, url_for, Markup, send_file
 from flask_session import Session
@@ -415,6 +419,40 @@ def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None
 
     t = "INSERT INTO teams(boxid, home, away) VALUES('{}', '{}', '{}');".format(boxid, home, away)
     db(t)
+
+
+##########################################################################
+## START OF SURVIVOR POOL FUNCTIONS
+##########################################################################
+
+@app.route("/survivor_pool", methods=["POST", "GET"])
+def survivor_pool():
+    """
+    Displays the survivor pool page, which is a list of all survivor pools
+    """
+
+    return render_template("survivor_pool.html")
+
+@app.route("/survivor_pool/select", methods=["POST", "GET"])
+@login_required
+def survivor_pool_select():
+    """
+    Displays the survivor pool selection page, where users can select their weekly picks
+    """
+    if request.method == "POST":
+        week = request.form.get("week")
+        season = request.form.get("season")
+
+        games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+        return render_template('survivor_week_display.html', games=games)
+
+##########################################################################
+## END OF SURVIVOR POOL FUNCTIONS
+##########################################################################
+
+
+
+
 
 @app.route("/start_game", methods=["POST", "GET"])
 def start_game():

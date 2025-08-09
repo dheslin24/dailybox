@@ -1,5 +1,11 @@
 #!/usr/bin/python3
 
+'''
+Checks scores for quarterly boxes and inserts into scores table
+not used anymore 2/8/25
+'''
+
+
 from db_accessor.db_accessor import db2 
 import logging
 #import random

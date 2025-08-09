@@ -22,6 +22,36 @@ def get_espn_ids(season_type = 3, week = 1, league='ncaaf'):
 
     return r
 
+def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
+
+    espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/{league}/scoreboard?seasontype={season_type}&week={week}&dates={season}"
+    response = requests.get(espn_url)
+    r = response.json()
+
+    def parse_events_from_response(r):
+        events = []
+        for event in r.get('events', []):
+            for comp in event.get('competitions', []):
+                event_id = comp.get('id')
+                start_date = comp.get('startDate')
+                competitors = comp.get('competitors', [])
+                home_team = next((c['team']['abbreviation'] for c in competitors if c.get('homeAway') == 'home'), None)
+                away_team = next((c['team']['abbreviation'] for c in competitors if c.get('homeAway') == 'away'), None)
+                odds = comp.get('odds', [{}])[0]
+                odds_details = odds.get('details')
+                odds_spread = odds.get('spread')
+                events.append({
+                    'id': event_id,
+                    'home_team': home_team,
+                    'away_team': away_team,
+                    'start_date': start_date,
+                    'odds_details': odds_details,
+                    'odds_spread': odds_spread
+                })
+        return events
+
+    return parse_events_from_response(r)
+
 def get_espn_scores(abbrev = True, season_type = 3, week = 5, league='nfl', espnid=False):
     # season_type = 3  # 1: preseason, 2: regular, 3: post
     # week = 1 # will make this an input soon

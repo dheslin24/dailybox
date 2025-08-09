@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Survivor Week Games</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; }
+        .game-list { max-width: 800px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .game { border-bottom: 1px solid #eee; padding: 16px 0; }
+        .game:last-child { border-bottom: none; }
+        .field { margin-bottom: 6px; }
+        .label { font-weight: bold; color: #333; }
+        .value { color: #555; }
+    </style>
+</head>
+<body>
+    <div class="game-list">
+        <h2>Survivor Week Games</h2>
+        {% if games %}
+            {% for game in games %}
+                <div class="game">
+                    <div class="field"><span class="label">Game ID:</span> <span class="value">{{ game.id }}</span></div>
+                    <div class="field"><span class="label">Home Team:</span> <span class="value">{{ game.home_team }}</span></div>
+                    <div class="field"><span class="label">Away Team:</span> <span class="value">{{ game.away_team }}</span></div>
+                    <div class="field"><span class="label">Start Date &amp; Time:</span> <span class="value">{{ game.start_date }}</span></div>
+                    <div class="field"><span class="label">Odds Details:</span> <span class="value">{{ game.odds_details }}</span></div>
+                    <div class="field"><span class="label">Spread:</span> <span class="value">{{ game.odds_spread }}</span></div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No games found for this week.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
