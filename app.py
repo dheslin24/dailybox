@@ -443,6 +443,7 @@ def survivor_pool_select():
     week = request.form.get("week")
     season = request.form.get("season")
 
+    print(f"survivor_pool_select week: {week}, season: {season}")
     games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
     print(games)
     return render_template('survivor_week_display.html', games=games)
