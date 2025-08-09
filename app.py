@@ -440,8 +440,8 @@ def survivor_pool_select():
     Displays the survivor pool selection page, where users can select their weekly picks
     """
     # if request.method == "POST":
-    week = request.form.get("week")
-    season = request.form.get("season")
+    week = request.args.get('week', default=1, type=int)
+    season = request.args.get('season', default=2025, type=int)
 
     print(f"survivor_pool_select week: {week}, season: {season}")
     games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
