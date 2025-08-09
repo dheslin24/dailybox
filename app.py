@@ -439,12 +439,13 @@ def survivor_pool_select():
     """
     Displays the survivor pool selection page, where users can select their weekly picks
     """
-    if request.method == "POST":
-        week = request.form.get("week")
-        season = request.form.get("season")
+    # if request.method == "POST":
+    week = request.form.get("week")
+    season = request.form.get("season")
 
-        games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
-        return render_template('survivor_week_display.html', games=games)
+    games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+    print(games)
+    return render_template('survivor_week_display.html', games=games)
 
 ##########################################################################
 ## END OF SURVIVOR POOL FUNCTIONS
