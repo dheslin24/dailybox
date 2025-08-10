@@ -17,7 +17,8 @@ import config  ## moved to db_accessor
 from db_accessor.db_accessor import db, db2
 import sched, time
 from collections import OrderedDict, defaultdict
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, timezone
+import pytz
 import re
 import os
 from operator import itemgetter, attrgetter
@@ -446,6 +447,17 @@ def survivor_pool_select():
     print(f"survivor_pool_select week: {week}, season: {season}")
     games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
     print(games)
+
+    est = pytz.timezone('US/Eastern')
+    for game in games:
+        if 'datetime' in game and game['datetime']:
+            # Convert from UTC to EST
+            if game['datetime'].tzinfo is None:
+                dt_utc = game['datetime'].replace(tzinfo=timezone.utc)
+            else:
+                dt_utc = game['datetime'].astimezone(timezone.utc)
+            dt_est = dt_utc.astimezone(est)
+            game['display_datetime'] = dt_est.strftime('%a %b %d %H:%M EST')
     return render_template('survivor_week_display.html', games=games)
 
 ##########################################################################
