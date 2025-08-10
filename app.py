@@ -491,6 +491,8 @@ def submit_team():
     logo = request.form.get('logo')
     week = request.form.get('week')
     print(f"Team submitted: {team}, Logo: {logo}, Week: {week}")
+    s = "INSERT INTO sv_picks(user_id, week, pick) VALUES(%s, %s, %s);"
+    db2(s, (session['userid'], week, team))
     return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
 
 
