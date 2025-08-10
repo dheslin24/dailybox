@@ -38,7 +38,7 @@
             {% for game in games %}
                 <div class="game">
                     <div class="field"><span class="label"></span> <span class="value">
-                        {{ game.display_datetime }}
+                        {{ game['display_datetime'] }}
                     </div>
                     <div class="field"><span class="label">Home Team:</span> <span class="value">{{ game.home_team }}</span></div>
                     <div class="field"><span class="label">Away Team:</span> <span class="value">{{ game.away_team }}</span></div>
