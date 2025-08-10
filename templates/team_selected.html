@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Team Selected</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; }
+        .selected-team {
+            position: absolute;
+            top: 32px;
+            right: 48px;
+            background: #fff;
+            padding: 18px 32px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+            text-align: center;
+        }
+        .selected-team-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .selected-team-logo {
+            height: 80px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="selected-team">
+        <div class="selected-team-title">Team selected for week {{ week }}</div>
+        <div>{{ team }}</div>
+        <img src="{{ logo }}" alt="{{ team }} logo" class="selected-team-logo">
+    </div>
+</body>
+</html>

@@ -463,7 +463,21 @@ def survivor_pool_select():
                     dt_utc = dt_utc.replace(tzinfo=timezone.utc)
             dt_est = dt_utc.astimezone(est)
             game['display_datetime'] = dt_est.strftime('%a %b %d %H:%M EST')
-    return render_template('survivor_week_display.html', games=games)
+    selected_team = None
+    selected_logo = None
+    if request.method == 'POST':
+        selected_team = request.form.get('selected_team')
+        selected_logo = request.form.get('selected_logo')
+    week = request.args.get('week', default=1, type=int)
+    return render_template('survivor_week_display.html', games=games, selected_team=selected_team, selected_logo=selected_logo, week=week)
+# Handle submit button for selected team
+@app.route('/submit_team', methods=['POST'])
+def submit_team():
+    team = request.form.get('team')
+    logo = request.form.get('logo')
+    week = request.form.get('week')
+    print(f"Team submitted: {team}, Logo: {logo}, Week: {week}")
+    return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
 
 
 # Route to handle team clicks
@@ -472,9 +486,9 @@ def team_click():
     team = request.form.get('team')
     game_id = request.form.get('game_id')
     logo = request.form.get('logo')
+    week = request.args.get('week', default=1, type=int)
     print(f"Team clicked: {team}, Game ID: {game_id}, Logo: {logo}")
-    # Display the logo in the response
-    return f"You clicked: {team} (Game ID: {game_id})<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
+    return render_template('team_selected.html', team=team, logo=logo, week=week)
 
 ##########################################################################
 ## END OF SURVIVOR POOL FUNCTIONS
