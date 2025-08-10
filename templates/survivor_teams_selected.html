@@ -24,11 +24,11 @@
             </tr>
             {% for pick in picks %}
             <tr>
-                <td>{{ pick[0] }}</td>
-                <td>
+                <td style="font-size:1.2em;">{{ pick[0] }}</td>
+                <td style="font-size:1.4em;font-weight:bold;">
                     {{ pick[1] }}
                     {% if pick[2] %}
-                        <br><img src="{{ pick[2] }}" alt="{{ pick[1] }} logo" style="height:40px;">
+                        <img src="{{ pick[2] }}" alt="{{ pick[1] }} logo" style="height:70px;vertical-align:middle;margin-left:16px;">
                     {% endif %}
                 </td>
             </tr>
