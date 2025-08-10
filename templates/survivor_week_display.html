@@ -37,7 +37,15 @@
         {% if games %}
             {% for game in games %}
                 <div class="game">
-                    <div class="field"><span class="label"></span> <span class="value">{{ game.start_date|strftime('%a %b %d %H:%M') if game.start_date is not string else game.start_date }}</span></div>
+                    <div class="field"><span class="label"></span> <span class="value">
+                        {% if game.start_date is string %}
+                            {% set dt = game.start_date | replace('Z','') | replace('T',' ') %}
+                            {% set dt_obj = dt | todatetime('%Y-%m-%d %H:%M') %}
+                            {{ dt_obj.strftime('%A %B %d %H:%M EST') }}
+                        {% else %}
+                            {{ game.start_date.strftime('%A %B %d %H:%M EST') }}
+                        {% endif %}
+                    </span></div>
                     <div class="field"><span class="label">Home Team:</span> <span class="value">{{ game.home_team }}</span></div>
                     <div class="field"><span class="label">Away Team:</span> <span class="value">{{ game.away_team }}</span></div>
                     <div class="field"><span class="label">Line:</span> <span class="value">{{ game.odds_details }}</span></div>
