@@ -525,21 +525,29 @@ def join_pool():
     pool_name = request.form.get('pool_name')
     pool_password = request.form.get('pool_password')
     found = False
+    pool_row = None
     # Check by pool_id
     if pool_id:
-        s = f"SELECT * FROM sv_pools WHERE pool_id = '{pool_id}' AND password = '{pool_password}'"
+        s = f"SELECT pool_id FROM sv_pools WHERE pool_id = '{pool_id}' AND password = '{pool_password}'"
         result = db2(s)
         if result:
             found = True
+            pool_row = result[0]
     # Check by pool_name if not found
     if not found and pool_name:
-        s = f"SELECT * FROM sv_pools WHERE pool_name = '{pool_name}' AND password = '{pool_password}'"
+        s = f"SELECT pool_id FROM sv_pools WHERE pool_name = '{pool_name}' AND password = '{pool_password}'"
         result = db2(s)
         if result:
             found = True
+            pool_row = result[0]
     if found:
-        print(f"Pool found: ID={pool_id}, Name={pool_name}")
-        return "Pool found!"
+        user_id = session.get('userid')
+        pool_id_val = pool_row[0]
+        # Add user to sv_user_pools
+        insert_q = f"INSERT INTO sv_user_pools (user_id, pool_id, active) VALUES ('{user_id}', '{pool_id_val}', 1)"
+        db2(insert_q)
+        print(f"User {user_id} added to pool {pool_id_val}")
+        return "Pool found! You have been added to the pool."
     else:
         print(f"No matching pool for ID={pool_id}, Name={pool_name}")
         return "No matching pool found."
