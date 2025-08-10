@@ -1,16 +1,3 @@
-# Add route for survivor_week_display
-@app.route('/survivor_week_display', methods=['GET', 'POST'])
-def survivor_week_display():
-    week = request.args.get('week', default=1, type=int)
-    season = request.args.get('season', default=2025, type=int)
-    games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
-    selected_team = None
-    selected_logo = None
-    if request.method == 'POST':
-        selected_team = request.form.get('selected_team')
-        selected_logo = request.form.get('selected_logo')
-    return render_template('survivor_week_display.html', games=games, selected_team=selected_team, selected_logo=selected_logo, week=week)
-
 from espnapi import get_all_games_for_week
 
 
@@ -445,6 +432,19 @@ def survivor_pool():
     """
 
     return render_template("survivor_pool.html")
+
+# Add route for survivor_week_display
+@app.route('/survivor_week_display', methods=['GET', 'POST'])
+def survivor_week_display():
+    week = request.args.get('week', default=1, type=int)
+    season = request.args.get('season', default=2025, type=int)
+    games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+    selected_team = None
+    selected_logo = None
+    if request.method == 'POST':
+        selected_team = request.form.get('selected_team')
+        selected_logo = request.form.get('selected_logo')
+    return render_template('survivor_week_display.html', games=games, selected_team=selected_team, selected_logo=selected_logo, week=week)
 
 @app.route("/survivor_pool/select", methods=["POST", "GET"])
 @login_required
