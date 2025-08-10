@@ -527,13 +527,13 @@ def join_pool():
     found = False
     # Check by pool_id
     if pool_id:
-        s = f"SELECT * FROM sv_pools WHERE pool_id = '{pool_id}' AND pool_password = '{pool_password}'"
+        s = f"SELECT * FROM sv_pools WHERE pool_id = '{pool_id}' AND password = '{pool_password}'"
         result = db2(s)
         if result:
             found = True
     # Check by pool_name if not found
     if not found and pool_name:
-        s = f"SELECT * FROM sv_pools WHERE pool_name = '{pool_name}' AND pool_password = '{pool_password}'"
+        s = f"SELECT * FROM sv_pools WHERE pool_name = '{pool_name}' AND password = '{pool_password}'"
         result = db2(s)
         if result:
             found = True
