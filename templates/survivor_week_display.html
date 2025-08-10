@@ -19,13 +19,37 @@
         {% if games %}
             {% for game in games %}
                 <div class="game">
+                    <div class="field"><span class="label"></span> <span class="value">{{ game.start_date }}</span></div>
                     <div class="field"><span class="label">Game ID:</span> <span class="value">{{ game.id }}</span></div>
                     <div class="field"><span class="label">Home Team:</span> <span class="value">{{ game.home_team }}</span></div>
                     <div class="field"><span class="label">Away Team:</span> <span class="value">{{ game.away_team }}</span></div>
-                    <div class="field"><span class="label">Start Date &amp; Time:</span> <span class="value">{{ game.start_date }}</span></div>
-                    <div class="field"><span class="label">Odds Details:</span> <span class="value">{{ game.odds_details }}</span></div>
-                    <div class="field"><span class="label">Spread:</span> <span class="value">{{ game.odds_spread }}</span></div>
+                    <div class="field"><span class="label">Line:</span> <span class="value">{{ game.odds_details }}</span></div>
+                    <!-- <div class="field"><span class="label">Spread:</span> <span class="value">{{ game.odds_spread }}</span></div> -->
+                    <div class="game-id-tooltip">Game ID: {{ game.id }}</div>
                 </div>
+                <style>
+                    .game-id-tooltip {
+                        display: none;
+                        position: absolute;
+                        background: #222;
+                        color: #fff;
+                        padding: 6px 12px;
+                        border-radius: 4px;
+                        font-size: 0.95em;
+                        z-index: 10;
+                        left: 50%;
+                        top: 100%;
+                        transform: translateX(-50%);
+                        white-space: nowrap;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                    }
+                    .game-hover {
+                        position: relative;
+                    }
+                    .game-hover:hover .game-id-tooltip {
+                        display: block;
+                    }
+                </style>
             {% endfor %}
         {% else %}
             <p>No games found for this week.</p>
