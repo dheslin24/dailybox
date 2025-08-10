@@ -35,15 +35,26 @@ def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
                 event_id = comp.get('id')
                 start_date = comp.get('startDate')
                 competitors = comp.get('competitors', [])
-                home_team = next((c['team']['abbreviation'] for c in competitors if c.get('homeAway') == 'home'), None)
-                away_team = next((c['team']['abbreviation'] for c in competitors if c.get('homeAway') == 'away'), None)
+                home_team = None
+                home_logo = None
+                away_team = None
+                away_logo = None
+                for c in competitors:
+                    if c.get('homeAway') == 'home':
+                        home_team = c['team']['abbreviation']
+                        home_logo = c['team'].get('logo') or c['team'].get('logos', [{}])[0].get('href')
+                    elif c.get('homeAway') == 'away':
+                        away_team = c['team']['abbreviation']
+                        away_logo = c['team'].get('logo') or c['team'].get('logos', [{}])[0].get('href')
                 odds = comp.get('odds', [{}])[0]
                 odds_details = odds.get('details')
                 odds_spread = odds.get('spread')
                 events.append({
                     'id': event_id,
                     'home_team': home_team,
+                    'home_logo': home_logo,
                     'away_team': away_team,
+                    'away_logo': away_logo,
                     'start_date': start_date,
                     'odds_details': odds_details,
                     'odds_spread': odds_spread

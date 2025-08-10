@@ -40,20 +40,26 @@
                     <div class="field"><span class="label"></span> <span class="value">
                         {{ game['display_datetime'] }}
                     </div>
-                    <form method="POST" action="/team_click" style="display:inline;">
-                        <input type="hidden" name="game_id" value="{{ game.id }}">
-                        <input type="hidden" name="team" value="{{ game.home_team }}">
-                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;">
-                            <span class="label">Home Team:</span> <span class="value">{{ game.home_team }}</span>
-                        </button>
-                    </form>
-                    <form method="POST" action="/team_click" style="display:inline;">
-                        <input type="hidden" name="game_id" value="{{ game.id }}">
-                        <input type="hidden" name="team" value="{{ game.away_team }}">
-                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;">
-                            <span class="label">Away Team:</span> <span class="value">{{ game.away_team }}</span>
-                        </button>
-                    </form>
+                    <div class="field">
+                        <form method="POST" action="/team_click" style="display:inline;">
+                            <input type="hidden" name="game_id" value="{{ game.id }}">
+                            <input type="hidden" name="team" value="{{ game.home_team }}">
+                            <input type="hidden" name="logo" value="{{ game.home_logo }}">
+                            <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;">
+                                <span class="label">Home Team:</span> <span class="value">{{ game.home_team }}</span>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="field">
+                        <form method="POST" action="/team_click" style="display:inline;">
+                            <input type="hidden" name="game_id" value="{{ game.id }}">
+                            <input type="hidden" name="team" value="{{ game.away_team }}">
+                            <input type="hidden" name="logo" value="{{ game.away_logo }}">
+                            <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;">
+                                <span class="label">Away Team:</span> <span class="value">{{ game.away_team }}</span>
+                            </button>
+                        </form>
+                    </div>
                     <div class="field"><span class="label">Line:</span> <span class="value">{{ game.odds_details }}</span></div>
                     <!-- <div class="field"><span class="label">Spread:</span> <span class="value">{{ game.odds_spread }}</span></div> -->
                     <!-- <div class="game-id-tooltip">Game ID: {{ game.id }}</div> -->

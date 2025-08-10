@@ -471,8 +471,10 @@ def survivor_pool_select():
 def team_click():
     team = request.form.get('team')
     game_id = request.form.get('game_id')
-    print(f"Team clicked: {team}, Game ID: {game_id}")
-    return f"You clicked: {team} (Game ID: {game_id})"
+    logo = request.form.get('logo')
+    print(f"Team clicked: {team}, Game ID: {game_id}, Logo: {logo}")
+    # Display the logo in the response
+    return f"You clicked: {team} (Game ID: {game_id})<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
 
 ##########################################################################
 ## END OF SURVIVOR POOL FUNCTIONS
