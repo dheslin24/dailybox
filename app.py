@@ -491,8 +491,8 @@ def submit_team():
     logo = request.form.get('logo')
     week = request.form.get('week')
     print(f"Team submitted: {team}, Logo: {logo}, Week: {week}")
-    s = "INSERT INTO sv_picks(user_id, week, pick) VALUES(%s, %s, %s);"
-    db2(s, (session['userid'], week, team))
+    s = "INSERT INTO sv_picks(user_id, week, pick, logo) VALUES(%s, %s, %s, %s);"
+    db2(s, (session['userid'], week, team, logo))
     return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
 
 
@@ -505,6 +505,12 @@ def team_click():
     week = request.args.get('week', default=1, type=int)
     print(f"Team clicked: {team}, Game ID: {game_id}, Logo: {logo}")
     return render_template('team_selected.html', team=team, logo=logo, week=week)
+
+@app.route('/survivor_teams_selected', methods=['POST', 'GET'])
+def survivor_teams_selected():
+    s = "SELECT week, pick, logo FROM sv_picks WHERE (week, id) IN (SELECT week, MAX(id) FROM sv_picks GROUP BY week) ORDER BY week ASC;"
+    picks = db2(s)
+    return render_template('survivor_teams_selected.html', picks=picks)
 
 ##########################################################################
 ## END OF SURVIVOR POOL FUNCTIONS
