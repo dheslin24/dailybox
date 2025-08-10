@@ -518,6 +518,32 @@ def survivor_teams_selected():
     picks = db2(s)
     return render_template('survivor_teams_selected.html', picks=picks)
 
+# Route to handle joining a pool
+@app.route('/join_pool', methods=['POST'])
+def join_pool():
+    pool_id = request.form.get('pool_id')
+    pool_name = request.form.get('pool_name')
+    pool_password = request.form.get('pool_password')
+    found = False
+    # Check by pool_id
+    if pool_id:
+        s = f"SELECT * FROM sv_pools WHERE pool_id = '{pool_id}' AND pool_password = '{pool_password}'"
+        result = db2(s)
+        if result:
+            found = True
+    # Check by pool_name if not found
+    if not found and pool_name:
+        s = f"SELECT * FROM sv_pools WHERE pool_name = '{pool_name}' AND pool_password = '{pool_password}'"
+        result = db2(s)
+        if result:
+            found = True
+    if found:
+        print(f"Pool found: ID={pool_id}, Name={pool_name}")
+        return "Pool found!"
+    else:
+        print(f"No matching pool for ID={pool_id}, Name={pool_name}")
+        return "No matching pool found."
+
 ##########################################################################
 ## END OF SURVIVOR POOL FUNCTIONS
 ##########################################################################

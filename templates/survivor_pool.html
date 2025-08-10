@@ -13,7 +13,19 @@
 <body>
     <div class="container">
         <h1>Survivor Pool</h1>
-        <div class="message">Under construction</div>
+        <form method="POST" action="/join_pool">
+            <div class="message">Enter pool ID or pool name to join</div>
+            <div style="margin-top:24px;">
+                <input type="text" name="pool_id" placeholder="Pool ID" style="width:80%;padding:10px;margin-bottom:12px;font-size:1em;">
+            </div>
+            <div>
+                <input type="text" name="pool_name" placeholder="Pool Name" style="width:80%;padding:10px;margin-bottom:12px;font-size:1em;">
+            </div>
+            <div>
+                <input type="password" name="pool_password" placeholder="Pool Password" style="width:80%;padding:10px;margin-bottom:18px;font-size:1em;">
+            </div>
+            <button type="submit" style="padding:10px 28px;font-size:1.1em;">Join Pool</button>
+        </form>
     </div>
 </body>
 </html>
