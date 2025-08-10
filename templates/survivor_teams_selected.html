@@ -21,15 +21,14 @@
             <tr>
                 <th>Week</th>
                 <th>Pick</th>
-                <th>Logo</th>
             </tr>
             {% for pick in picks %}
             <tr>
                 <td>{{ pick[0] }}</td>
-                <td>{{ pick[1] }}</td>
                 <td>
+                    {{ pick[1] }}
                     {% if pick[2] %}
-                        <img src="{{ pick[2] }}" alt="{{ pick[1] }} logo" style="height:40px;">
+                        <br><img src="{{ pick[2] }}" alt="{{ pick[1] }} logo" style="height:40px;">
                     {% endif %}
                 </td>
             </tr>
