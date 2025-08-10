@@ -487,12 +487,17 @@ def survivor_pool_select():
 # Handle submit button for selected team
 @app.route('/submit_team', methods=['POST'])
 def submit_team():
+    user_id = session.get('userid')
+    if not user_id:
+        return redirect(url_for('login'))
     team = request.form.get('team')
     logo = request.form.get('logo')
     week = request.form.get('week')
     print(f"Team submitted: {team}, Logo: {logo}, Week: {week}")
     s = "INSERT INTO sv_picks(user_id, week, pick, logo) VALUES(%s, %s, %s, %s);"
-    db2(s, (session['userid'], week, team, logo))
+    db2(s, (user_id, week, team, logo))
+    s_picks = f"SELECT week, pick, logo FROM sv_picks WHERE user_id = '{user_id}' AND (week, pick_id) IN (SELECT week, MAX(pick_id) FROM sv_picks WHERE user_id = '{user_id}' GROUP BY week) ORDER BY week ASC;"
+    picks = db2(s_picks)
     # return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
     return render_template('survivor_teams_selected.html', picks=picks)
 
