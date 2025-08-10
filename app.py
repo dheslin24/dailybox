@@ -451,11 +451,16 @@ def survivor_pool_select():
     est = pytz.timezone('US/Eastern')
     for game in games:
         if 'start_date' in game and game['start_date']:
-            # Convert from UTC to EST
-            if game['start_date'].tzinfo is None:
-                dt_utc = game['start_date'].replace(tzinfo=timezone.utc)
-            else:
-                dt_utc = game['start_date'].astimezone(timezone.utc)
+            # ESPN API returns ISO8601 string, e.g. '2025-08-10T15:30Z'
+            dt_str = game['start_date'].replace('Z', '')
+            try:
+                dt_utc = datetime.strptime(dt_str, '%Y-%m-%dT%H:%M')
+                dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+            except Exception:
+                # fallback for other formats
+                dt_utc = datetime.fromisoformat(dt_str)
+                if dt_utc.tzinfo is None:
+                    dt_utc = dt_utc.replace(tzinfo=timezone.utc)
             dt_est = dt_utc.astimezone(est)
             game['display_datetime'] = dt_est.strftime('%a %b %d %H:%M EST')
     return render_template('survivor_week_display.html', games=games)
