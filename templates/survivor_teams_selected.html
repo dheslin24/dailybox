@@ -16,27 +16,43 @@
 <body>
     <div class="picks-list">
         <h2>Survivor Picks</h2>
-        {% if picks %}
         <table>
             <tr>
                 <th>Week</th>
                 <th>Pick</th>
+                <th></th>
             </tr>
+            {% set picks_by_week = {} %}
             {% for pick in picks %}
+                {% set _ = picks_by_week.update({pick[0]: pick}) %}
+            {% endfor %}
+            {% for week in range(1, 19) %}
             <tr>
-                <td style="font-size:1.2em;">{{ pick[0] }}</td>
+                <td style="font-size:1.2em;">{{ week }}</td>
                 <td style="font-size:1.4em;font-weight:bold;">
-                    {{ pick[1] }}
-                    {% if pick[2] %}
-                        <img src="{{ pick[2] }}" alt="{{ pick[1] }} logo" style="height:70px;vertical-align:middle;margin-left:16px;">
+                    {% if picks_by_week[week] is defined %}
+                        {{ picks_by_week[week][1] }}
+                        {% if picks_by_week[week][2] %}
+                            <img src="{{ picks_by_week[week][2] }}" alt="{{ picks_by_week[week][1] }} logo" style="height:70px;vertical-align:middle;margin-left:16px;">
+                        {% endif %}
+                    {% else %}
+                        <form method="GET" action="/survivor_week_display">
+                            <input type="hidden" name="week" value="{{ week }}">
+                            <button type="submit" style="padding:6px 16px;font-size:1em;">Pick for Week {{ week }}</button>
+                        </form>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if picks_by_week[week] is defined %}
+                        <form method="GET" action="/survivor_week_display">
+                            <input type="hidden" name="week" value="{{ week }}">
+                            <button type="submit" style="padding:6px 16px;font-size:1em;">Change Pick</button>
+                        </form>
                     {% endif %}
                 </td>
             </tr>
             {% endfor %}
         </table>
-        {% else %}
-            <p>No picks found.</p>
-        {% endif %}
     </div>
 </body>
 </html>

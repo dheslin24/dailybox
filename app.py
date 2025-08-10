@@ -493,8 +493,8 @@ def submit_team():
     print(f"Team submitted: {team}, Logo: {logo}, Week: {week}")
     s = "INSERT INTO sv_picks(user_id, week, pick, logo) VALUES(%s, %s, %s, %s);"
     db2(s, (session['userid'], week, team, logo))
-    return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
-
+    # return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
+    return render_template('survivor_teams_selected.html', picks=picks)
 
 # Route to handle team clicks
 @app.route('/team_click', methods=['POST'])
