@@ -465,11 +465,18 @@ def survivor_pool_select():
             game['display_datetime'] = dt_est.strftime('%a %b %d %H:%M EST')
     return render_template('survivor_week_display.html', games=games)
 
+
+# Route to handle team clicks
+@app.route('/team_click', methods=['POST'])
+def team_click():
+    team = request.form.get('team')
+    game_id = request.form.get('game_id')
+    print(f"Team clicked: {team}, Game ID: {game_id}")
+    return f"You clicked: {team} (Game ID: {game_id})"
+
 ##########################################################################
 ## END OF SURVIVOR POOL FUNCTIONS
 ##########################################################################
-
-
 
 
 
