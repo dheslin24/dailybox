@@ -416,7 +416,7 @@ def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None
     
     b = "SELECT max(boxid) FROM boxes;"
     boxid = db(b)[0][0]
-
+ 
     t = "INSERT INTO teams(boxid, home, away) VALUES('{}', '{}', '{}');".format(boxid, home, away)
     db(t)
 
@@ -445,12 +445,12 @@ def sv_create_pool():
                 q = f"INSERT INTO sv_pools (pool_name, password, admin) VALUES ('{pool_name}', '{pool_password}', '{user_id}')"
                 try:
                     db2(q)
-                    # Get the last inserted pool_id
-                    get_id_q = "SELECT LAST_INSERT_ID()"
+                    # Fetch the pool_id using the unique pool_name
+                    get_id_q = f"SELECT pool_id FROM sv_pools WHERE pool_name = '{pool_name}'"
                     result = db2(get_id_q)
                     pool_id = result[0][0] if result and len(result) > 0 else None
                     success = f'Survivor pool "{pool_name}" created successfully.'
-                except Exception as e:
+                except Exception as e: 
                     error = f'Error creating pool: {e}'
                     pool_id = None
     else:
