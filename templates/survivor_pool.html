@@ -31,7 +31,9 @@
                 <h2>Pools you are already in:</h2>
                 <ul>
                     {% for pool in user_pools %}
-                    <li>{{ pool[1] }} (ID: {{ pool[0] }})</li>
+                    <li>
+                        <a href="{{ url_for('survivor_teams_selected') }}?pool_id={{ pool[0] }}">{{ pool[1] }} (ID: {{ pool[0] }})</a>
+                    </li>
                     {% endfor %}
                 </ul>
             </div>
