@@ -81,6 +81,8 @@
             </form>
         </div>
         {% endif %}
+
+        <!-- The list of games for the selected week -->
         {% if games %}
             {% for game in games %}
                 <div class="game">
@@ -93,8 +95,12 @@
                         <input type="hidden" name="selected_logo" value="{{ game.home_logo }}">
                         <input type="hidden" name="week" value="{{ week }}">
                         <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;">
-                            <span class="label">Home Team:</span> <span class="value">{{ game.home_team }}</span>
+                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;vertical-align:middle;">
+                            <span class="label">Home Team:</span>
+                            <span class="value">{{ game.home_team }}</span>
+                            {% if game.home_logo %}
+                            <img src="{{ game.home_logo }}" alt="{{ game.home_team }} logo" style="height:32px;vertical-align:middle;margin-left:8px;">
+                            {% endif %}
                         </button>
                     </form>
                     </div>
@@ -104,14 +110,16 @@
                         <input type="hidden" name="selected_logo" value="{{ game.away_logo }}">
                         <input type="hidden" name="week" value="{{ week }}">
                         <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;">
-                            <span class="label">Away Team:</span> <span class="value">{{ game.away_team }}</span>
+                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;vertical-align:middle;">
+                            <span class="label">Away Team:</span>
+                            <span class="value">{{ game.away_team }}</span>
+                            {% if game.away_logo %}
+                            <img src="{{ game.away_logo }}" alt="{{ game.away_team }} logo" style="height:32px;vertical-align:middle;margin-left:8px;">
+                            {% endif %}
                         </button>
                     </form>
                     </div>
                     <div class="field"><span class="label">Line:</span> <span class="value">{{ game.odds_details }}</span></div>
-                    <!-- <div class="field"><span class="label">Spread:</span> <span class="value">{{ game.odds_spread }}</span></div> -->
-                    <!-- <div class="game-id-tooltip">Game ID: {{ game.id }}</div> -->
                 </div>
             {% endfor %}
         {% else %}
