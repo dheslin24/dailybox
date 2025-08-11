@@ -541,9 +541,10 @@ def submit_team():
     team = request.form.get('team')
     logo = request.form.get('logo')
     week = request.form.get('week')
-    print(f"Team submitted: {team}, Logo: {logo}, Week: {week}")
-    s = "INSERT INTO sv_picks(user_id, week, pick, logo) VALUES(%s, %s, %s, %s);"
-    db2(s, (user_id, week, team, logo))
+    pool_id = request.form.get('pool_id') or request.args.get('pool_id')
+    print(f"Team submitted: {team}, Logo: {logo}, Week: {week}")    
+    s = "INSERT INTO sv_picks(user_id, pool_id, week, pick, logo) VALUES(%s, %s, %s, %s, %s);"
+    db2(s, (user_id, pool_id, week, team, logo))
     s_picks = f"SELECT week, pick, logo FROM sv_picks WHERE user_id = '{user_id}' AND (week, pick_id) IN (SELECT week, MAX(pick_id) FROM sv_picks WHERE user_id = '{user_id}' GROUP BY week) ORDER BY week ASC;"
     picks = db2(s_picks)
     # return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
