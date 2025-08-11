@@ -1,3 +1,10 @@
+BUG FIXES prior to 2026
+
+- hard coded pickem final - need to set back to calc
+- support OT in pickem
+- hard code pickem winner - was calculating wrong?
+- display tie break
+
 FUNNEL Go Live:
 
 X  - display user picks page

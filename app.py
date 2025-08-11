@@ -543,11 +543,17 @@ def join_pool():
     if found:
         user_id = session.get('userid')
         pool_id_val = pool_row[0]
-        # Add user to sv_user_pools
-        insert_q = f"INSERT INTO sv_user_pools (user_id, pool_id, active) VALUES ('{user_id}', '{pool_id_val}', 1)"
-        db2(insert_q)
-        print(f"User {user_id} added to pool {pool_id_val}")
-        return "Pool found! You have been added to the pool."
+        # Add user to sv_user_pools only if not already present
+        check_q = f"SELECT 1 FROM sv_user_pools WHERE user_id = '{user_id}' AND pool_id = '{pool_id_val}'"
+        exists = db2(check_q)
+        if not exists:
+            insert_q = f"INSERT INTO sv_user_pools (user_id, pool_id, active) VALUES ('{user_id}', '{pool_id_val}', 1)"
+            db2(insert_q)
+            print(f"User {user_id} added to pool {pool_id_val}")
+            return "Pool found! You have been added to the pool."
+        else:
+            print(f"User {user_id} is already in pool {pool_id_val}")
+            return "You are already a member of this pool."
     else:
         print(f"No matching pool for ID={pool_id}, Name={pool_name}")
         return "No matching pool found."
