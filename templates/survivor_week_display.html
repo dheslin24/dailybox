@@ -66,12 +66,16 @@
             <div class="selected-team-title" style="font-size:1.2em;font-weight:bold;margin-bottom:10px;">Team selected for week {{ week }}</div>
             <div>{{ selected_team }}</div>
             <img src="{{ selected_logo }}" alt="{{ selected_team }} logo" style="height:80px;margin-top:8px;">
-            <form method="POST" action="/submit_team" style="margin-top:12px;">
+            <form method="POST" action="/submit_team" style="margin-top:12px;display:inline;">
                 <input type="hidden" name="team" value="{{ selected_team }}">
                 <input type="hidden" name="logo" value="{{ selected_logo }}">
                 <input type="hidden" name="week" value="{{ week }}">
                 <input type="hidden" name="pool_id" value="{{ pool_id }}">
                 <button type="submit" style="padding:8px 18px;font-size:1em;">Submit</button>
+            </form>
+            <form method="GET" action="/survivor_teams_selected" style="display:inline;">
+                <input type="hidden" name="pool_id" value="{{ pool_id }}">
+                <button type="submit" style="padding:8px 18px;font-size:1em;background:#eee;color:#333;border:1px solid #ccc;margin-left:8px;">Cancel</button>
             </form>
         </div>
         {% endif %}
