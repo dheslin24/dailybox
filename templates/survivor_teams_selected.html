@@ -65,6 +65,7 @@
                     {% else %}
                         <form method="GET" action="/survivor_week_display">
                             <input type="hidden" name="week" value="{{ week }}">
+                            <input type="hidden" name="pool_id" value="{{ pool_id }}">
                             <button type="submit" style="padding:6px 16px;font-size:1em;">Pick for Week {{ week }}</button>
                         </form>
                     {% endif %}
@@ -73,6 +74,7 @@
                     {% if picks_by_week[week] is defined %}
                         <form method="GET" action="/survivor_week_display">
                             <input type="hidden" name="week" value="{{ week }}">
+                            <input type="hidden" name="pool_id" value="{{ pool_id }}">
                             <button type="submit" style="padding:6px 16px;font-size:1em;">Change Pick</button>
                         </form>
                     {% endif %}
