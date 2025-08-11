@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Survivor Pool</title>
+    <title>BYG Survivor Pool</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f8f8f8; }
         .container { max-width: 600px; margin: 80px auto; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
@@ -18,7 +18,10 @@
                 <button style="background:#444;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:1em;">Jump To ▼</button>
                 <div style="display:none;position:absolute;top:36px;left:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:4px;min-width:180px;z-index:100;" class="dropdown-content">
                     <a href="/survivor_pool" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">Main Survivor Page</a>
-                </div>
+                    {% if session['is_admin'] == 1 %}
+                    <a href="/sv_create_pool" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">Create Survivor Pool</a>
+                    {% endif %}
+                </div
             </div>
         </nav>
     </div>
