@@ -428,23 +428,34 @@ def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None
 @app.route("/survivor_pool", methods=["POST", "GET"])
 def survivor_pool():
     """
-    Displays the survivor pool page, which is a list of all survivor pools
+    Displays the survivor pool page, which is a list of all survivor pools and the pools the user is already in
     """
-
-    return render_template("survivor_pool.html")
+    user_id = session.get('userid')
+    user_pools = []
+    if user_id:
+        # Get pool_ids the user is in
+        q = f"SELECT pool_id FROM sv_user_pools WHERE user_id = '{user_id}'"
+        pool_ids = db2(q)
+        if pool_ids:
+            pool_ids_str = ','.join([str(row[0]) for row in pool_ids])
+            # Get pool details from sv_pools
+            pools_q = f"SELECT pool_id, pool_name FROM sv_pools WHERE pool_id IN ({pool_ids_str})"
+            user_pools = db2(pools_q)
+    return render_template("survivor_pool.html", user_pools=user_pools)
 
 # Add route for survivor_week_display
 @app.route('/survivor_week_display', methods=['GET', 'POST'])
 def survivor_week_display():
     week = request.args.get('week', default=1, type=int)
     season = request.args.get('season', default=2025, type=int)
+    pool_id = request.args.get('pool_id', type=int)
     games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
     selected_team = None
     selected_logo = None
     if request.method == 'POST':
         selected_team = request.form.get('selected_team')
         selected_logo = request.form.get('selected_logo')
-    return render_template('survivor_week_display.html', games=games, selected_team=selected_team, selected_logo=selected_logo, week=week)
+    return render_template('survivor_week_display.html', games=games, selected_team=selected_team, selected_logo=selected_logo, week=week, pool_id=pool_id)
 
 @app.route("/survivor_pool/select", methods=["POST", "GET"])
 @login_required

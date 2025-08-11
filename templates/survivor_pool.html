@@ -26,6 +26,16 @@
             </div>
             <button type="submit" style="padding:10px 28px;font-size:1.1em;">Join Pool</button>
         </form>
+            {% if user_pools and user_pools|length > 0 %}
+            <div class="user-pools">
+                <h2>Pools you are already in:</h2>
+                <ul>
+                    {% for pool in user_pools %}
+                    <li>{{ pool[1] }} (ID: {{ pool[0] }})</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
     </div>
 </body>
 </html>
