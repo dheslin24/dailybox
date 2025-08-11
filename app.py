@@ -420,6 +420,30 @@ def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None
     t = "INSERT INTO teams(boxid, home, away) VALUES('{}', '{}', '{}');".format(boxid, home, away)
     db(t)
 
+@app.route('/sv_create_pool', methods=['GET', 'POST'])
+def sv_create_pool():
+    # Only allow admin users
+    if session.get('is_admin') != 1:
+        return redirect('/survivor_pool')
+    error = None
+    success = None
+    if request.method == 'POST':
+        pool_name = request.form.get('pool_name')
+        pool_password = request.form.get('pool_password')
+        user_id = session.get('userid')
+        if not pool_name or not pool_password:
+            error = 'Pool name and password are required.'
+        else:
+            # Insert new pool into sv_pools, set current user as admin
+            # You may need to adjust columns for your schema
+            q = f"INSERT INTO sv_pools (pool_name, password, admin_userid) VALUES ('{pool_name}', '{pool_password}', '{user_id}')"
+            try:
+                db2(q)
+                success = f'Survivor pool "{pool_name}" created successfully.'
+            except Exception as e:
+                error = f'Error creating pool: {e}'
+    return render_template('sv_create_pool.html', error=error, success=success)
+
 
 ##########################################################################
 ## START OF SURVIVOR POOL FUNCTIONS
