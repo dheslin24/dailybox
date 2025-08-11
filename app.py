@@ -436,7 +436,7 @@ def sv_create_pool():
         else:
             # Insert new pool into sv_pools, set current user as admin
             # You may need to adjust columns for your schema
-            q = f"INSERT INTO sv_pools (pool_name, password, admin_userid) VALUES ('{pool_name}', '{pool_password}', '{user_id}')"
+            q = f"INSERT INTO sv_pools (pool_name, password, admin) VALUES ('{pool_name}', '{pool_password}', '{user_id}')"
             try:
                 db2(q)
                 success = f'Survivor pool "{pool_name}" created successfully.'
