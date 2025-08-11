@@ -70,6 +70,7 @@
                 <input type="hidden" name="team" value="{{ selected_team }}">
                 <input type="hidden" name="logo" value="{{ selected_logo }}">
                 <input type="hidden" name="week" value="{{ week }}">
+                <input type="hidden" name="pool_id" value="{{ pool_id }}">
                 <button type="submit" style="padding:8px 18px;font-size:1em;">Submit</button>
             </form>
         </div>
@@ -85,6 +86,7 @@
                         <input type="hidden" name="selected_team" value="{{ game.home_team }}">
                         <input type="hidden" name="selected_logo" value="{{ game.home_logo }}">
                         <input type="hidden" name="week" value="{{ week }}">
+                        <input type="hidden" name="pool_id" value="{{ pool_id }}">
                         <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;">
                             <span class="label">Home Team:</span> <span class="value">{{ game.home_team }}</span>
                         </button>
@@ -95,6 +97,7 @@
                         <input type="hidden" name="selected_team" value="{{ game.away_team }}">
                         <input type="hidden" name="selected_logo" value="{{ game.away_logo }}">
                         <input type="hidden" name="week" value="{{ week }}">
+                        <input type="hidden" name="pool_id" value="{{ pool_id }}">
                         <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;">
                             <span class="label">Away Team:</span> <span class="value">{{ game.away_team }}</span>
                         </button>
