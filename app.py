@@ -434,18 +434,25 @@ def sv_create_pool():
         if not pool_name or not pool_password:
             error = 'Pool name and password are required.'
         else:
-            # Insert new pool into sv_pools, set current user as admin
-            q = f"INSERT INTO sv_pools (pool_name, password, admin) VALUES ('{pool_name}', '{pool_password}', '{user_id}')"
-            try:
-                db2(q)
-                # Get the last inserted pool_id
-                get_id_q = "SELECT LAST_INSERT_ID()"
-                result = db2(get_id_q)
-                pool_id = result[0][0] if result and len(result) > 0 else None
-                success = f'Survivor pool "{pool_name}" created successfully.'
-            except Exception as e:
-                error = f'Error creating pool: {e}'
+            # Check for duplicate pool_name
+            check_q = f"SELECT pool_id FROM sv_pools WHERE pool_name = '{pool_name}'"
+            exists = db2(check_q)
+            if exists:
+                error = f'A pool with the name "{pool_name}" already exists. Please choose a different name.'
                 pool_id = None
+            else:
+                # Insert new pool into sv_pools, set current user as admin
+                q = f"INSERT INTO sv_pools (pool_name, password, admin) VALUES ('{pool_name}', '{pool_password}', '{user_id}')"
+                try:
+                    db2(q)
+                    # Get the last inserted pool_id
+                    get_id_q = "SELECT LAST_INSERT_ID()"
+                    result = db2(get_id_q)
+                    pool_id = result[0][0] if result and len(result) > 0 else None
+                    success = f'Survivor pool "{pool_name}" created successfully.'
+                except Exception as e:
+                    error = f'Error creating pool: {e}'
+                    pool_id = None
     else:
         pool_id = None
     return render_template('sv_create_pool.html', error=error, success=success, pool_id=pool_id)
