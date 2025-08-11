@@ -29,13 +29,26 @@
             {% if user_pools and user_pools|length > 0 %}
             <div class="user-pools">
                 <h2>Jump to pools you are already in, just click on link below:</h2>
-                <ul>
-                    {% for pool in user_pools %}
-                    <li>
-                        <a href="{{ url_for('survivor_teams_selected') }}?pool_id={{ pool[0] }}">{{ pool[1] }} POOL_ID: {{ pool[0] }}</a>
-                    </li>
-                    {% endfor %}
-                </ul>
+                <table style="width:100%;margin-top:16px;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f0f0f0;">
+                            <th style="padding:8px;border:1px solid #ddd;">Pool Name</th>
+                            <th style="padding:8px;border:1px solid #ddd;">Pool ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pool in user_pools %}
+                        <tr>
+                            <td style="padding:8px;border:1px solid #ddd;">
+                                <a href="{{ url_for('survivor_teams_selected') }}?pool_id={{ pool[0] }}">{{ pool[1] }}</a>
+                            </td>
+                            <td style="padding:8px;border:1px solid #ddd;">
+                                <a href="{{ url_for('survivor_teams_selected') }}?pool_id={{ pool[0] }}">{{ pool[0] }}</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
             {% endif %}
     </div>
