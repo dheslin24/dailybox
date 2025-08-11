@@ -547,7 +547,8 @@ def submit_team():
     s_picks = f"SELECT week, pick, logo FROM sv_picks WHERE user_id = '{user_id}' AND (week, pick_id) IN (SELECT week, MAX(pick_id) FROM sv_picks WHERE user_id = '{user_id}' GROUP BY week) ORDER BY week ASC;"
     picks = db2(s_picks)
     # return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
-    return redirect(url_for('survivor_teams_selected', pool_id=request.form.get('pool_id')))
+    pool_id = request.form.get('pool_id') or request.args.get('pool_id')
+    return redirect(url_for('survivor_teams_selected', pool_id=pool_id))
 
 # Route to handle team clicks
 @app.route('/team_click', methods=['POST'])
