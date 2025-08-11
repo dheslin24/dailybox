@@ -486,6 +486,9 @@ def survivor_week_display():
     week = request.args.get('week', default=1, type=int)
     season = request.args.get('season', default=2025, type=int)
     pool_id = request.args.get('pool_id', type=int)
+    if request.method == 'POST':
+        # If pool_id not in args, get from form
+        pool_id = pool_id or request.form.get('pool_id', type=int)
     games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
     selected_team = None
     selected_logo = None
