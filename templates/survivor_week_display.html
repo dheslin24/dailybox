@@ -90,33 +90,41 @@
                         {{ game['display_datetime'] }}
                     </div>
                     <div class="field">
+                    {% set home_used_week = used_teams.get(game.home_team) %}
                     <form method="POST" action="/survivor_week_display?week={{ week }}" style="display:inline;">
                         <input type="hidden" name="selected_team" value="{{ game.home_team }}">
                         <input type="hidden" name="selected_logo" value="{{ game.home_logo }}">
                         <input type="hidden" name="week" value="{{ week }}">
                         <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;vertical-align:middle;">
+                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;vertical-align:middle;" {% if home_used_week %}disabled style="color:#aaa;cursor:not-allowed;text-decoration:none;"{% endif %}>
                             <span class="label">Home Team:</span>
                             <span class="value">{{ game.home_team }}</span>
                             {% if game.home_logo %}
                             <img src="{{ game.home_logo }}" alt="{{ game.home_team }} logo" style="height:32px;vertical-align:middle;margin-left:8px;">
                             {% endif %}
                         </button>
+                        {% if home_used_week %}
+                        <span class="game-id-tooltip" style="display:inline-block;position:absolute;left:0;top:100%;background:#222;color:#fff;padding:6px 12px;border-radius:4px;font-size:0.95em;z-index:10;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15);">Already Used in week {{ home_used_week }}</span>
+                        {% endif %}
                     </form>
                     </div>
                     <div class="field">
+                    {% set away_used_week = used_teams.get(game.away_team) %}
                     <form method="POST" action="/survivor_week_display?week={{ week }}" style="display:inline;">
                         <input type="hidden" name="selected_team" value="{{ game.away_team }}">
                         <input type="hidden" name="selected_logo" value="{{ game.away_logo }}">
                         <input type="hidden" name="week" value="{{ week }}">
                         <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;vertical-align:middle;">
+                        <button type="submit" class="field" style="background:none;border:none;padding:0;cursor:pointer;color:#007bff;text-decoration:underline;vertical-align:middle;" {% if away_used_week %}disabled style="color:#aaa;cursor:not-allowed;text-decoration:none;"{% endif %}>
                             <span class="label">Away Team:</span>
                             <span class="value">{{ game.away_team }}</span>
                             {% if game.away_logo %}
                             <img src="{{ game.away_logo }}" alt="{{ game.away_team }} logo" style="height:32px;vertical-align:middle;margin-left:8px;">
                             {% endif %}
                         </button>
+                        {% if away_used_week %}
+                        <span class="game-id-tooltip" style="display:inline-block;position:absolute;left:0;top:100%;background:#222;color:#fff;padding:6px 12px;border-radius:4px;font-size:0.95em;z-index:10;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15);">Already Used in week {{ away_used_week }}</span>
+                        {% endif %}
                     </form>
                     </div>
                     <div class="field"><span class="label">Line:</span> <span class="value">{{ game.odds_details }}</span></div>

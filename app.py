@@ -486,6 +486,7 @@ def survivor_week_display():
     week = request.args.get('week', default=1, type=int)
     season = request.args.get('season', default=2025, type=int)
     pool_id = request.args.get('pool_id', type=int)
+    user_id = session.get('userid')
     if request.method == 'POST':
         # If pool_id not in args, get from form
         pool_id = pool_id or request.form.get('pool_id', type=int)
@@ -505,13 +506,19 @@ def survivor_week_display():
                     dt_utc = dt_utc.replace(tzinfo=timezone.utc)
             dt_est = dt_utc.astimezone(est)
             game['display_datetime'] = dt_est.strftime('%a %b %d %H:%M EST')
-    print(games)
     selected_team = None
     selected_logo = None
     if request.method == 'POST':
         selected_team = request.form.get('selected_team')
         selected_logo = request.form.get('selected_logo')
-    return render_template('survivor_week_display.html', games=games, selected_team=selected_team, selected_logo=selected_logo, week=week, pool_id=pool_id)
+    # Query all picks for this user and pool_id across all weeks
+    used_teams = {}
+    if user_id and pool_id:
+        s = f"SELECT week, pick FROM sv_picks WHERE user_id = '{user_id}' AND pool_id = '{pool_id}' AND (week, pick_id) IN (SELECT week, MAX(pick_id) FROM sv_picks WHERE user_id = '{user_id}' AND pool_id = '{pool_id}' GROUP BY week)"
+        picks = db2(s)
+        for row in picks:
+            used_teams[row[1]] = row[0]  # {team: week}
+    return render_template('survivor_week_display.html', games=games, selected_team=selected_team, selected_logo=selected_logo, week=week, pool_id=pool_id, used_teams=used_teams)
 
 # @app.route("/survivor_pool/select", methods=["POST", "GET"])
 # @login_required
