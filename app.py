@@ -567,7 +567,7 @@ def survivor_teams_selected():
     pool_id = request.args.get('pool_id')
     s = f"SELECT week, pick, logo FROM sv_picks WHERE user_id = '{user_id}' AND pool_id = '{pool_id}' AND (week, pick_id) IN (SELECT week, MAX(pick_id) FROM sv_picks WHERE user_id = '{user_id}' GROUP BY week) ORDER BY week ASC;"
     picks = db2(s)
-    return render_template('survivor_teams_selected.html', picks=picks)
+    return render_template('survivor_teams_selected.html', picks=picks, pool_id=pool_id)
 
 # Route to handle joining a pool
 @app.route('/join_pool', methods=['POST'])
