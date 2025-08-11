@@ -63,27 +63,19 @@
                             <img src="{{ picks_by_week[week][2] }}" alt="{{ picks_by_week[week][1] }} logo" style="height:70px;vertical-align:middle;margin-left:16px;">
                         {% endif %}
                     {% else %}
-                        <form method="GET" action="/survivor_week_display" style="display:inline;">
+                        <form method="GET" action="/survivor_week_display">
                             <input type="hidden" name="week" value="{{ week }}">
                             <input type="hidden" name="pool_id" value="{{ pool_id }}">
                             <button type="submit" style="padding:6px 16px;font-size:1em;">Pick for Week {{ week }}</button>
-                        </form>
-                        <form method="GET" action="/survivor_teams_selected" style="display:inline;">
-                            <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                            <button type="submit" style="padding:6px 16px;font-size:1em;background:#eee;color:#333;border:1px solid #ccc;margin-left:8px;">Cancel</button>
                         </form>
                     {% endif %}
                 </td>
                 <td>
                     {% if picks_by_week[week] is defined %}
-                        <form method="GET" action="/survivor_week_display" style="display:inline;">
+                        <form method="GET" action="/survivor_week_display">
                             <input type="hidden" name="week" value="{{ week }}">
                             <input type="hidden" name="pool_id" value="{{ pool_id }}">
                             <button type="submit" style="padding:6px 16px;font-size:1em;">Change Pick</button>
-                        </form>
-                        <form method="GET" action="/survivor_teams_selected" style="display:inline;">
-                            <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                            <button type="submit" style="padding:6px 16px;font-size:1em;background:#eee;color:#333;border:1px solid #ccc;margin-left:8px;">Cancel</button>
                         </form>
                     {% endif %}
                 </td>
