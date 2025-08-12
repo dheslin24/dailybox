@@ -619,7 +619,30 @@ def survivor_teams_selected():
     user_id = session.get('userid')
     pool_id = request.args.get('pool_id')
     s = f"SELECT week, pick, logo FROM sv_picks WHERE user_id = '{user_id}' AND pool_id = '{pool_id}' AND (week, pick_id) IN (SELECT week, MAX(pick_id) FROM sv_picks WHERE user_id = '{user_id}' AND pool_id = '{pool_id}' GROUP BY week) ORDER BY week ASC;"
-    picks = db2(s)
+    picks_raw = db2(s)
+    # Get game start times for each pick to determine locked status
+    from datetime import datetime, timezone
+    season = request.args.get('season', default=2025, type=int)
+    picks = []
+    for pick in picks_raw:
+        week, team, logo = pick
+        locked = False
+        games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+        for game in games:
+            if team == game.get('home_team') or team == game.get('away_team'):
+                if 'start_date' in game and game['start_date']:
+                    dt_str = game['start_date'].replace('Z', '')
+                    try:
+                        dt_utc = datetime.strptime(dt_str, '%Y-%m-%dT%H:%M')
+                        dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+                    except Exception:
+                        dt_utc = datetime.fromisoformat(dt_str)
+                        if dt_utc.tzinfo is None:
+                            dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+                    now_utc = datetime.now(timezone.utc)
+                    locked = now_utc > dt_utc
+                break
+        picks.append((week, team, logo, locked))
     pool_name = None
     if pool_id:
         q = f"SELECT pool_name FROM sv_pools WHERE pool_id = '{pool_id}'"

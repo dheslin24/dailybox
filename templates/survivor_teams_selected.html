@@ -78,10 +78,16 @@
                 </td>
                 <td>
                     {% if picks_by_week[week] is defined %}
+                        {% set locked = false %}
+                        {% for pick in picks %}
+                            {% if pick[0] == week %}
+                                {% set locked = pick[3] %}
+                            {% endif %}
+                        {% endfor %}
                         <form method="GET" action="/survivor_week_display">
                             <input type="hidden" name="week" value="{{ week }}">
                             <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                            <button type="submit" style="padding:6px 16px;font-size:1em;">Change Pick</button>
+                            <button type="submit" style="padding:6px 16px;font-size:1em;{% if locked %}background:#eee;color:#aaa;cursor:not-allowed;{% endif %}" {% if locked %}disabled{% endif %}>Change Pick</button>
                         </form>
                     {% endif %}
                 </td>
