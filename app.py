@@ -492,6 +492,7 @@ def survivor_week_display():
         pool_id = pool_id or request.form.get('pool_id', type=int)
     games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
     est = pytz.timezone('US/Eastern')
+    now_utc = datetime.now(timezone.utc)
     for game in games:
         if 'start_date' in game and game['start_date']:
             # ESPN API returns ISO8601 string, e.g. '2025-08-10T15:30Z'
@@ -506,6 +507,9 @@ def survivor_week_display():
                     dt_utc = dt_utc.replace(tzinfo=timezone.utc)
             dt_est = dt_utc.astimezone(est)
             game['display_datetime'] = dt_est.strftime('%a %b %d %H:%M EST')
+            # Lock team selection if current time is after (start_time - 5 min)
+            lock_time = dt_utc - timedelta(minutes=5)
+            game['locked'] = now_utc > lock_time
     selected_team = None
     selected_logo = None
     if request.method == 'POST':
@@ -568,13 +572,36 @@ def submit_team():
     logo = request.form.get('logo')
     week = request.form.get('week')
     pool_id = request.form.get('pool_id') or request.args.get('pool_id')
-    print(f"Team submitted: {team}, Logo: {logo}, Week: {week}, pool ID {pool_id}")    
+    season = request.form.get('season') or request.args.get('season') or 2025
+    print(f"Team submitted: {team}, Logo: {logo}, Week: {week}, pool ID {pool_id}, Season: {season}")
+    # Backend validation: check game start time
+    games = get_all_games_for_week(season_type=2, week=int(week), league='nfl', season=int(season))
+    # Find the game for the selected team
+    game_start_utc = None
+    for game in games:
+        if team == game.get('home_team') or team == game.get('away_team'):
+            if 'start_date' in game and game['start_date']:
+                dt_str = game['start_date'].replace('Z', '')
+                try:
+                    dt_utc = datetime.strptime(dt_str, '%Y-%m-%dT%H:%M')
+                    dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+                except Exception:
+                    dt_utc = datetime.fromisoformat(dt_str)
+                    if dt_utc.tzinfo is None:
+                        dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+                game_start_utc = dt_utc
+                break
+    now_utc = datetime.now(timezone.utc)
+    if game_start_utc:
+        lock_time = game_start_utc - timedelta(minutes=5)
+        if now_utc > lock_time:
+            # Too late to pick
+            return render_template('survivor_teams_selected.html', error="Too late to pick this team. Picks must be made at least 5 minutes before game start.", pool_id=pool_id)
+    # Otherwise, allow pick
     s = "INSERT INTO sv_picks(user_id, pool_id, week, pick, logo) VALUES(%s, %s, %s, %s, %s);"
     db2(s, (user_id, pool_id, week, team, logo))
     s_picks = f"SELECT week, pick, logo FROM sv_picks WHERE user_id = '{user_id}' AND (week, pick_id) IN (SELECT week, MAX(pick_id) FROM sv_picks WHERE user_id = '{user_id}' GROUP BY week) ORDER BY week ASC;"
     picks = db2(s_picks)
-    # return f"Team submitted: {team} for week {week}<br><img src='{logo}' alt='{team} logo' style='height:60px;'>"
-    # pool_id = request.form.get('pool_id') or request.args.get('pool_id')
     return redirect(url_for('survivor_teams_selected', pool_id=pool_id))
 
 # Route to handle team clicks

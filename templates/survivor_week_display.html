@@ -101,7 +101,7 @@
                         <input type="hidden" name="selected_logo" value="{{ game.home_logo }}">
                         <input type="hidden" name="week" value="{{ week }}">
                         <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                        <button type="submit" class="field" style="{{ home_btn_style }}" {% if home_used_week %}disabled{% endif %}>
+                        <button type="submit" class="field" style="{{ home_btn_style }}" {% if home_used_week or game.locked %}disabled{% endif %}>
                             <span class="label">Home Team:</span>
                             <span class="value">{{ game.home_team }}</span>
                             {% if game.home_logo %}
@@ -109,6 +109,8 @@
                             {% endif %}
                             {% if home_used_week %}
                             <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Used week {{ home_used_week }}</span>
+                            {% elif game.locked %}
+                            <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Locked</span>
                             {% endif %}
                         </button>
                     </form>
@@ -125,7 +127,7 @@
                         <input type="hidden" name="selected_logo" value="{{ game.away_logo }}">
                         <input type="hidden" name="week" value="{{ week }}">
                         <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                        <button type="submit" class="field" style="{{ away_btn_style }}" {% if away_used_week %}disabled{% endif %}>
+                        <button type="submit" class="field" style="{{ away_btn_style }}" {% if away_used_week or game.locked %}disabled{% endif %}>
                             <span class="label">Away Team:</span>
                             <span class="value">{{ game.away_team }}</span>
                             {% if game.away_logo %}
@@ -133,6 +135,8 @@
                             {% endif %}
                             {% if away_used_week %}
                             <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Used week {{ away_used_week }}</span>
+                            {% elif game.locked %}
+                            <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Locked</span>
                             {% endif %}
                         </button>
                     </form>
