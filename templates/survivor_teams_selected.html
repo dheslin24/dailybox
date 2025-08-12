@@ -43,6 +43,11 @@
     </script>
     <div class="picks-list">
         <h2>Survivor Picks</h2>
+        {% if pool_name %}
+        <div style="text-align:center;font-size:1.1em;margin-bottom:12px;color:#333;">
+            Pool: <span style="font-weight:bold;">{{ pool_name }}</span>
+        </div>
+        {% endif %}
         <table>
             <tr>
                 <th>Week</th>
