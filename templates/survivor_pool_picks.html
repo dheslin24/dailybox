@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Survivor Pool Picks</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; }
+        .picks-table { max-width: 900px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f0f0f0; }
+        tr:last-child td { border-bottom: none; }
+        .locked { color: #aaa; }
+        .user-row { background: #e6f7ff; }
+    </style>
+</head>
+<body>
+    <div class="picks-table">
+        <h2>Survivor Pool Picks</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    {% for week in weeks %}
+                    <th>Week {{ week }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr {% if user.user_id == session['userid'] %}class="user-row"{% endif %}>
+                    <td>{{ user.username }}</td>
+                    {% for week in weeks %}
+                        {% set pick = picks.get((user.user_id, week)) %}
+                        {% if user.user_id == session['userid'] or (pick and pick.locked) %}
+                            <td>{{ pick.team if pick else '' }}</td>
+                        {% else %}
+                            <td class="locked">Locked</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

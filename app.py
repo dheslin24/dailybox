@@ -628,6 +628,48 @@ def survivor_teams_selected():
             pool_name = result[0][0]
     return render_template('survivor_teams_selected.html', picks=picks, pool_id=pool_id, pool_name=pool_name)
 
+# Route to display all users and their picks for a given pool
+@app.route('/survivor_pool_picks')
+def survivor_pool_picks():
+    pool_id = request.args.get('pool_id', type=int)
+    season = request.args.get('season', default=2025, type=int)
+    user_id = session.get('userid')
+    # Get all users in this pool
+    user_rows = db2(f"SELECT u.userid, u.username FROM users u JOIN sv_user_pools up ON u.userid = up.user_id WHERE up.pool_id = '{pool_id}'")
+    users = [{'user_id': row[0], 'username': row[1]} for row in user_rows]
+    # Get all weeks for this pool (from sv_picks)
+    week_rows = db2(f"SELECT DISTINCT week FROM sv_picks WHERE pool_id = '{pool_id}' ORDER BY week ASC")
+    weeks = [row[0] for row in week_rows]
+    # Get all picks for all users in this pool
+    pick_rows = db2(f"SELECT user_id, week, pick, logo FROM sv_picks WHERE pool_id = '{pool_id}'")
+    # Get all games for all weeks
+    games_by_week = {}
+    for week in weeks:
+        games_by_week[week] = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+    # Build pick dict with lock info
+    from datetime import datetime, timezone
+    picks = {}
+    for row in pick_rows:
+        uid, week, team, logo = row
+        # Find game start time for this pick
+        locked = False
+        for game in games_by_week[week]:
+            if team == game.get('home_team') or team == game.get('away_team'):
+                if 'start_date' in game and game['start_date']:
+                    dt_str = game['start_date'].replace('Z', '')
+                    try:
+                        dt_utc = datetime.strptime(dt_str, '%Y-%m-%dT%H:%M')
+                        dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+                    except Exception:
+                        dt_utc = datetime.fromisoformat(dt_str)
+                        if dt_utc.tzinfo is None:
+                            dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+                    now_utc = datetime.now(timezone.utc)
+                    locked = now_utc > dt_utc
+                break
+        picks[(uid, week)] = {'team': team, 'logo': logo, 'locked': locked}
+    return render_template('survivor_pool_picks.html', users=users, weeks=weeks, picks=picks)
+
 # Route to handle joining a pool
 @app.route('/join_pool', methods=['POST'])
 def join_pool():
