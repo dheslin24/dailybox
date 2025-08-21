@@ -692,7 +692,7 @@ def survivor_pool_picks():
                         if dt_utc.tzinfo is None:
                             dt_utc = dt_utc.replace(tzinfo=timezone.utc)
                     now_utc = datetime.now(timezone.utc)
-                    locked = now_utc < dt_utc
+                    locked = now_utc > dt_utc
                 if game.get('winner_team'):
                     logging.info(f"Game winner: {game['winner_team']}")
                     # If game has a winner, set result
