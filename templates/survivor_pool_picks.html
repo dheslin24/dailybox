@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Survivor Pool Picks</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; }
+        .picks-table { max-width: 900px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f0f0f0; }
+        tr:last-child td { border-bottom: none; }
+        .locked { color: #aaa; }
+        .user-row { background: #e6f7ff; }
+    </style>
+</head>
+<body>
+    <div style="width:100%;background:#222;padding:0;margin:0;">
+        <nav style="display:flex;align-items:center;justify-content:left;padding:0 24px;height:48px;">
+            <div style="color:#fff;font-size:1.2em;font-weight:bold;margin-right:32px;">Survivor Navigation</div>
+            <div style="position:relative;">
+                <button style="background:#444;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:1em;">Jump To ▼</button>
+                <div style="display:none;position:absolute;top:36px;left:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:4px;min-width:180px;z-index:100;" class="dropdown-content">
+                    <a href="/survivor_pool" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">Main Survivor Page</a>
+                    <a href="/survivor_pool_picks?pool_id={{ pool_id }}&season={{ season|default(2025) }}" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">View All Pool Picks</a>
+                    {% if session['is_admin'] == 1 %}
+                    <a href="/sv_create_pool" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">Create Survivor Pool</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </div>
+    <script>
+        // Simple dropdown logic
+        const btn = document.querySelector('nav button');
+        const dropdown = document.querySelector('.dropdown-content');
+        btn.addEventListener('click', function(e) {
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        });
+        document.addEventListener('click', function(e) {
+            if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
+    <div class="picks-table">
+        <h2>Survivor Pool Picks</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    {% for week in weeks %}
+                    <th>Week {{ week }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr {% if user.user_id == session['userid'] %}class="user-row"{% endif %}>
+                    <td>{{ user.username }}</td>
+                    {% for week in weeks %}
+                        {% set pick = picks.get((user.user_id, week)) %}
+                        {% if user.user_id == session['userid'] or (pick and pick.locked) %}
+                            <td>
+                                {% if pick and pick.logo %}
+                                    <img src="{{ pick.logo }}" alt="{{ pick.team }} logo" style="height:32px;vertical-align:middle;">
+                                {% else %}
+                                    &nbsp;
+                                {% endif %}
+                            </td>
+                        {% else %}
+                            <td class="locked">Locked</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
