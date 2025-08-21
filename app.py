@@ -691,12 +691,12 @@ def survivor_pool_picks():
                             dt_utc = dt_utc.replace(tzinfo=timezone.utc)
                     now_utc = datetime.now(timezone.utc)
                     locked = now_utc < dt_utc
-                    if game.get('winner_team'):
-                        # If game has a winner, set result
-                        if team == game['winner_team']:
-                            result = 'win'
-                        else:
-                            result = 'lose'
+                if game.get('winner_team'):
+                    # If game has a winner, set result
+                    if team == game['winner_team']:
+                        result = 'win'
+                    else:
+                        result = 'lose'
                 break
         picks[(uid, week)] = {'team': team, 'logo': logo, 'locked': locked, 'result': result}
     return render_template('survivor_pool_picks.html', users=users, weeks=weeks, picks=picks)
