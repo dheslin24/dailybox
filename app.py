@@ -680,6 +680,7 @@ def survivor_pool_picks():
         result = False
         for game in games_by_week[week]:
             if team == game.get('home_team') or team == game.get('away_team'):
+                logging.info(f"Found game for team {team} in week {week}: {game}")
                 if 'start_date' in game and game['start_date']:
                     dt_str = game['start_date'].replace('Z', '')
                     try:
