@@ -670,7 +670,8 @@ def survivor_pool_picks():
     # Get all games for all weeks
     games_by_week = {}
     for week in weeks:
-        games_by_week[week] = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+        # games_by_week[week] = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+        games_by_week[week] = get_all_games_for_week(season_type=1, week=week, league='nfl', season=season)  # testing with preseason
     # Build pick dict with win/lose and locked info
     picks = {}
     for row in pick_rows:

@@ -47,7 +47,7 @@ def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
                     elif c.get('homeAway') == 'away':
                         away_team = c['team']['abbreviation']
                         away_logo = c['team'].get('logo') or c['team'].get('logos', [{}])[0].get('href')
-                    winner = c.get('winner', False)
+                    winner = c.get('winner')
                     if winner:
                         winner_team = c['team']['abbreviation']
                 odds = comp.get('odds', [{}])[0]
