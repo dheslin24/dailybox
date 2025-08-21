@@ -699,6 +699,7 @@ def survivor_pool_picks():
                         result = 'lose'
                 break
         picks[(uid, week)] = {'team': team, 'logo': logo, 'locked': locked, 'result': result}
+    print(picks)
     return render_template('survivor_pool_picks.html', users=users, weeks=weeks, picks=picks)
 
 # Route to handle joining a pool
