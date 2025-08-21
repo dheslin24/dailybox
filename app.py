@@ -690,7 +690,7 @@ def survivor_pool_picks():
                         if dt_utc.tzinfo is None:
                             dt_utc = dt_utc.replace(tzinfo=timezone.utc)
                     now_utc = datetime.now(timezone.utc)
-                    locked = now_utc > dt_utc
+                    locked = now_utc < dt_utc
                 break
         picks[(uid, week)] = {'team': team, 'logo': logo, 'locked': locked}
     return render_template('survivor_pool_picks.html', users=users, weeks=weeks, picks=picks)
