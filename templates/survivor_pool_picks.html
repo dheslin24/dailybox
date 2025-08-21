@@ -61,7 +61,7 @@
                     {% for week in weeks %}
                         {% set pick = picks.get((user.user_id, week)) %}
                         {% if user.user_id == session['userid'] or (pick and pick.locked) %}
-                            <td>
+                            <td class="{% if pick and pick.result == 'win' %}winner{% elif pick and pick.result == 'lose' %}loser{% endif %}">
                                 {% if pick and pick.logo %}
                                     <img src="{{ pick.logo }}" alt="{{ pick.team }} logo" style="height:32px;vertical-align:middle;">
                                 {% else %}

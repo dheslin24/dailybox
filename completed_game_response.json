@@ -1,0 +1,514 @@
+{
+    "id": "401773010",
+    "uid": "s:20~l:28~e:401773010",
+    "date": "2025-08-10T00:00Z",
+    "name": "New York Jets at Green Bay Packers",
+    "shortName": "NYJ @ GB",
+    "season": {
+        "year": 2025,
+        "type": 1,
+        "slug": "preseason"
+    },
+    "week": {
+        "number": 2
+    },
+    "competitions": [
+        {
+            "id": "401773010",
+            "uid": "s:20~l:28~e:401773010~c:401773010",
+            "date": "2025-08-10T00:00Z",
+            "attendance": 71501,
+            "type": {
+                "id": "1",
+                "abbreviation": "STD"
+            },
+            "timeValid": true,
+            "neutralSite": false,
+            "conferenceCompetition": false,
+            "playByPlayAvailable": true,
+            "recent": false,
+            "venue": {
+                "id": "3798",
+                "fullName": "Lambeau Field",
+                "address": {
+                    "city": "Green Bay",
+                    "state": "WI",
+                    "country": "USA"
+                },
+                "indoor": false
+            },
+            "competitors": [
+                {
+                    "id": "9",
+                    "uid": "s:20~l:28~t:9",
+                    "type": "team",
+                    "order": 0,
+                    "homeAway": "home",
+                    "winner": false,
+                    "team": {
+                        "id": "9",
+                        "uid": "s:20~l:28~t:9",
+                        "location": "Green Bay",
+                        "name": "Packers",
+                        "abbreviation": "GB",
+                        "displayName": "Green Bay Packers",
+                        "shortDisplayName": "Packers",
+                        "color": "204e32",
+                        "alternateColor": "ffb612",
+                        "isActive": true,
+                        "venue": {
+                            "id": "3798"
+                        },
+                        "links": [
+                            {
+                                "rel": [
+                                    "clubhouse",
+                                    "desktop",
+                                    "team"
+                                ],
+                                "href": "https://www.espn.com/nfl/team/_/name/gb/green-bay-packers",
+                                "text": "Clubhouse",
+                                "isExternal": false,
+                                "isPremium": false
+                            },
+                            {
+                                "rel": [
+                                    "roster",
+                                    "desktop",
+                                    "team"
+                                ],
+                                "href": "https://www.espn.com/nfl/team/roster/_/name/gb/green-bay-packers",
+                                "text": "Roster",
+                                "isExternal": false,
+                                "isPremium": false
+                            },
+                            {
+                                "rel": [
+                                    "stats",
+                                    "desktop",
+                                    "team"
+                                ],
+                                "href": "https://www.espn.com/nfl/team/stats/_/name/gb/green-bay-packers",
+                                "text": "Statistics",
+                                "isExternal": false,
+                                "isPremium": false
+                            },
+                            {
+                                "rel": [
+                                    "schedule",
+                                    "desktop",
+                                    "team"
+                                ],
+                                "href": "https://www.espn.com/nfl/team/schedule/_/name/gb",
+                                "text": "Schedule",
+                                "isExternal": false,
+                                "isPremium": false
+                            }
+                        ],
+                        "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/gb.png"
+                    },
+                    "score": "10",
+                    "linescores": [
+                        {
+                            "value": 0,
+                            "displayValue": "0",
+                            "period": 1
+                        },
+                        {
+                            "value": 3,
+                            "displayValue": "3",
+                            "period": 2
+                        },
+                        {
+                            "value": 0,
+                            "displayValue": "0",
+                            "period": 3
+                        },
+                        {
+                            "value": 7,
+                            "displayValue": "7",
+                            "period": 4
+                        }
+                    ],
+                    "statistics": [],
+                    "records": [
+                        {
+                            "name": "overall",
+                            "abbreviation": "Game",
+                            "type": "total",
+                            "summary": "0-1"
+                        },
+                        {
+                            "name": "Home",
+                            "type": "home",
+                            "summary": "0-1"
+                        },
+                        {
+                            "name": "Road",
+                            "type": "road",
+                            "summary": "0-0"
+                        }
+                    ]
+                },
+                {
+                    "id": "20",
+                    "uid": "s:20~l:28~t:20",
+                    "type": "team",
+                    "order": 1,
+                    "homeAway": "away",
+                    "winner": true,
+                    "team": {
+                        "id": "20",
+                        "uid": "s:20~l:28~t:20",
+                        "location": "New York",
+                        "name": "Jets",
+                        "abbreviation": "NYJ",
+                        "displayName": "New York Jets",
+                        "shortDisplayName": "Jets",
+                        "color": "115740",
+                        "alternateColor": "ffffff",
+                        "isActive": true,
+                        "venue": {
+                            "id": "3839"
+                        },
+                        "links": [
+                            {
+                                "rel": [
+                                    "clubhouse",
+                                    "desktop",
+                                    "team"
+                                ],
+                                "href": "https://www.espn.com/nfl/team/_/name/nyj/new-york-jets",
+                                "text": "Clubhouse",
+                                "isExternal": false,
+                                "isPremium": false
+                            },
+                            {
+                                "rel": [
+                                    "roster",
+                                    "desktop",
+                                    "team"
+                                ],
+                                "href": "https://www.espn.com/nfl/team/roster/_/name/nyj/new-york-jets",
+                                "text": "Roster",
+                                "isExternal": false,
+                                "isPremium": false
+                            },
+                            {
+                                "rel": [
+                                    "stats",
+                                    "desktop",
+                                    "team"
+                                ],
+                                "href": "https://www.espn.com/nfl/team/stats/_/name/nyj/new-york-jets",
+                                "text": "Statistics",
+                                "isExternal": false,
+                                "isPremium": false
+                            },
+                            {
+                                "rel": [
+                                    "schedule",
+                                    "desktop",
+                                    "team"
+                                ],
+                                "href": "https://www.espn.com/nfl/team/schedule/_/name/nyj",
+                                "text": "Schedule",
+                                "isExternal": false,
+                                "isPremium": false
+                            }
+                        ],
+                        "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/nyj.png"
+                    },
+                    "score": "30",
+                    "linescores": [
+                        {
+                            "value": 7,
+                            "displayValue": "7",
+                            "period": 1
+                        },
+                        {
+                            "value": 10,
+                            "displayValue": "10",
+                            "period": 2
+                        },
+                        {
+                            "value": 7,
+                            "displayValue": "7",
+                            "period": 3
+                        },
+                        {
+                            "value": 6,
+                            "displayValue": "6",
+                            "period": 4
+                        }
+                    ],
+                    "statistics": [],
+                    "records": [
+                        {
+                            "name": "overall",
+                            "abbreviation": "Game",
+                            "type": "total",
+                            "summary": "1-0"
+                        },
+                        {
+                            "name": "Home",
+                            "type": "home",
+                            "summary": "0-0"
+                        },
+                        {
+                            "name": "Road",
+                            "type": "road",
+                            "summary": "1-0"
+                        }
+                    ]
+                }
+            ],
+            "notes": [],
+            "status": {
+                "clock": 0,
+                "displayClock": "0:00",
+                "period": 4,
+                "type": {
+                    "id": "3",
+                    "name": "STATUS_FINAL",
+                    "state": "post",
+                    "completed": true,
+                    "description": "Final",
+                    "detail": "Final",
+                    "shortDetail": "Final"
+                },
+                "isTBDFlex": false
+            },
+            "broadcasts": [
+                {
+                    "market": "national",
+                    "names": [
+                        "NFL Net"
+                    ]
+                }
+            ],
+            "leaders": [
+                {
+                    "name": "passingYards",
+                    "displayName": "Passing Leader",
+                    "shortDisplayName": "PASS",
+                    "abbreviation": "PYDS",
+                    "leaders": [
+                        {
+                            "displayValue": "11/16, 152 YDS, 1 TD",
+                            "value": 152,
+                            "athlete": {
+                                "id": "4361182",
+                                "fullName": "Adrian Martinez",
+                                "displayName": "Adrian Martinez",
+                                "shortName": "A. Martinez",
+                                "links": [
+                                    {
+                                        "rel": [
+                                            "playercard",
+                                            "desktop",
+                                            "athlete"
+                                        ],
+                                        "href": "https://www.espn.com/nfl/player/_/id/4361182/adrian-martinez"
+                                    }
+                                ],
+                                "headshot": "https://a.espncdn.com/i/headshots/nfl/players/full/4361182.png",
+                                "jersey": "15",
+                                "position": {
+                                    "abbreviation": "QB"
+                                },
+                                "team": {
+                                    "id": "20"
+                                },
+                                "active": true
+                            },
+                            "team": {
+                                "id": "20"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "rushingYards",
+                    "displayName": "Rushing Leader",
+                    "shortDisplayName": "RUSH",
+                    "abbreviation": "RYDS",
+                    "leaders": [
+                        {
+                            "displayValue": "7 CAR, 67 YDS, 1 TD",
+                            "value": 67,
+                            "athlete": {
+                                "id": "4878878",
+                                "fullName": "Amar Johnson",
+                                "displayName": "Amar Johnson",
+                                "shortName": "A. Johnson",
+                                "links": [
+                                    {
+                                        "rel": [
+                                            "playercard",
+                                            "desktop",
+                                            "athlete"
+                                        ],
+                                        "href": "https://www.espn.com/nfl/player/_/id/4878878/amar-johnson"
+                                    }
+                                ],
+                                "headshot": "https://a.espncdn.com/i/headshots/nfl/players/full/4878878.png",
+                                "jersey": "46",
+                                "position": {
+                                    "abbreviation": "RB"
+                                },
+                                "team": {
+                                    "id": "9"
+                                },
+                                "active": true
+                            },
+                            "team": {
+                                "id": "9"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "receivingYards",
+                    "displayName": "Receiving Leader",
+                    "shortDisplayName": "REC",
+                    "abbreviation": "RECYDS",
+                    "leaders": [
+                        {
+                            "displayValue": "2 REC, 36 YDS",
+                            "value": 36,
+                            "athlete": {
+                                "id": "3125107",
+                                "fullName": "Andrew Beck",
+                                "displayName": "Andrew Beck",
+                                "shortName": "A. Beck",
+                                "links": [
+                                    {
+                                        "rel": [
+                                            "playercard",
+                                            "desktop",
+                                            "athlete"
+                                        ],
+                                        "href": "https://www.espn.com/nfl/player/_/id/3125107/andrew-beck"
+                                    }
+                                ],
+                                "headshot": "https://a.espncdn.com/i/headshots/nfl/players/full/3125107.png",
+                                "jersey": "47",
+                                "position": {
+                                    "abbreviation": "FB"
+                                },
+                                "team": {
+                                    "id": "20"
+                                },
+                                "active": true
+                            },
+                            "team": {
+                                "id": "20"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "format": {
+                "regulation": {
+                    "periods": 4
+                }
+            },
+            "startDate": "2025-08-10T00:00Z",
+            "broadcast": "NFL Net",
+            "geoBroadcasts": [
+                {
+                    "type": {
+                        "id": "1",
+                        "shortName": "TV"
+                    },
+                    "market": {
+                        "id": "1",
+                        "type": "National"
+                    },
+                    "media": {
+                        "shortName": "NFL Net"
+                    },
+                    "lang": "en",
+                    "region": "us"
+                }
+            ],
+            "highlights": [],
+            "headlines": [
+                {
+                    "type": "Recap",
+                    "description": "— As soon as he recovered a fumble in the end zone to score a touchdown, New York Jets defensive tackle Jay Tufele went over to the sideline to give the ball to his new head coach.",
+                    "shortLinkText": "Fields scores in his lone series as Jets open 1st preseason under Glenn by beating Packers 30-10"
+                }
+            ]
+        }
+    ],
+    "links": [
+        {
+            "language": "en-US",
+            "rel": [
+                "summary",
+                "desktop",
+                "event"
+            ],
+            "href": "https://www.espn.com/nfl/game/_/gameId/401773010/jets-packers",
+            "text": "Gamecast",
+            "shortText": "Gamecast",
+            "isExternal": false,
+            "isPremium": false
+        },
+        {
+            "language": "en-US",
+            "rel": [
+                "boxscore",
+                "desktop",
+                "event"
+            ],
+            "href": "https://www.espn.com/nfl/boxscore/_/gameId/401773010",
+            "text": "Box Score",
+            "shortText": "Box Score",
+            "isExternal": false,
+            "isPremium": false
+        },
+        {
+            "language": "en-US",
+            "rel": [
+                "pbp",
+                "desktop",
+                "event"
+            ],
+            "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401773010",
+            "text": "Play-by-Play",
+            "shortText": "Play-by-Play",
+            "isExternal": false,
+            "isPremium": false
+        },
+        {
+            "language": "en-US",
+            "rel": [
+                "recap",
+                "desktop",
+                "event"
+            ],
+            "href": "https://www.espn.com/nfl/recap?gameId=401773010",
+            "text": "Recap",
+            "shortText": "Recap",
+            "isExternal": false,
+            "isPremium": false
+        }
+    ],
+    "status": {
+        "clock": 0,
+        "displayClock": "0:00",
+        "period": 4,
+        "type": {
+            "id": "3",
+            "name": "STATUS_FINAL",
+            "state": "post",
+            "completed": true,
+            "description": "Final",
+            "detail": "Final",
+            "shortDetail": "Final"
+        }
+    }
+}

@@ -671,13 +671,13 @@ def survivor_pool_picks():
     games_by_week = {}
     for week in weeks:
         games_by_week[week] = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
-    # Build pick dict with lock info
-    from datetime import datetime, timezone
+    # Build pick dict with win/lose and locked info
     picks = {}
     for row in pick_rows:
         uid, week, team, logo = row
         # Find game start time for this pick
         locked = False
+        result = False
         for game in games_by_week[week]:
             if team == game.get('home_team') or team == game.get('away_team'):
                 if 'start_date' in game and game['start_date']:
@@ -691,8 +691,14 @@ def survivor_pool_picks():
                             dt_utc = dt_utc.replace(tzinfo=timezone.utc)
                     now_utc = datetime.now(timezone.utc)
                     locked = now_utc < dt_utc
+                    if game.get('winner_team'):
+                        # If game has a winner, set result
+                        if team == game['winner_team']:
+                            result = 'win'
+                        else:
+                            result = 'lose'
                 break
-        picks[(uid, week)] = {'team': team, 'logo': logo, 'locked': locked}
+        picks[(uid, week)] = {'team': team, 'logo': logo, 'locked': locked, 'result': result}
     return render_template('survivor_pool_picks.html', users=users, weeks=weeks, picks=picks)
 
 # Route to handle joining a pool

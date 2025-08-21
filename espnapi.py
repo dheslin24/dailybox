@@ -39,6 +39,7 @@ def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
                 home_logo = None
                 away_team = None
                 away_logo = None
+                winner_team = None
                 for c in competitors:
                     if c.get('homeAway') == 'home':
                         home_team = c['team']['abbreviation']
@@ -46,6 +47,9 @@ def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
                     elif c.get('homeAway') == 'away':
                         away_team = c['team']['abbreviation']
                         away_logo = c['team'].get('logo') or c['team'].get('logos', [{}])[0].get('href')
+                    winner = c.get('winner', False)
+                    if winner:
+                        winner_team = c['team']['abbreviation']
                 odds = comp.get('odds', [{}])[0]
                 odds_details = odds.get('details')
                 odds_spread = odds.get('spread')
@@ -57,7 +61,8 @@ def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
                     'away_logo': away_logo,
                     'start_date': start_date,
                     'odds_details': odds_details,
-                    'odds_spread': odds_spread
+                    'odds_spread': odds_spread,
+                    'winner_team': winner_team
                 })
         return events
 
