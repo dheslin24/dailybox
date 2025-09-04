@@ -491,8 +491,8 @@ def survivor_week_display():
     if request.method == 'POST':
         # If pool_id not in args, get from form
         pool_id = pool_id or request.form.get('pool_id', type=int)
-    # games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
-    games = get_all_games_for_week(season_type=1, week=week, league='nfl', season=season) # testing with preseason
+    games = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+    # games = get_all_games_for_week(season_type=1, week=week, league='nfl', season=season) # testing with preseason
     est = pytz.timezone('US/Eastern')
     now_utc = datetime.now(timezone.utc)
     for game in games:
@@ -670,8 +670,8 @@ def survivor_pool_picks():
     # Get all games for all weeks
     games_by_week = {}
     for week in weeks:
-        # games_by_week[week] = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
-        games_by_week[week] = get_all_games_for_week(season_type=1, week=week, league='nfl', season=season)  # testing with preseason
+        games_by_week[week] = get_all_games_for_week(season_type=2, week=week, league='nfl', season=season)
+        # games_by_week[week] = get_all_games_for_week(season_type=1, week=week, league='nfl', season=season)  # testing with preseason
     # Build pick dict with win/lose and locked info
     picks = {}
     for row in pick_rows:
