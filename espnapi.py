@@ -95,7 +95,7 @@ def get_espn_scores(abbrev=True, season_type=3, week=5, league='nfl', espnid=Fal
 
     espn_q = f"SELECT espnid, fav, spread FROM latest_lines WHERE league = '{league}'"
     espn_db = db2(espn_q)
-    logging.info("espndb: %s", espn_db)
+    logging.debug("espndb: %s", espn_db)
 
     espn_dict = {}
     for game in espn_db:

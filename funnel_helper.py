@@ -45,15 +45,16 @@ def elimination_check(game_dict, d, user_dict):
         total_score = 0
         for score in teams:
             total_score += int(score[2])
-        logging.info(f"total score {total_score}")
+        logging.info(f"TIE BREAK total score {total_score}")
 
         min_diff = 1000
         tb_winner = []
         for user in winner:
             if abs(d[user]['tb'] - total_score) == min_diff:
                 tb_winner.append(user)
-                tb_log.append(f"{user_dict[user]} TB of {d[user]['tb']} is {abs(d[user]['tb'] - total_score)} away from total score of {total_score}")
+                tb_log.insert(0, f"{user_dict[user]} TB of {d[user]['tb']} is {abs(d[user]['tb'] - total_score)} away from total score of {total_score}")
             elif abs(d[user]['tb'] - total_score) < min_diff:
+                min_diff = abs(d[user]['tb'] - total_score)
                 tb_winner = [user]
                 tb_log.insert(0, f"{user_dict[user]['username']}'s tie break of {d[user]['tb']} is {abs(d[user]['tb'] - total_score)} away from total score of {total_score}")
             else:

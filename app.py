@@ -2607,27 +2607,28 @@ def view_all_picks():
     # get user tiebreaks
     t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
     tb_dict = dict(db2(t))
-    print(f"TB DICT {tb_dict}")
+    logging.info(f"TB DICT {tb_dict}")
 
-    print(f"all_picks {all_picks}")
+    logging.info(f"all_picks {all_picks}")
 
     # dict of {userid:  {espnid/wins: pick/wintotal}}
     d = {}
     ignore = [401331242, 401331217, 401331220, 401339628, 401331225, 401352013] # 401331242 is final
     for pick in all_picks:
-        if pick[1] not in ignore:
-            if pick[0] not in d:
-                d[pick[0]] = {pick[1]: pick[2]}
-                if(pick[1], pick[2]) in winning_teams:
-                    d[pick[0]]['wins'] = 1
+        pick_userid, pick_espnid, pick_team = pick
+        if pick_espnid not in ignore:
+            if pick_userid not in d:
+                d[pick_userid] = {pick_espnid: pick_team}
+                if(pick_espnid, pick_team) in winning_teams:
+                    d[pick_userid]['wins'] = 1
                 else:
-                    d[pick[0]]['wins'] = 0
+                    d[pick_userid]['wins'] = 0
             else:
-                d[pick[0]][pick[1]] = pick[2]
-                if (pick[1], pick[2]) in winning_teams:
-                    d[pick[0]]['wins'] += 1
-        if pick[0] in tb_dict:
-            d[pick[0]]['tb'] = tb_dict[pick[0]]
+                d[pick_userid][pick_espnid] = pick_team
+                if (pick_espnid, pick_team) in winning_teams:
+                    d[pick_userid]['wins'] += 1
+        if pick_userid in tb_dict:
+            d[pick_userid]['tb'] = tb_dict[pick_userid]
 
 
     # add users who are in but haven't picked yet, with 0 wins
