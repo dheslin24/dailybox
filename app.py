@@ -2516,12 +2516,11 @@ def select_bowl_games():
 @login_required
 def view_all_picks():
 
-    season = 2022
     season_type = 3
     weeks = [1, 2, 3, 5] # [1, 2, 3, 5]  - week 4 is probowl
     league = 'nfl'
     now = datetime.utcnow() - timedelta(hours=5)
-    annual = now.year - 2009
+    annual = now.year - 2010
     # get list of active games first
     #game_dict = get_espn_scores(False)['game']
     game_dicts = []

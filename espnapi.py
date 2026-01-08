@@ -1,6 +1,8 @@
+import logging
 import requests
 from datetime import datetime, timedelta
 from db_accessor.db_accessor import db2
+
 
 def get_ncaab_games():
     espn_ncaab_url = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?dates=20230302"
@@ -9,7 +11,8 @@ def get_ncaab_games():
 
     return response
 
-def get_espn_ids(season_type = 3, week = 1, league='ncaaf'):
+
+def get_espn_ids(season_type=3, week=1, league='ncaaf'):
     espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
     espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 
@@ -21,6 +24,7 @@ def get_espn_ids(season_type = 3, week = 1, league='ncaaf'):
     r = response.json()
 
     return r
+
 
 def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
 
@@ -68,15 +72,14 @@ def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
 
     return parse_events_from_response(r)
 
-def get_espn_scores(abbrev = True, season_type = 3, week = 5, league='nfl', espnid=False):
-    # season_type = 3  # 1: preseason, 2: regular, 3: post
-    # week = 1 # will make this an input soon
-    espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
-    espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
-    #espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
-    espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 
-    #response = requests.get(espn_url)
+def get_espn_scores(abbrev=True, season_type=3, week=5, league='nfl', espnid=False):
+    """Return a dict: { 'game': {espnid: {...}}, 'team': {abbr: score} }
+
+    Uses logging instead of printing so messages go to the app logger (byg.log).
+    """
+    espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+    espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
 
     if league == 'ncaaf':
         response = requests.get(espn_ncaa_url)
@@ -86,14 +89,13 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 5, league='nfl', espn
     r = response.json()
 
     game_dict = {}
-    #game_num = 1
     team_dict = {}
     now = datetime.utcnow() - timedelta(hours=5)
-    print(now)
+    logging.info("now: %s", now)
 
     espn_q = f"SELECT espnid, fav, spread FROM latest_lines WHERE league = '{league}'"
     espn_db = db2(espn_q)
-    print(f"espndb: {espn_db}")
+    logging.info("espndb: %s", espn_db)
 
     espn_dict = {}
     for game in espn_db:
@@ -102,48 +104,47 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 5, league='nfl', espn
         else:
             espn_dict[str(game[0])] = {'fav': game[1], 'spread': ''}
 
-    print(f"espn dict: {espn_dict}")
+    logging.info("espn dict: %s", espn_dict)
 
-    winloss_dict = {}
-
-    for event in r['events']:
-        for game in event['competitions']:
+    for event in r.get('events', []):
+        for game in event.get('competitions', []):
             espnid = int(game['id'])
             competitors = []
             abbreviations = {}
             headline = ''
             status = {}
+
             if 'status' in game:
-                print(f"status! {game['status']}")
-                game_status = game['status']['type']['description']  # 1: scheduled, 2: inprogress, 3: final, 5: canceled
+                logging.info("status: %s", game['status'])
+                game_status = game['status']['type']['description']
                 if game_status == 'Scheduled':
                     status['status'] = game_status
-
-                elif game_status == 'Canceled' or game_status == 'Postponed':
+                elif game_status in ('Canceled', 'Postponed'):
                     status['status'] = game_status
                     status['detail'] = game_status
-
                 elif game_status != 'Final':
                     status['status'] = game['status']['type']['description']
-                    status['detail'] = game['status']['type']['detail']
-                    status['displayClock'] = game['status']['displayClock']
-                    status['quarter'] = game['status']['period']
+                    status['detail'] = game['status']['type'].get('detail')
+                    status['displayClock'] = game['status'].get('displayClock')
+                    status['quarter'] = game['status'].get('period')
                 else:
                     status['status'] = 'Final'
-                
-            if 'odds' in game:
-                over_under = game['odds'][0]['overUnder']
-                if over_under % 2 == 0:
-                    over_under = int(over_under)
+
+            if 'odds' in game and game['odds']:
+                over_under = game['odds'][0].get('overUnder')
+                try:
+                    if isinstance(over_under, (int, float)) and over_under % 2 == 0:
+                        over_under = int(over_under)
+                except Exception:
+                    pass
             else:
-                # line = 'TBD'
                 over_under = 'TBD'
 
             if game['id'] in espn_dict:
                 if espn_dict[game['id']]['fav'] != 'EVEN':
                     espn_fav = espn_dict[game['id']]['fav']
                     espn_spread = espn_dict[game['id']]['spread']
-                    if len(espn_spread) > 2 and espn_spread[-2:] == '.0':
+                    if isinstance(espn_spread, str) and len(espn_spread) > 2 and espn_spread.endswith('.0'):
                         espn_spread = espn_spread[:-2]
                     line = [espn_fav, espn_spread]
                 else:
@@ -153,59 +154,58 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 5, league='nfl', espn
             else:
                 line = 'TBD'
 
-            if line[0] != 'EVEN':
-                print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
+            if isinstance(line, list) and line[0] != 'EVEN':
+                logging.info("line: %s o/u: %s type: %s", line, over_under, type(line[1]) if len(line) > 1 else None)
             else:
-                print(f"line: EVEN EVEN {line}")
-                #print(f"game with even {game}")
+                logging.info("line: EVEN or TBD: %s", line)
 
-            if 'notes' in game:
-                if len(game['notes']) > 0:
-                    if 'headline' in game['notes'][0]:
-                        headline = game['notes'][0]['headline']
+            if 'notes' in game and game['notes']:
+                if 'headline' in game['notes'][0]:
+                    headline = game['notes'][0]['headline']
 
-            for team in game['competitors']:
-                home_away = team['homeAway'].upper()
+            for team in game.get('competitors', []):
+                home_away = team.get('homeAway', '').upper()
                 if abbrev:
-                    competitors.append((home_away, team['team']['abbreviation'], team['score']))
+                    competitors.append((home_away, team['team'].get('abbreviation'), team.get('score')))
                 else:
-                    competitors.append((home_away, team['team']['displayName'], team['score']))
-                    abbreviations[home_away] = team['team']['abbreviation']
+                    competitors.append((home_away, team['team'].get('displayName'), team.get('score')))
+                    abbreviations[home_away] = team['team'].get('abbreviation')
 
-                team_dict[team['team']['abbreviation']] = team['score']
-                
-            # convert string to datetime e.g.:  
-            # 'date': '2022-01-01T17:00Z'
-            game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
-            game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
+                team_dict[team['team'].get('abbreviation')] = team.get('score')
+
+            # parse datetime
+            try:
+                game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
+            except Exception:
+                game_datetime = now
+            game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST')
             game_date_short = game_datetime.strftime('%m-%d %H:%M')
 
             if 'venue' in game:
-                venue = game['venue']['fullName']
-                location = game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
+                venue = game['venue'].get('fullName', 'TBD')
+                location = game['venue'].get('address', {}).get('city', 'TBD') + ', ' + game['venue'].get('address', {}).get('state', 'TBD')
             else:
                 venue = 'TBD'
                 location = 'TBD'
 
-            if headline[-8:] == 'Playoffs':
+            if isinstance(headline, str) and headline.endswith('Playoffs'):
                 headline = headline[:-8]
 
             game_dict[espnid] = {
-                'espn_id': int(game['id']), 
-                'date': game_date, # date string for printing
+                'espn_id': int(game['id']),
+                'date': game_date,
                 'date_short': game_date_short,
-                'datetime': game_datetime, # datetime object for comparison
-                'venue': venue, 
-                'competitors': competitors,  # list of competitors [(home/away, team, score), ... ]
-                'abbreviations': abbreviations,  # {'HOME': abbrev, 'AWAY', abbrev}
+                'datetime': game_datetime,
+                'venue': venue,
+                'competitors': competitors,
+                'abbreviations': abbreviations,
                 'line': line,
                 'over_under': over_under,
                 'headline': headline,
                 'location': location,
                 'status': status
-                }
-            #game_num += 1
-            
+            }
+
     # post processing of game_dict for winner/loser
     for game in game_dict:
         fav = ''
@@ -216,105 +216,88 @@ def get_espn_scores(abbrev = True, season_type = 3, week = 5, league='nfl', espn
         game_dict[game]['current_winner'] = ''
 
         if game_dict[game]['datetime'] < now:
-            #print(f"even check {game_dict[game]['line']}"
-            if game_dict[game]['line'][0] == 'EVEN':
-                print(f"gamedict in espnapi ###################################### {game_dict[game]['abbreviations']}")
-                fav = game_dict[game]['abbreviations']['HOME']
-                fav_score = team_dict[fav]
-                dog = game_dict[game]['abbreviations']['AWAY']
-                dog_score = team_dict[dog]
-            elif game_dict[game]['line'] != 'TBD':
+            if isinstance(game_dict[game]['line'], list) and game_dict[game]['line'][0] == 'EVEN':
+                logging.info('gamedict in espnapi EVEN: %s', game_dict[game]['abbreviations'])
+                fav = game_dict[game]['abbreviations'].get('HOME')
+                fav_score = int(team_dict.get(fav) or 0)
+                dog = game_dict[game]['abbreviations'].get('AWAY')
+                dog_score = int(team_dict.get(dog) or 0)
+            elif game_dict[game]['line'] != 'TBD' and isinstance(game_dict[game]['line'], list):
                 for team in game_dict[game]['abbreviations'].values():
-                    print(f"team: {team}")
+                    logging.info('team: %s', team)
                     if team == game_dict[game]['line'][0]:
                         spread = game_dict[game]['line'][1]
                         fav = team
-                        fav_score = int(team_dict[team]) + float(spread)
+                        fav_score = int(team_dict.get(team) or 0) + float(spread)
                     else:
-                        dog_score = float(team_dict[team])
+                        dog_score = float(team_dict.get(team) or 0)
                         dog = team
-            # if fav_score != 0 or dog_score != 0:
-            print(f"favdogscores 1 {fav} 2 {dog} 3 {fav_score} 4 {dog_score}")
+
+            logging.info('favdogscores 1 %s 2 %s 3 %s 4 %s', fav, dog, fav_score, dog_score)
             if fav_score > dog_score:
                 game_dict[game]['current_winner'] = fav
             elif dog_score > fav_score:
                 game_dict[game]['current_winner'] = dog
             else:
                 game_dict[game]['current_winner'] = 'PUSH'
-            print(f"curr winner {game_dict[game]['current_winner']}")
-            # else:
-    #print(f"GAME DICT {game_dict}")
-                
-    #return (game_dict, team_dict)
+            logging.info('curr winner %s', game_dict[game]['current_winner'])
+
     return {"game": game_dict, "team": team_dict}
 
 
 def get_espn_score_by_qtr(eventid, league='nfl'):
-    # season_type = 3
-    # week = 1
-    event = 401331242   # 401331242 is CFP final
-    print(eventid)
-    espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={eventid}"  # change to eventid eventually
+    event = eventid
+    logging.info('eventid: %s', eventid)
+    espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={eventid}"
     espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={eventid}"
 
     if league == 'ncaaf':
         response = requests.get(espn_url_ncaaf)
     else:
         response = requests.get(espn_url_nfl)
-    print(response)
+    logging.info('response: %s', response)
     r = response.json()
     espn_dict = dict(r)
-    print(espn_dict.keys())
+    logging.info('espn summary keys: %s', list(espn_dict.keys()))
 
     d = {}
 
-    print("----------BOXSCORE------------")
-    # print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
-    # print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
-    for teams in espn_dict['boxscore']['teams']:
+    logging.info('----------BOXSCORE------------')
+    for teams in espn_dict.get('boxscore', {}).get('teams', []):
         for k, v in teams.items():
-            #print(f"{k}\n{v}")
-            #print(teams[k])
             if k == 'team':
-                print(v['abbreviation'] + ' - ' + v['displayName'] + ' ' + v['name'])
+                logging.info('%s - %s %s', v.get('abbreviation'), v.get('displayName'), v.get('name'))
                 if 'logo' in v:
-                    print(v['logo'])
+                    logging.info(v.get('logo'))
                 else:
                     v['logo'] = ''
-                d[v['abbreviation']] = {'schoolName': v['displayName'], 'nickname': v['name'], 'logo': v['logo']}
+                d[v.get('abbreviation')] = {'schoolName': v.get('displayName'), 'nickname': v.get('name'), 'logo': v.get('logo')}
 
-    # result of above:
-    # dheslin@DESKTOP-IF8M32H:~/bygtech/line_checker$ ./espn_tester.py
-    # UGA - Georgia Bulldogs
-    # ALA - Alabama Crimson Tide
+    logging.info('\n-----------GAMEINFO--------------')
+    logging.info(espn_dict.get('gameInfo'))
 
-    print("\n-----------GAMEINFO--------------")
-    print(espn_dict['gameInfo'])
-
-    print("\n------------HEADER----------")
-    print(f"header: {espn_dict['header']}")
-    for competition in espn_dict['header']['competitions']:
-        print(type(competition))
-        for competitor in competition['competitors']:
-            print(f"competitor!!!:  {competitor}")
-            team = competitor['team']['abbreviation']
+    logging.info('\n------------HEADER----------')
+    logging.info('header: %s', espn_dict.get('header'))
+    for competition in espn_dict.get('header', {}).get('competitions', []):
+        logging.info(type(competition))
+        for competitor in competition.get('competitors', []):
+            logging.info('competitor: %s', competitor)
+            team = competitor.get('team', {}).get('abbreviation')
             if 'score' in competitor:
-                #print(competitor['team']['abbreviation'], competitor['score'])
-                
-                curr_score = competitor['score']
+                curr_score = competitor.get('score')
                 qtrs = {}
                 q = 1
-                for qtr in competitor['linescores']:
-                    #print(qtr['displayValue'])
-                    qtrs[q] = qtr['displayValue']
+                for qtr in competitor.get('linescores', []):
+                    qtrs[q] = qtr.get('displayValue')
                     q += 1
                 d[team]['current_score'] = curr_score
                 d[team]['qtr_scores'] = qtrs
             else:
                 qtrs = {}
+                d[team] = d.get(team, {})
                 d[team]['current_score'] = '0'
                 d[team]['qtr_scores'] = qtrs
-    
+
     return d
 
 
@@ -325,7 +308,6 @@ def get_espn_summary_single_game(espnid, league='nfl'):
         espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={espnid}"
     else:
         espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
-
 
     r = requests.get(espn_url).json()
 
@@ -348,6 +330,354 @@ def get_espn_summary_single_game(espnid, league='nfl'):
     }
 
     return response
+
+# def get_ncaab_games():
+#     espn_ncaab_url = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?dates=20230302"
+
+#     response = requests.get(espn_ncaab_url).json()
+
+#     return response
+
+# def get_espn_ids(season_type = 3, week = 1, league='ncaaf'):
+#     espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+#     espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
+
+#     if league == 'ncaaf':
+#         response = requests.get(espn_ncaa_url)
+#     else:
+#         response = requests.get(espn_nfl_url)
+
+#     r = response.json()
+
+#     return r
+
+# def get_all_games_for_week(season_type=3, week=1, league='nfl', season=2025):
+
+#     espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/{league}/scoreboard?seasontype={season_type}&week={week}&dates={season}"
+#     response = requests.get(espn_url)
+#     r = response.json()
+
+#     def parse_events_from_response(r):
+#         events = []
+#         for event in r.get('events', []):
+#             for comp in event.get('competitions', []):
+#                 event_id = comp.get('id')
+#                 start_date = comp.get('startDate')
+#                 competitors = comp.get('competitors', [])
+#                 home_team = None
+#                 home_logo = None
+#                 away_team = None
+#                 away_logo = None
+#                 winner_team = None
+#                 for c in competitors:
+#                     if c.get('homeAway') == 'home':
+#                         home_team = c['team']['abbreviation']
+#                         home_logo = c['team'].get('logo') or c['team'].get('logos', [{}])[0].get('href')
+#                     elif c.get('homeAway') == 'away':
+#                         away_team = c['team']['abbreviation']
+#                         away_logo = c['team'].get('logo') or c['team'].get('logos', [{}])[0].get('href')
+#                     winner = c.get('winner')
+#                     if winner:
+#                         winner_team = c['team']['abbreviation']
+#                 odds = comp.get('odds', [{}])[0]
+#                 odds_details = odds.get('details')
+#                 odds_spread = odds.get('spread')
+#                 events.append({
+#                     'id': event_id,
+#                     'home_team': home_team,
+#                     'home_logo': home_logo,
+#                     'away_team': away_team,
+#                     'away_logo': away_logo,
+#                     'start_date': start_date,
+#                     'odds_details': odds_details,
+#                     'odds_spread': odds_spread,
+#                     'winner_team': winner_team
+#                 })
+#         return events
+
+#     return parse_events_from_response(r)
+
+# def get_espn_scores(abbrev = True, season_type = 3, week = 5, league='nfl', espnid=False):
+#     # season_type = 3  # 1: preseason, 2: regular, 3: post
+#     # week = 1 # will make this an input soon
+#     espn_url_hc = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=9"  # hard coded url
+#     espn_nfl_url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype={season_type}&week={week}"
+#     #espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
+#     espn_ncaa_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?seasontype={season_type}&week={week}&limit=900"
+
+#     #response = requests.get(espn_url)
+
+#     if league == 'ncaaf':
+#         response = requests.get(espn_ncaa_url)
+#     else:
+#         response = requests.get(espn_nfl_url)
+
+#     r = response.json()
+
+#     game_dict = {}
+#     #game_num = 1
+#     team_dict = {}
+#     now = datetime.utcnow() - timedelta(hours=5)
+#     print(now)
+
+#     espn_q = f"SELECT espnid, fav, spread FROM latest_lines WHERE league = '{league}'"
+#     espn_db = db2(espn_q)
+#     print(f"espndb: {espn_db}")
+
+#     espn_dict = {}
+#     for game in espn_db:
+#         if len(game) == 3:
+#             espn_dict[str(game[0])] = {'fav': game[1], 'spread': game[2]}
+#         else:
+#             espn_dict[str(game[0])] = {'fav': game[1], 'spread': ''}
+
+#     print(f"espn dict: {espn_dict}")
+
+#     winloss_dict = {}
+
+#     for event in r['events']:
+#         for game in event['competitions']:
+#             espnid = int(game['id'])
+#             competitors = []
+#             abbreviations = {}
+#             headline = ''
+#             status = {}
+#             if 'status' in game:
+#                 print(f"status! {game['status']}")
+#                 game_status = game['status']['type']['description']  # 1: scheduled, 2: inprogress, 3: final, 5: canceled
+#                 if game_status == 'Scheduled':
+#                     status['status'] = game_status
+
+#                 elif game_status == 'Canceled' or game_status == 'Postponed':
+#                     status['status'] = game_status
+#                     status['detail'] = game_status
+
+#                 import logging
+#                 import requests
+#                     status['status'] = game['status']['type']['description']
+#                     status['detail'] = game['status']['type']['detail']
+#                     status['displayClock'] = game['status']['displayClock']
+#                     status['quarter'] = game['status']['period']
+#                 else:
+#                     status['status'] = 'Final'
+                
+#             if 'odds' in game:
+#                 over_under = game['odds'][0]['overUnder']
+#                 if over_under % 2 == 0:
+#                     over_under = int(over_under)
+#             else:
+#                 # line = 'TBD'
+#                 over_under = 'TBD'
+
+#             if game['id'] in espn_dict:
+#                 if espn_dict[game['id']]['fav'] != 'EVEN':
+#                     espn_fav = espn_dict[game['id']]['fav']
+#                     espn_spread = espn_dict[game['id']]['spread']
+#                     now = datetime.utcnow() - timedelta(hours=5)
+#                     logging.info(f"now: {now}")
+#                     line = [espn_fav, espn_spread]
+#                 else:
+#                     espn_fav = 'EVEN'
+#                     logging.info(f"espndb: {espn_db}")
+#                     line = [espn_fav]
+#             else:
+#                 line = 'TBD'
+
+#             if line[0] != 'EVEN':
+#                 print(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
+#             else:
+#                 print(f"line: EVEN EVEN {line}")
+#                     logging.info(f"espn dict: {espn_dict}")
+
+#             if 'notes' in game:
+#                 if len(game['notes']) > 0:
+#                     if 'headline' in game['notes'][0]:
+#                         headline = game['notes'][0]['headline']
+
+#             for team in game['competitors']:
+#                 home_away = team['homeAway'].upper()
+#                 if abbrev:
+#                     competitors.append((home_away, team['team']['abbreviation'], team['score']))
+#                 else:
+#                                 logging.info(f"status! {game['status']}")
+#                     abbreviations[home_away] = team['team']['abbreviation']
+
+#                 team_dict[team['team']['abbreviation']] = team['score']
+                
+#             # convert string to datetime e.g.:  
+#             # 'date': '2022-01-01T17:00Z'
+#             game_datetime = datetime.strptime(game['date'], '%Y-%m-%dT%H:%MZ') - timedelta(hours=5)
+#             game_date = game_datetime.strftime('%Y-%m-%d %I:%M %p EST') 
+#             game_date_short = game_datetime.strftime('%m-%d %H:%M')
+
+#             if 'venue' in game:
+#                 venue = game['venue']['fullName']
+#                 location = game['venue']['address']['city'] + ', ' + game['venue']['address']['state']
+#             else:
+#                 venue = 'TBD'
+#                 location = 'TBD'
+
+#             if headline[-8:] == 'Playoffs':
+#                 headline = headline[:-8]
+
+#             game_dict[espnid] = {
+#                 'espn_id': int(game['id']), 
+#                 'date': game_date, # date string for printing
+#                 'date_short': game_date_short,
+#                 'datetime': game_datetime, # datetime object for comparison
+#                 'venue': venue, 
+#                 'competitors': competitors,  # list of competitors [(home/away, team, score), ... ]
+#                 'abbreviations': abbreviations,  # {'HOME': abbrev, 'AWAY', abbrev}
+#                 'line': line,
+#                 'over_under': over_under,
+#                 'headline': headline,
+#                 'location': location,
+#                 'status': status
+#                 }
+#             #game_num += 1
+            
+#     # post processing of game_dict for winner/loser
+#     for game in game_dict:
+#                                 logging.info(f"line:  {line}  o/u: {over_under}  {type(line[1])}")
+#         dog = ''
+#                                 logging.info(f"line: EVEN EVEN {line}")
+#         fav_score = 0
+#         dog_score = 0
+#         game_dict[game]['current_winner'] = ''
+
+#         if game_dict[game]['datetime'] < now:
+#             #print(f"even check {game_dict[game]['line']}"
+#             if game_dict[game]['line'][0] == 'EVEN':
+#                 print(f"gamedict in espnapi ###################################### {game_dict[game]['abbreviations']}")
+#                 fav = game_dict[game]['abbreviations']['HOME']
+#                 fav_score = team_dict[fav]
+#                 dog = game_dict[game]['abbreviations']['AWAY']
+#                 dog_score = team_dict[dog]
+#             elif game_dict[game]['line'] != 'TBD':
+#                 for team in game_dict[game]['abbreviations'].values():
+#                     print(f"team: {team}")
+#                     if team == game_dict[game]['line'][0]:
+#                         spread = game_dict[game]['line'][1]
+#                         fav = team
+#                         fav_score = int(team_dict[team]) + float(spread)
+#                     else:
+#                         dog_score = float(team_dict[team])
+#                         dog = team
+#             # if fav_score != 0 or dog_score != 0:
+#             print(f"favdogscores 1 {fav} 2 {dog} 3 {fav_score} 4 {dog_score}")
+#             if fav_score > dog_score:
+#                 game_dict[game]['current_winner'] = fav
+#             elif dog_score > fav_score:
+#                 game_dict[game]['current_winner'] = dog
+#             else:
+#                 game_dict[game]['current_winner'] = 'PUSH'
+#             print(f"curr winner {game_dict[game]['current_winner']}")
+#             # else:
+#     #print(f"GAME DICT {game_dict}")
+                
+#     #return (game_dict, team_dict)
+#     return {"game": game_dict, "team": team_dict}
+
+
+# def get_espn_score_by_qtr(eventid, league='nfl'):
+#     # season_type = 3
+#     # week = 1
+#     event = 401331242   # 401331242 is CFP final
+#     print(eventid)
+#     espn_url_nfl = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event={eventid}"  # change to eventid eventually
+#     espn_url_ncaaf = f"http://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={eventid}"
+
+#     if league == 'ncaaf':
+#         response = requests.get(espn_url_ncaaf)
+#     else:
+#         response = requests.get(espn_url_nfl)
+#     print(response)
+#     r = response.json()
+#     espn_dict = dict(r)
+#     print(espn_dict.keys())
+
+#                                 logging.info(f"gamedict in espnapi ###################################### {game_dict[game]['abbreviations']}")
+
+#     print("----------BOXSCORE------------")
+#     # print(f"boxscore keys:  {espn_dict['boxscore'].keys()}")
+#     # print(f"boxscore teams: {espn_dict['boxscore']['teams']}")
+#     for teams in espn_dict['boxscore']['teams']:
+#         for k, v in teams.items():
+#                                     logging.info(f"team: {team}")
+#             #print(teams[k])
+#             if k == 'team':
+#                 print(v['abbreviation'] + ' - ' + v['displayName'] + ' ' + v['name'])
+#                 if 'logo' in v:
+#                     print(v['logo'])
+#                 else:
+#                     v['logo'] = ''
+#                 d[v['abbreviation']] = {'schoolName': v['displayName'], 'nickname': v['name'], 'logo': v['logo']}
+
+#     # result of above:
+#     # dheslin@DESKTOP-IF8M32H:~/bygtech/line_checker$ ./espn_tester.py
+#     # UGA - Georgia Bulldogs
+#     # ALA - Alabama Crimson Tide
+
+#     print("\n-----------GAMEINFO--------------")
+#                             logging.info(f"curr winner {game_dict[game]['current_winner']}")
+
+#     print("\n------------HEADER----------")
+#     print(f"header: {espn_dict['header']}")
+#                     logging.info(f"eventid: {eventid}")
+#         print(type(competition))
+#         for competitor in competition['competitors']:
+#             print(f"competitor!!!:  {competitor}")
+#             team = competitor['team']['abbreviation']
+#             if 'score' in competitor:
+#                 #print(competitor['team']['abbreviation'], competitor['score'])
+                
+#                     logging.info(f"response: {response}")
+#                 qtrs = {}
+#                 q = 1
+#                     logging.info(f"espn summary keys: {list(espn_dict.keys())}")
+#                     #print(qtr['displayValue'])
+#                     qtrs[q] = qtr['displayValue']
+#                     q += 1
+#                     logging.info("----------BOXSCORE------------")
+#                 d[team]['qtr_scores'] = qtrs
+#             else:
+#                 qtrs = {}
+#                                 logging.info(v['abbreviation'] + ' - ' + v['displayName'] + ' ' + v['name'])
+#                 d[team]['qtr_scores'] = qtrs
+#                                     logging.info(v['logo'])
+#     return d
+
+
+# def get_espn_summary_single_game(espnid, league='nfl'):
+#                     logging.info("\n-----------GAMEINFO--------------")
+#                     logging.info(espn_dict.get('gameInfo'))
+#     elif league == 'nfl':
+#                     logging.info("\n------------HEADER----------")
+#                     logging.info(f"header: {espn_dict.get('header')}")
+#         espn_url = f"https://site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={espnid}"
+#                         logging.info(type(competition))
+
+#                             logging.info(f"competitor!!!:  {competitor}")
+
+#     game_status = r['header']['competitions'][0]['status']
+
+#     clock = ''
+#     quarter = 0
+
+#     if 'displayClock' in game_status:
+#         clock = game_status['displayClock']
+
+#     if 'period' in game_status:
+#         quarter = game_status['period']
+
+#     response = {
+#         'game_status': game_status['type']['description'],
+#         'kickoff_time': game_status['type']['detail'],
+#         'game_clock': clock,
+#         'quarter': quarter
+#     }
+
+#     return response
     
     
 
