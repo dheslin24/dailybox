@@ -3958,7 +3958,7 @@ def admin_summary():
         s = "UPDATE users SET amt_paid = {} WHERE userid = {};".format(amt, userid)
         db(s)
 
-    s = "SELECT userid, username, first_name, last_name, email, mobile, is_admin, alias_of_userid FROM users where active = 1;"
+    s = "SELECT userid, username, first_name, last_name, last_update, email, mobile, is_admin, alias_of_userid FROM users where active = 1;"
     users = db(s)
 
     p = "SELECT userid, amt_paid FROM users;"
