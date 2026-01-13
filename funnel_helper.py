@@ -1,5 +1,5 @@
 import logging
-import datetime
+from datetime import datetime
 
 
 def elimination_check(game_dict, d, user_dict):
