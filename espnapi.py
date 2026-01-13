@@ -95,7 +95,7 @@ def get_espn_scores(abbrev=True, season_type=3, week=5, league='nfl', espnid=Fal
 
     espn_q = f"SELECT espnid, fav, spread FROM latest_lines WHERE league = '{league}'"
     espn_db = db2(espn_q)
-    logging.debug("espndb: %s", espn_db)
+    # logging.debug("espndb: %s", espn_db)
 
     espn_dict = {}
     for game in espn_db:
@@ -104,7 +104,7 @@ def get_espn_scores(abbrev=True, season_type=3, week=5, league='nfl', espnid=Fal
         else:
             espn_dict[str(game[0])] = {'fav': game[1], 'spread': ''}
 
-    logging.info("espn dict: %s", espn_dict)
+    # logging.info("espn dict: %s", espn_dict)
 
     for event in r.get('events', []):
         for game in event.get('competitions', []):
@@ -115,7 +115,7 @@ def get_espn_scores(abbrev=True, season_type=3, week=5, league='nfl', espnid=Fal
             status = {}
 
             if 'status' in game:
-                logging.info("status: %s", game['status'])
+                # logging.info("status: %s", game['status'])
                 game_status = game['status']['type']['description']
                 if game_status == 'Scheduled':
                     status['status'] = game_status
@@ -154,10 +154,10 @@ def get_espn_scores(abbrev=True, season_type=3, week=5, league='nfl', espnid=Fal
             else:
                 line = 'TBD'
 
-            if isinstance(line, list) and line[0] != 'EVEN':
-                logging.info("line: %s o/u: %s type: %s", line, over_under, type(line[1]) if len(line) > 1 else None)
-            else:
-                logging.info("line: EVEN or TBD: %s", line)
+            # if isinstance(line, list) and line[0] != 'EVEN':
+            #     logging.info("line: %s o/u: %s type: %s", line, over_under, type(line[1]) if len(line) > 1 else None)
+            # else:
+            #     logging.info("line: EVEN or TBD: %s", line)
 
             if 'notes' in game and game['notes']:
                 if 'headline' in game['notes'][0]:
@@ -217,14 +217,14 @@ def get_espn_scores(abbrev=True, season_type=3, week=5, league='nfl', espnid=Fal
 
         if game_dict[game]['datetime'] < now:
             if isinstance(game_dict[game]['line'], list) and game_dict[game]['line'][0] == 'EVEN':
-                logging.info('gamedict in espnapi EVEN: %s', game_dict[game]['abbreviations'])
+                # logging.info('gamedict in espnapi EVEN: %s', game_dict[game]['abbreviations'])
                 fav = game_dict[game]['abbreviations'].get('HOME')
                 fav_score = int(team_dict.get(fav) or 0)
                 dog = game_dict[game]['abbreviations'].get('AWAY')
                 dog_score = int(team_dict.get(dog) or 0)
             elif game_dict[game]['line'] != 'TBD' and isinstance(game_dict[game]['line'], list):
                 for team in game_dict[game]['abbreviations'].values():
-                    logging.info('team: %s', team)
+                    # logging.info('team: %s', team)
                     if team == game_dict[game]['line'][0]:
                         spread = game_dict[game]['line'][1]
                         fav = team
@@ -233,7 +233,7 @@ def get_espn_scores(abbrev=True, season_type=3, week=5, league='nfl', espnid=Fal
                         dog_score = float(team_dict.get(team) or 0)
                         dog = team
 
-            logging.info('favdogscores 1 %s 2 %s 3 %s 4 %s', fav, dog, fav_score, dog_score)
+            # logging.info('favdogscores 1 %s 2 %s 3 %s 4 %s', fav, dog, fav_score, dog_score)
             if fav_score > dog_score:
                 game_dict[game]['current_winner'] = fav
             elif dog_score > fav_score:
