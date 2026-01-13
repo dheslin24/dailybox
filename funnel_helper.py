@@ -25,7 +25,8 @@ def elimination_check(game_dict, d, user_dict):
     logging.info(f"games left: {games_left}")
     logging.info(f"curr_most_winner from helper!!!: {curr_most_wins}")
     logging.info(f"total games: {total_games}")
-    logging.info(f"time at start of elimination_check: {datetime.now()}")
+    start_elim = datetime.now()
+    logging.info(f"time at start of elimination_check: {start_elim}")
 
     # compare most with user wins vs games left to calc elim
     # and also prepare a list of users with the most wins
@@ -63,6 +64,7 @@ def elimination_check(game_dict, d, user_dict):
                 tb_log.append(f"{user_dict[user]} TB of {d[user]['tb']} is {abs(d[user]['tb'] - total_score)} away from total score of {total_score}")
         winner = tb_winner
         logging.info(f"winner in helper {winner}")
-        logging.info(f"time at end of elimination_check: {datetime.now()}")
+    logging.info(f"time at end of elimination_check: {datetime.now()}")
+    logging.info(f"total time in elim check {datetime.now() - start_elim}")
 
     return {'elim': eliminated_list, 'winner': winner, 'tb_log': tb_log}
