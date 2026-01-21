@@ -78,7 +78,8 @@
     <img src="{{ url_for('static', filename='cannellacrest.png') }}" style="display: block; margin-left: auto; margin-right: auto;">
     {% else %}
     <!-- will ferrell old school just one -->
-    <img src="https://y.yarn.co/77ce7edc-daf1-4a26-adc9-8dc5156069cd_text.gif" style="display: block; margin-left: auto; margin-right: auto;">
+    <!-- <img src="https://y.yarn.co/77ce7edc-daf1-4a26-adc9-8dc5156069cd_text.gif" style="display: block; margin-left: auto; margin-right: auto;"> -->
+    <img src="{{ url_for('static', filename='will_just_one.gif') }}" style="display: block; margin-left: auto; margin-right: auto;">
     {% endif %}
     </div>
         {% if scores|length > 0 %}
