@@ -1069,7 +1069,7 @@ def assign_alias():
     boxid = str(request.form.get('boxid'))
     boxnum = str(int(request.form.get('boxnum')) - 1) #boxes displayed start at 1.  boxes in db start at 0.
     
-    user_aliases = eval(request.form.get('user_aliases'))
+    user_aliases = eval(request.form.get('user_aliases', ''))
     user_alias_dict = dict(user_aliases)
     print(f"user_alias_dict: {user_alias_dict}")
 
