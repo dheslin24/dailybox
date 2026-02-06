@@ -3955,7 +3955,7 @@ def priv_payment_status():
         admins.append(admin[0])
         admins.append(3) # DH superuser
 
-    return render_template("payment_status.html", users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=True, boxid=boxid, box_type=4)
+    return render_template("payment_status.html", user_dict=user_dict, users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=True, boxid=boxid, box_type=4)
 
 @app.route("/admin_summary", methods=["GET", "POST"])
 def admin_summary():
