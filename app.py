@@ -3879,6 +3879,13 @@ def priv_payment_status():
     p = "SELECT userid, paid FROM privategames WHERE boxid = %s;"
     paid = dict(db2(p, (boxid, )))
 
+    # get actual names for our demanding 'admin'
+    uname_string = "SELECT userid, username, first_name, last_name FROM users;"
+    usernames = db2(uname_string)
+    user_dict = {}
+    for userid, username, first_name, last_name in usernames:
+        user_dict[userid] = {"username": username, "first_name": first_name, "last_name": last_name}
+
     box_list = ['box' + str(x) + ' ,' for x in range(100)]
     box_string = ''
     for _ in box_list:
