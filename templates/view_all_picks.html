@@ -35,7 +35,7 @@
     </br>
     {% if winner|length > 0 %}
         {% for winning_user in winner %}
-        <h2 style="color: green; font-weight: bold">{{ emojis['crown'] }} {{ winning_user }} {{ emojis['crown'] }}</h2>
+        <h2 style="color: green; font-weight: bold">{{ emojis['crown'] }} {{ user_dict[winning_user]['username'] }} {{ emojis['crown'] }}</h2>
         {% endfor %}
     {% endif %}
     {% if tb_log|length > 0 %}
