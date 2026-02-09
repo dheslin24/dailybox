@@ -184,8 +184,8 @@ def get_espn_every_min_scores(espnid):
         reverse_winner = {
             # "away_score": next_winner["home_score"],  # reversed away/home number
             # "home_score": next_winner["away_score"],
-            "away_score": "29",  # reversed away/home number
-            "home_score": "13",
+            "away_score": "13",  # reversed away/home number
+            "home_score": "29",
             "winning_minutes": None,
             "type": "reverse"
         }
