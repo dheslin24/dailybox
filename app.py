@@ -2087,6 +2087,7 @@ def enter_every_score():
         teams = db(s)[0]
         home_team = teams[0]
         away_team = teams[1]
+        logging.info("{} just entered a new score: {}-{} for home and {}-{} for away".format(session["username"], home_team, home_score, away_team, away_score))
 
         box_list = []
         for entry in boxid_list:
@@ -2120,12 +2121,21 @@ def enter_every_score():
         print("boxid list {}".format(boxid_list))
         if len(boxid_list) == 0:
             return apology("there are no active every score games")
+        # get home/away teams for buttons
+        # this assumes there will only ever be 1 active everyscore pool so all boxids have same home/away team
+
+        s = "SELECT home_team, away_team FROM boxes WHERE boxid = {};".format(boxid_list[0][0])
+        teams = db(s)[0]
+        home_team = teams[0]
+        away_team = teams[1]
+        logging.info("{} just entered a new score: {}-{} for home and {}-{} for away".format(session["username"], home_team, home_score, away_team, away_score))
+
         box_list = []
         for boxid in boxid_list:
             box_list.append(boxid[0])
         check_result_list = sanity_checks(box_list)
 
-        return render_template("enter_every_score.html", scores=scores, box_list=box_list, check_result_list=check_result_list)
+        return render_template("enter_every_score.html", scores=scores, box_list=box_list, check_result_list=check_result_list, home_team=home_team, away_team=away_team)
 
 @app.route("/delete_score", methods=["POST", "GET"])
 @login_required
