@@ -2083,7 +2083,7 @@ def enter_every_score():
         # get home/away teams for buttons
         # this assumes there will only ever be 1 active everyscore pool so all boxids have same home/away team
 
-        s = "SELECT home, away FROM boxes WHERE boxid = {};".format(boxid_list[0][0])
+        s = "SELECT home, away FROM teams WHERE boxid = {};".format(boxid_list[0][0])
         teams = db(s)[0]
         home_team = teams[0]
         away_team = teams[1]
@@ -2124,7 +2124,7 @@ def enter_every_score():
         # get home/away teams for buttons
         # this assumes there will only ever be 1 active everyscore pool so all boxids have same home/away team
 
-        s = "SELECT home, away FROM boxes WHERE boxid = {};".format(boxid_list[0][0])
+        s = "SELECT home, away FROM teams WHERE boxid = {};".format(boxid_list[0][0])
         teams = db(s)[0]
         home_team = teams[0]
         away_team = teams[1]
