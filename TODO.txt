@@ -1,9 +1,12 @@
-BUG FIXES prior to 2026
+BUG FIXES prior to 2027
 
-- hard coded pickem final - need to set back to calc
+- hard coded pickem final - need to set back to calc - FIXED
 - support OT in pickem
 - hard code pickem winner - was calculating wrong?  FIXED
 - display tie break
+
+2027
+- FIX hard coded MM final winner
 
 FUNNEL Go Live:
 

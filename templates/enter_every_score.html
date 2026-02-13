@@ -16,8 +16,8 @@
                 <!--<input autocomplete="off" autofocus class="form-control" name="boxid" placeholder="boxid" type="text" size="5"/>-->
                 <input autocomplete="off" class="form-control" name="score_num" placeholder="score number" type="text" size="5"/>
                 </br>
-                <input class="form-control" name="home" placeholder="NE" type="text" size="5"/>
-                <input class="form-control" name="away" placeholder="SEA" type="text" size="5"/>
+                <input class="form-control" name="home" placeholder="{{ home_team }}" type="text" size="5"/>
+                <input class="form-control" name="away" placeholder="{{ away_team }}" type="text" size="5"/>
                 </br>
                 <button type="submit">Submit</button>
                 </br>
@@ -28,16 +28,16 @@
     <form action="{{ url_for('enter_every_score') }}" method="POST">
         <fieldset>
         <div class="form-group">
-            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="1">NE 1</button>
-            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="2">NE 2</button>
-            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="3">NE 3</button>
-            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="6">NE 6</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="1">{{ home_team }} 1</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="2">{{ home_team }} 2</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="3">{{ home_team }} 3</button>
+            <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="6">{{ home_team }} 6</button>
             </br>
             </br>
-            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="1">SEA 1</button>
-            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="2">SEA 2</button>
-            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="3">SEA 3</button>
-            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="6">SEA 6</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="1">{{ away_team }} 1</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="2">{{ away_team }} 2</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="3">{{ away_team }} 3</button>
+            <button type="submit" name="AWAY_BUTTON" id="AWAY_BUTTON" value="6">{{ away_team }} 6</button>
         </div>
         </fieldset>
     </form>

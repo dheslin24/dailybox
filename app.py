@@ -2080,6 +2080,14 @@ def enter_every_score():
         away_score = int(request.form.get("away"))
         '''
 
+        # get home/away teams for buttons
+        # this assumes there will only ever be 1 active everyscore pool so all boxids have same home/away team
+
+        s = "SELECT home_team, away_team FROM boxes WHERE boxid = {};".format(boxid_list[0][0])
+        teams = db(s)[0]
+        home_team = teams[0]
+        away_team = teams[1]
+
         box_list = []
         for entry in boxid_list:
             boxid = entry[0] 
@@ -2100,9 +2108,9 @@ def enter_every_score():
         scores = db(s)
         print(scores)
 
-        return render_template("enter_every_score.html", scores=scores, box_list=box_list, check_result_list=check_result_list)
+        return render_template("enter_every_score.html", scores=scores, box_list=box_list, check_result_list=check_result_list, home_team=home_team, away_team=away_team)
 
-    
+
     else:
         s = "SELECT e.boxid, e.score_id, e.score_num, e.x_score, e.y_score, e.score_type, e.winning_box, u.username, u.first_name, u.last_name FROM everyscore e LEFT JOIN users u ON e.winner = u.userid INNER JOIN boxes b ON b.boxid = e.boxid where b.active = 1 and b.pay_type = 3 order by e.boxid, e.score_num, e.score_id;"
         scores = db(s)
