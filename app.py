@@ -2087,7 +2087,7 @@ def enter_every_score():
         teams = db(s)[0]
         home_team = teams[0]
         away_team = teams[1]
-        logging.info("{} just entered a new score: {}-{} for home and {}-{} for away".format(session["username"], home_team, home_score, away_team, away_score))
+        logging.info(("{} just entered a new score: {}-{} for home and {}-{} for away".format(session["username"], home_team, home_score, away_team, away_score)))
 
         box_list = []
         for entry in boxid_list:
@@ -2128,7 +2128,7 @@ def enter_every_score():
         teams = db(s)[0]
         home_team = teams[0]
         away_team = teams[1]
-        logging.info("{} just entered a new score: {}-{} for home and {}-{} for away".format(session["username"], home_team, home_score, away_team, away_score))
+        logging.info(f"home team: {home_team}, away team: {away_team}")
 
         box_list = []
         for boxid in boxid_list:
