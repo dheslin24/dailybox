@@ -1,4 +1,5 @@
 *.log
+.env
 config.py
 line_checker/config.py
 line_checker/*.json

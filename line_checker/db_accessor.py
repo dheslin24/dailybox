@@ -1,10 +1,16 @@
-# mysql stuff
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import errorcode
 
-# imported config
-import config 
-db_config = {'user':config.user, 'password':config.password, 'host':config.host, 'database':config.database}
+load_dotenv(Path(__file__).parent.parent / '.env')
+db_config = {
+    'user': os.environ['DB_USER'],
+    'password': os.environ['DB_PASSWORD'],
+    'host': os.environ['DB_HOST'],
+    'database': os.environ['DB_NAME'],
+}
 # print(db_config)
 
 def db2(s, params=(), db_config=db_config):

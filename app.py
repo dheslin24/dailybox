@@ -26,7 +26,6 @@ from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_sin
 from espn_every_minute.get_espn_score import get_espn_every_min_scores
 from funnel_helper import elimination_check
 from email_helper import send_email
-from gd_email_helper import send_gd_email
 from email_validator import validate_email, EmailNotValidError
 
 
