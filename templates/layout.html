@@ -63,40 +63,40 @@
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                         </button>
-                        <a class="navbar-brand" href="{{ url_for('index') }}"><span class="blue">B</span><span class="blue">Y</span><span class="blue">G</span><span class="green">T</span>e<span class="red">c</span><span class="yellow">h</span></a>
+                        <a class="navbar-brand" href="{{ url_for('auth.index') }}"><span class="blue">B</span><span class="blue">Y</span><span class="blue">G</span><span class="green">T</span>e<span class="red">c</span><span class="yellow">h</span></a>
                     </div>
                     <div class="collapse navbar-collapse" id="navbar">
                         {% if session.userid %}
                             <ul class="nav navbar-nav">
                                 <!--
-                                <li><a href="{{ url_for('game_list') }}">Daily Box</a></li>
+                                <li><a href="{{ url_for('boxes.game_list') }}">Daily Box</a></li>
                                 -->
-                                <li><a href="{{ url_for('custom_game_list') }}">Super Bowl Boxes</a></li>
-                                <li><a href="{{ url_for('my_games') }}">My Games</a></li>
+                                <li><a href="{{ url_for('boxes.custom_game_list') }}">Super Bowl Boxes</a></li>
+                                <li><a href="{{ url_for('boxes.my_games') }}">My Games</a></li>
                                 <!--
-                                <li><a href="{{ url_for('pickem_game_list') }}">Enter Your Picks</a></li>
-                                <li><a href="{{ url_for('pickem_all_picks') }}">See All User Picks</a></li>
-                                <li><a href="{{ url_for('pickem_payment_status') }}">Payment Status</a></li>
-                                <li><a href="{{ url_for('pickem_rules') }}">Pickem Rules</a></li>
+                                <li><a href="{{ url_for('pickem.pickem_game_list') }}">Enter Your Picks</a></li>
+                                <li><a href="{{ url_for('pickem.pickem_all_picks') }}">See All User Picks</a></li>
+                                <li><a href="{{ url_for('pickem.pickem_payment_status') }}">Payment Status</a></li>
+                                <li><a href="{{ url_for('pickem.pickem_rules') }}">Pickem Rules</a></li>
                                 -->
                                 {% if box_type != 4 %}
-                                <li><a href="{{ url_for('payment_status', sort_method='user', priv=False) }}">Payment Status</a></li>
+                                <li><a href="{{ url_for('boxes.payment_status', sort_method='user', priv=False) }}">Payment Status</a></li>
                                 {% else %}
-                                <li><a href="{{ url_for('priv_payment_status', sort_method='user', boxid=boxid) }}">Payment Status</a></li>
+                                <li><a href="{{ url_for('boxes.priv_payment_status', sort_method='user', boxid=boxid) }}">Payment Status</a></li>
                                 {% endif %}
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
                                 {% if session['is_admin'] == 1 %}
-                                <li><a href="{{ url_for('bygzomo') }}">BYGZomo</a></li>
-                                <li><a href="{{ url_for('admin') }}">Admin</a></li>
+                                <li><a href="{{ url_for('admin.bygzomo') }}">BYGZomo</a></li>
+                                <li><a href="{{ url_for('admin.admin') }}">Admin</a></li>
                                 {% endif %}
-                                <li><a href="{{ url_for('user_details') }}">User {{ session['username'] }}</a></li>
-                                <li><a href="{{ url_for('logout') }}">Log Out</a></li>
+                                <li><a href="{{ url_for('auth.user_details') }}">User {{ session['username'] }}</a></li>
+                                <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
                             </ul>
                         {% else %}
                             <ul class="nav navbar-nav navbar-right">
-                                <li><a href="{{ url_for('register') }}">Register</a></li>
-                                <li><a href="{{ url_for('login') }}">Log In</a></li>
+                                <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+                                <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
                             </ul>
                         {% endif %}
                     </div>

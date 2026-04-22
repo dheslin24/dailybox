@@ -19,7 +19,7 @@
     </h2>
 
     {% if boxid == '46' or boxid == '7' %}
-    <p class="text-center"><a href="{{ url_for('es_payout_details', fee=fee) }}"> Click here for detailed payout table</a></p>
+    <p class="text-center"><a href="{{ url_for('boxes.es_payout_details', fee=fee) }}"> Click here for detailed payout table</a></p>
     {% endif %}
     
         <h3>
@@ -137,7 +137,7 @@
                 {% if box[1][:4] == 'WINN' or box[1][:2] == 'Q1' or box[1][:2] == 'Q2' or box[1][:2] == 'Q3' or box[1][:2] == 'Q4' or box[1][:7] == 'Current' %} 
                     {% if box[2] == session['userid']  or box[3] == session['userid'] %}
                     <td class="my_winning_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
-                        <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                        <form action="{{ url_for("boxes.select_box") }}", id="{{- box[0]|int -}}" method="POST">
                         <input type="hidden" name="boxid", value="{{ boxid }}">
                         <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
                         {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
@@ -147,7 +147,7 @@
                     </td>
                     {% else %}
                     <td class="winning_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
-                        <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                        <form action="{{ url_for("boxes.select_box") }}", id="{{- box[0]|int -}}" method="POST">
                         <input type="hidden" name="boxid", value="{{ boxid }}">
                         <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
                         {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
@@ -160,7 +160,7 @@
                 {% elif box[1] == session['username'] or box[3] == session['userid'] %}
                     {% if box[2] in images %}
                     <td class="user_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
-                        <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                        <form action="{{ url_for("boxes.select_box") }}", id="{{- box[0]|int -}}" method="POST">
                         <input type="hidden" name="boxid", value="{{ boxid }}">
                         <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
                         {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
@@ -170,7 +170,7 @@
                     </td>
                     {% else %}
                     <td class="user_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
-                        <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                        <form action="{{ url_for("boxes.select_box") }}", id="{{- box[0]|int -}}" method="POST">
                         <input type="hidden" name="boxid", value="{{ boxid }}">
                         <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
                         {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
@@ -183,7 +183,7 @@
                 {% elif box[1] != 'Available ' %}
                     {% if box[2] in images %}
                     <td class="taken_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
-                        <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                        <form action="{{ url_for("boxes.select_box") }}", id="{{- box[0]|int -}}" method="POST">
                         <input type="hidden" name="boxid", value="{{ boxid }}">
                         <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
                         {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
@@ -194,7 +194,7 @@
                     </td>
                     {% else %}
                     <td class="taken_box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">
-                        <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                        <form action="{{ url_for("boxes.select_box") }}", id="{{- box[0]|int -}}" method="POST">
                         <input type="hidden" name="boxid", value="{{ boxid }}">
                         <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
                         {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
@@ -206,7 +206,7 @@
 
                 {% else %}
                 <td class="box" onClick="document.getElementById('{{- box[0]|int -}}').submit()">    
-                    <form action="{{ url_for("select_box") }}", id="{{- box[0]|int -}}" method="POST">
+                    <form action="{{ url_for("boxes.select_box") }}", id="{{- box[0]|int -}}" method="POST">
                     <input type="hidden" name="boxid", value="{{ boxid }}">
                     <input type="hidden" name="box_num" value="{{- box[0]|int -}}">
                     {% set bnum = outer_loop.index0|int * 10 + loop.index|int %}
@@ -227,7 +227,7 @@
         <div class="col-lg-4 col-md-6 col-xs-12">
         <p class="text-center"> Live IN-Game Updates (must refresh) </p>
         {% if pay_type == 3 %}
-        <p class="text-center"> Curious about how payouts work??  Click <a href="{{ url_for('es_payout_details', fee=fee) }}"> here</a></p>
+        <p class="text-center"> Curious about how payouts work??  Click <a href="{{ url_for('boxes.es_payout_details', fee=fee) }}"> here</a></p>
         {% endif %}
         <table class="table table-striped" style="padding-top: 30px; table-layout: fixed;">
             {% if pay_type == 8 %}

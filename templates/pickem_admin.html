@@ -8,11 +8,11 @@
 
 {% block main %}
     </br>
-    <a href="{{ url_for('enter_pickem_scores') }}">Enter Scores for Playoff Pickem Games</a>
+    <a href="{{ url_for('pickem.enter_pickem_scores') }}">Enter Scores for Playoff Pickem Games</a>
     </br>
     </br>
     <p> Create new Pickem Game below </p>
-    <form action="{{ url_for('create_pickem_game') }}" method="POST">
+    <form action="{{ url_for('pickem.create_pickem_game') }}" method="POST">
         <label for="season">Season</label>
         <input type="text" name="season" size="10" value="{{ season }}">
         <label for="game_name">Game Name</label>
@@ -31,7 +31,7 @@
     </form>
     </br></br>
     <p> Lock/Unlock game below </p>
-    <form action="{{ url_for('lock_pickem_game') }}" method="POST">
+    <form action="{{ url_for('pickem.lock_pickem_game') }}" method="POST">
         <label for="game_name">Game Name</label>
         <select name="game_name">
             {% for name in game_group_list %}
@@ -47,13 +47,13 @@
     </form>
     </br>
     </br>
-    <form action="{{ url_for('pickem_mark_paid') }}" method="POST">
+    <form action="{{ url_for('pickem.pickem_mark_paid') }}" method="POST">
         <label for="userid">userid</label>
         <input type="text" id="userid" name="userid" style="width: 50px">
         <button type="submit">Mark Paid</button>
     </form>
     </br></br>
-    <form action="{{ url_for('pickem_enable_user') }}" method="POST">
+    <form action="{{ url_for('pickem.pickem_enable_user') }}" method="POST">
         <label for="userid">userid: </label>
         <input type="text" id="userid" name="userid" style="width: 50px">
         <button type="submit">Enable for Pickem</button>

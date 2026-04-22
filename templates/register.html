@@ -10,7 +10,7 @@
       document.getElementById('registerForm').submit();
     }
   </script>
-    <form action="{{ url_for('register') }}" id="registerForm" method="post">
+    <form action="{{ url_for('auth.register') }}" id="registerForm" method="post">
         <fieldset>
             <div class="form-group">
                 <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text"/>

@@ -11,7 +11,7 @@
         </p>
     </h1>
 
-    <form action="{{ url_for("my_games") }}", method="POST", name="active" value="0">
+    <form action="{{ url_for("boxes.my_games") }}", method="POST", name="active" value="0">
     <input type="radio" id="Active" name="active" value=True onclick="this.form.submit()">
     <label for="Active">Active</label>
     <input type="radio" id="Complete" name="active" value=False checked>
@@ -33,7 +33,7 @@
         </tr>
             {% for row in game_list %}
             <tr>
-                <form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
+                <form action="{{ url_for("boxes.display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
                 <td>{{ row[0] }}</td>
                 {% for field in row[1:] %}
                     <td>{{ field }}</td>

@@ -12,9 +12,9 @@
     </h1>
     <p>Sort By:</p>
     {% if priv == true %}
-    <form action="{{ url_for("priv_payment_status") }}", method="POST", name="sort_method_form">
+    <form action="{{ url_for("boxes.priv_payment_status") }}", method="POST", name="sort_method_form">
     {% else %}
-    <form action="{{ url_for("payment_status") }}", method="POST", name="sort_method_form">
+    <form action="{{ url_for("boxes.payment_status") }}", method="POST", name="sort_method_form">
     {% endif %}
         {% if sort_method == "id" %}
         <input type="radio" id="ID" name="sort_method" value="id" onclick="this.form.submit()" checked>
@@ -60,9 +60,9 @@
                 <td id="p">{{ paid[user[0]] }} </td>
                 <td> {{ emoji[user[0]] }} </td>
                 {% if priv == true %}
-                <td><form action="{{ url_for('priv_mark_paid') }}" method="POST">
+                <td><form action="{{ url_for('boxes.priv_mark_paid') }}" method="POST">
                 {% else %}
-                <td><form action="{{ url_for('mark_paid') }}" method="POST">
+                <td><form action="{{ url_for('boxes.mark_paid') }}" method="POST">
                 {% endif %}
                     <input type="submit" value="{{ user[0] }}" name="userid">
                     <input type="hidden" value="True" name="paid">

@@ -8,7 +8,7 @@
 
 {% block main %}
 
-<form action="{{ url_for('send_bygemail') }}" method="POST">
+<form action="{{ url_for('admin.send_bygemail') }}" method="POST">
     <label for="userid">Send E-Mail to Userid:</label>
     <input type="text" name="userid" size="10">
     <label for="rcpt">Recipient</label>

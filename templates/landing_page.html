@@ -14,14 +14,14 @@
     <h4>
         <table align = "center", cellpadding = "10">
             <!--  superbowl box
-            <tr><td onClick="document.location.href='{{ url_for('pickem_all_picks') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;"><img src="https://www.wmse.org/wp-content/uploads/2017/12/ralph.gif" style="display: block; width: 90%; height: auto; margin: auto;"><br> PLAYOFF PICKEM begins Jan 15, 2022 </td><td onClick="document.location.href='{{ url_for('custom_game_list') }}';" class="landing"><img src="https://static.wikia.nocookie.net/simpsons/images/6/69/Box_factory_1.png" style="display: block; width: 100%; height: auto;"><br> Click Here for the GOBBLER </td></tr>
+            <tr><td onClick="document.location.href='{{ url_for('pickem.pickem_all_picks') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;"><img src="https://www.wmse.org/wp-content/uploads/2017/12/ralph.gif" style="display: block; width: 90%; height: auto; margin: auto;"><br> PLAYOFF PICKEM begins Jan 15, 2022 </td><td onClick="document.location.href='{{ url_for('boxes.custom_game_list') }}';" class="landing"><img src="https://static.wikia.nocookie.net/simpsons/images/6/69/Box_factory_1.png" style="display: block; width: 100%; height: auto;"><br> Click Here for the GOBBLER </td></tr>
             -->
             <!-- Gobbler -->
             <tr>
-                <td onClick="document.location.href='{{ url_for('view_all_picks') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;">
+                <td onClick="document.location.href='{{ url_for('pickem.view_all_picks') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;">
                     <img src="https://www.wmse.org/wp-content/uploads/2017/12/ralph.gif" style="display: block; width: 90%; height: auto; margin: auto;">
                         <br> PLAYOFF PICKEM</td>
-                <td onClick="document.location.href='{{ url_for('custom_game_list') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;">
+                <td onClick="document.location.href='{{ url_for('boxes.custom_game_list') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;">
                     <!-- Nutcracker image below -->
                     <!-- <img src="https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcTZvDv5HELwpfDgdjYurjni6bqaE12RE9Iukdzm4qRxP6VteRNWwLL2ItmfEJyu7v_DTm6e1CfBNVkHPwP5oaa3krnQRrKrEc5Li_Sp2348Mmdrn7sNo_X_vQ&usqp=CAc" style="width: auto; height: 72%;"> -->
 
@@ -31,19 +31,19 @@
                         <br><br><br><br> Click Here for Super Bowl Boxes</td>
             </tr>
             <tr style="background:#fff;">
-                <td colspan="2" style="text-align:center;cursor:pointer;padding:24px 0; background:#fff;" onclick="window.location.href='{{ url_for('survivor_pool') }}';">
+                <td colspan="2" style="text-align:center;cursor:pointer;padding:24px 0; background:#fff;" onclick="window.location.href='{{ url_for('survivor.survivor_pool') }}';">
                     <img src="/static/simpsons_survivor.png" alt="Survivor Pools" style="display:block;margin:auto;width:90%;max-width:900px;height:auto;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:8px;">
                     <div style="font-size:1.5em;font-weight:bold;margin-top:12px;">Survivor Pools</div>
                 </td>
             </tr>
             <tr>
-                <td onClick="document.location.href='{{ url_for('private_pswd') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;">
+                <td onClick="document.location.href='{{ url_for('boxes.private_pswd') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;">
                     <!-- <img src="https://media0.giphy.com/media/3o85xtib0RaWzZ7U1G/giphy.gif?cid=790b761152632592e2473f10739c52f9519db3433beca4f4&rid=giphy.gif&ct=g" style="display: block; width: 90%; height: auto; margin: auto;">  -->
                     <!-- <iframe src="https://giphy.com/embed/3o85xtib0RaWzZ7U1G" width="480" height="388" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/will-ferrell-old-school-frank-the-tank-3o85xtib0RaWzZ7U1G">via GIPHY</a></p> -->
                     <img src="https://pbs.twimg.com/media/ECkwxxLX4AE_btl.jpg" style="display: block; width: auto; height: auto; margin: auto;">
                         <br> Register for Private Event <br>(password required)</td>
-                <!-- <td onClick="document.location.href='{{ url_for('custom_game_list') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;"> -->
-                <td onClick="document.location.href='{{ url_for('private_game_list') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;">
+                <!-- <td onClick="document.location.href='{{ url_for('boxes.custom_game_list') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;"> -->
+                <td onClick="document.location.href='{{ url_for('boxes.private_game_list') }}';" class="landing" style="text-align: center; margin-left: auto; margin-right: auto;">
                     <!-- <img src="https://media4.giphy.com/media/26tjZlAuzjkuON8PK/giphy.gif?cid=ecf05e4735r3k396sja0gwkhm30oarhq5ryyydybxlfpiayr&rid=giphy.gif&ct=g" style="display: block; width: auto; height: auto; margin: auto;">  -->
                         <!-- <img src="https://frinkiac.com/img/S05E10/525574.jpg" style="display: block; width: auto; height: auto; margin: auto;"> -->
                         <!-- <img src="https://frinkiac.com/img/S05E10/525574.jpg" style="display: block; width: auto; height: 70%; margin: auto;"> -->

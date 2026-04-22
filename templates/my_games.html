@@ -11,7 +11,7 @@
         </p>
     </h1>
 
-    <form action="{{ url_for("my_games") }}", method="POST", name="active" value="0">
+    <form action="{{ url_for("boxes.my_games") }}", method="POST", name="active" value="0">
     <input type="radio" id="Active" name="active" value=True checked>
     <label for="Active">Active</label>
     <input type="radio" id="Complete" name="active" value=False onclick="this.form.submit()">
@@ -38,7 +38,7 @@
             {% for row in game_list %}
             <tr>
                 <td class="team" onClick="document.getElementById('{{ row[0] }}').submit()">
-                <form action="{{ url_for("display_box", uat=0) }}", method="post", id="{{ row[0] }}">
+                <form action="{{ url_for("boxes.display_box", uat=0) }}", method="post", id="{{ row[0] }}">
                 <input type="hidden" value="{{ row[0] }}" name="boxid">
                 {{ row[0] }}
                 </form>
@@ -49,7 +49,7 @@
                     <td>{{ row[3] }}</td>
                 {% else %}
                     <td class="team" onClick="document.getElementById('{{ row[0] }} {{ row[2] }}').submit()">
-                    <form action="{{ url_for("create_alias") }}", method="POST", id="{{ row[0] }} {{ row[2] }}">
+                    <form action="{{ url_for("admin.create_alias") }}", method="POST", id="{{ row[0] }} {{ row[2] }}">
                         <input type="hidden" value="({{ row[0] }}, {{ row[2] }})" name="alias_boxnum">
                         Change box label
                         <span class="CellComment">

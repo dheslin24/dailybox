@@ -24,7 +24,7 @@
 
     {% if session['userid'] in admins %}
     <br><br>
-    <form action="{{ url_for('add_bowl_user') }}" method="POST">
+    <form action="{{ url_for('pickem.add_bowl_user') }}" method="POST">
         <label for="userid">Add new active user by userid</label>
         <input type="text" name="userid" size="5">
         <input type="submit">
@@ -47,12 +47,12 @@
                 <td class="payment"> {{ field }} </td>
                 {% endfor %}
                 <td>
-                    <form action="{{ url_for('bowl_mark_paid') }}" method="POST">
+                    <form action="{{ url_for('pickem.bowl_mark_paid') }}" method="POST">
                     <input type="submit" value="{{ user[0] }}" name="userid">
                     <input type="hidden" value="True" name="paid"></form>
                 </td>
                 <td>
-                    <form action="{{ url_for('bowl_mark_paid_dh') }}" method="POST">
+                    <form action="{{ url_for('pickem.bowl_mark_paid_dh') }}" method="POST">
                     <input type="submit" value="{{ user[0] }}" name="userid">
                     <input type="hidden" value="True" name="paid_dh"></form>
                 </td>

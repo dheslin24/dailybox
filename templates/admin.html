@@ -8,33 +8,33 @@
 
 {% block main %}
     <!--
-    <form action="{{ url_for('admin') }}" method="post">
-        <a href="{{ url_for('init_box_db') }}">Initialize BOX DB (danger)</a></br>
+    <form action="{{ url_for('admin.admin') }}" method="post">
+        <a href="{{ url_for('boxes.init_box_db') }}">Initialize BOX DB (danger)</a></br>
     </form>
     -->
     </br>
-    <a href="{{ url_for('admin_summary') }}">Admin Summary for all Users</a>
+    <a href="{{ url_for('admin.admin_summary') }}">Admin Summary for all Users</a>
     </br>
     </br>
-    <a href="{{ url_for('sv_create_pool') }}">Create New Survivor Pool</a>
+    <a href="{{ url_for('survivor.sv_create_pool') }}">Create New Survivor Pool</a>
     </br>
     </br>
-    <a href="{{ url_for('enter_custom_scores') }}">Enter Custom Game Scores</a>
+    <a href="{{ url_for('boxes.enter_custom_scores') }}">Enter Custom Game Scores</a>
     </br>
     </br>
-    <a href="{{ url_for('enter_every_score') }}">Enter Scores for Every Score Games</a>
+    <a href="{{ url_for('boxes.enter_every_score') }}">Enter Scores for Every Score Games</a>
     </br>
     </br>
-    <a href="{{ url_for('pickem_admin') }}">Pickem Admin Page</a>
+    <a href="{{ url_for('pickem.pickem_admin') }}">Pickem Admin Page</a>
     </br>
     </br>
-    <a href="{{ url_for('display_box', uat=1, boxid=56) }}">UAT New BOX in DEV</a>
+    <a href="{{ url_for('boxes.display_box', uat=1, boxid=56) }}">UAT New BOX in DEV</a>
     </br>
     </br>
-    <a href="{{ url_for('display_box', uat=1, boxid=37) }}">UAT New BOX in PROD</a>
+    <a href="{{ url_for('boxes.display_box', uat=1, boxid=37) }}">UAT New BOX in PROD</a>
     </br>
     </br>
-    <form action="{{ url_for('add_money') }}" method="POST">
+    <form action="{{ url_for('admin.add_money') }}" method="POST">
         <label for="username">Add Money:  Username</label>
         <input type="text" name="username" size="10">
         <label for="amount">Amount</label>
@@ -42,7 +42,7 @@
         <input type="submit">
     </form>
     </br>
-    <form action="{{ url_for('create_game') }}" method="POST">
+    <form action="{{ url_for('boxes.create_game') }}" method="POST">
         <label for="fee">Create New Game: FEE</label>
         <input type="text" name="fee" size="5">
         <label for="box_name">Box Name</label>
@@ -65,7 +65,7 @@
         </select>
         <input type="submit">
     </form>
-    <form action="{{ url_for('gobble_games') }}" method="POST">
+    <form action="{{ url_for('boxes.gobble_games') }}" method="POST">
         <label for="boxid_1">Gobble Games:  boxid 1</label>
         <input type="text" name="boxid_1" size="5">
         <label for="boxid_2">boxid 2</label>
@@ -75,7 +75,7 @@
         <input type="submit">
     </form>
     </br>
-    <form action="{{ url_for('user_reset') }}" method="POST">
+    <form action="{{ url_for('auth.user_reset') }}" method="POST">
         <label for="username">Reset User Password: Username</label>
         <input type="text" name="username" size="10">
         <label for="password">Password</label>
@@ -84,24 +84,24 @@
         <input type="text" name="password_confirm" size="10">
         <input type="submit">
     </form>
-    <form action="{{ url_for('add_boxes_for_user') }}" method="POST">
+    <form action="{{ url_for('admin.add_boxes_for_user') }}" method="POST">
         <label for="username">Add Boxes for Username</label>
         <input type="text" name="username" size="10">
         <label for="boxes"># of Boxes</label>
         <input type="text" name="boxes">
         <input type="submit">
     </form>
-    <form action="{{ url_for('deactivate_user') }}" method="POST">
+    <form action="{{ url_for('auth.deactivate_user') }}" method="POST">
         <label for="userid">Deactivate UserID</label>
         <input type="text" name="userid" size="5">
         <input type="submit">
     </form>
-    <form action="{{ url_for('start_game') }}" method="POST">
+    <form action="{{ url_for('boxes.start_game') }}" method="POST">
         <label for="boxid">Start Game ID</label>
         <input type="text" name="boxid" size="5">
         <input type="submit">
     </form>
-    <form action="{{ url_for('create_privategame_code') }}" method="POST">
+    <form action="{{ url_for('admin.create_privategame_code') }}" method="POST">
         <label for="boxid">Private Game ID</label>
         <input type="text" name="boxid" size="5">
         <label for="code">Passcode</label>

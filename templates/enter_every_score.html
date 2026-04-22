@@ -10,7 +10,7 @@
     {% for message in check_result_list %}
         <p> {{ message }} </p>
     {% endfor %}
-    <form action="{{ url_for('enter_every_score') }}" method="post">
+    <form action="{{ url_for('boxes.enter_every_score') }}" method="post">
         <fieldset>
             <div class="form-group">
                 <!--<input autocomplete="off" autofocus class="form-control" name="boxid" placeholder="boxid" type="text" size="5"/>-->
@@ -25,7 +25,7 @@
         </fieldset>
     </form>
 
-    <form action="{{ url_for('enter_every_score') }}" method="POST">
+    <form action="{{ url_for('boxes.enter_every_score') }}" method="POST">
         <fieldset>
         <div class="form-group">
             <button type="submit" name="HOME_BUTTON" id="HOME_BUTTON" value="1">{{ home_team }} 1</button>
@@ -44,7 +44,7 @@
 
 
     <p> Delete a specific score ID </p>
-    <form action="{{ url_for('delete_score') }}" method="POST">
+    <form action="{{ url_for('boxes.delete_score') }}" method="POST">
         <input autocomplete="off" class="form-control" name="score_id" placeholder="score id" type="text" size="5"/>
         <button type="submit">Delete</button>
     </form>
@@ -75,6 +75,6 @@
         </table>
     </h4>
 
-    <a href="{{ url_for('end_game') }}">Click here to end game and calculate final/reverse final/touch</a>
+    <a href="{{ url_for('boxes.end_game') }}">Click here to end game and calculate final/reverse final/touch</a>
 
 {% endblock %}

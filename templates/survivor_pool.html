@@ -67,10 +67,10 @@
                         {% for pool in user_pools %}
                         <tr>
                             <td style="padding:8px;border:1px solid #ddd;">
-                                <a href="{{ url_for('survivor_teams_selected') }}?pool_id={{ pool[0] }}">{{ pool[1] }}</a>
+                                <a href="{{ url_for('survivor.survivor_teams_selected') }}?pool_id={{ pool[0] }}">{{ pool[1] }}</a>
                             </td>
                             <td style="padding:8px;border:1px solid #ddd;">
-                                <a href="{{ url_for('survivor_teams_selected') }}?pool_id={{ pool[0] }}">{{ pool[0] }}</a>
+                                <a href="{{ url_for('survivor.survivor_teams_selected') }}?pool_id={{ pool[0] }}">{{ pool[0] }}</a>
                             </td>
                         </tr>
                         {% endfor %}

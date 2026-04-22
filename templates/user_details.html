@@ -21,7 +21,7 @@
             <!-- <tr><td> Current Balance</td><td>{{ user_dict['balance'] }}</td></tr> -->
         </table>
     </br>
-    <a href="{{ url_for('reset_password') }}">Click here to reset password</a>
+    <a href="{{ url_for('auth.reset_password') }}">Click here to reset password</a>
     </h4>
 
 
@@ -40,8 +40,8 @@
             {% else %}
             <td></td>
             {% endif %}
-            <td><a href="{{ url_for('upload_file', userid=session['userid']) }}">Click here to upload a new image</a></td>
-            <td><a href="{{ url_for('remove_image', userid=session['userid']) }}">Click here to display only username</a></td>
+            <td><a href="{{ url_for('boxes.upload_file', userid=session['userid']) }}">Click here to upload a new image</a></td>
+            <td><a href="{{ url_for('boxes.remove_image', userid=session['userid']) }}">Click here to display only username</a></td>
         </tr>
         {% if alias_dict %}
             {% for alias in alias_dict %}
@@ -52,8 +52,8 @@
                 {% else %}
                 <td></td>
                 {% endif %}                
-                <td><a href="{{ url_for('upload_file', userid=userid_dict[alias]) }}">Click here to upload a new image</a></td>
-                <td><a href="{{ url_for('remove_image', userid=userid_dict[alias]) }}">Click here to display only username</a></td>
+                <td><a href="{{ url_for('boxes.upload_file', userid=userid_dict[alias]) }}">Click here to upload a new image</a></td>
+                <td><a href="{{ url_for('boxes.remove_image', userid=userid_dict[alias]) }}">Click here to display only username</a></td>
             </tr>
             {% endfor %}
         {% endif %}

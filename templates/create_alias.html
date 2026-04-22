@@ -27,7 +27,7 @@
     </h3>
 
     {% if user_aliases|length > 0 %}
-    <form action="{{ url_for('assign_alias') }}" method="POST">
+    <form action="{{ url_for('admin.assign_alias') }}" method="POST">
         <label for="existingAlias">Choose an existing label for this box</label>
         <br>
         <select name="existingAlias">
@@ -45,7 +45,7 @@
 
 
     <label for="aliasName">Create a new label </label>
-    <form action="{{ url_for('assign_alias') }}" id="assignAliasForm" method="post">
+    <form action="{{ url_for('admin.assign_alias') }}" id="assignAliasForm" method="post">
         <fieldset>
             <div class="form-group">
                 <input autocomplete="on" autofocus class="form-control" name="newAliasName" placeholder="Enter New Label" type="text"/>

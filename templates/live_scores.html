@@ -11,10 +11,10 @@
         </p>
     </h1>
 
-    <a href="{{ url_for('live_scores') }}">Refresh</a>
+    <a href="{{ url_for('boxes.live_scores') }}">Refresh</a>
     </br>
     <h4>
-        <form action="{{ url_for('select_bowl_games') }}" method="POST">
+        <form action="{{ url_for('pickem.select_bowl_games') }}" method="POST">
         <input class="pick" type="submit" value="Submit Picks">
         <table align = "center", cellpadding = "10">
         <tr>

@@ -12,7 +12,7 @@
     </h1>
             Click on game ID in green to join <br>
 
-    <a href="{{ url_for('completed_games') }}">View Completed Games</a>
+    <a href="{{ url_for('boxes.completed_games') }}">View Completed Games</a>
     </br>
 
     <h1>
@@ -31,7 +31,7 @@
             {% for row in game_list %}
             <tr>
                 <td class="team" onClick="document.getElementById('{{ row[0] }}').submit()">
-                    <form action="{{ url_for('display_box') }}" id="{{ row[0] }}" method="POST">
+                    <form action="{{ url_for('boxes.display_box') }}" id="{{ row[0] }}" method="POST">
                     <input type="hidden" name="boxid" value={{ row[0] }}>
                     {{ row[0] }}
                     </form>

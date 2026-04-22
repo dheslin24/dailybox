@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main %}
-    <form action="{{ url_for('enter_custom_scores') }}" method="post">
+    <form action="{{ url_for('boxes.enter_custom_scores') }}" method="post">
         <fieldset>
             <div class="form-group">
                 <input autocomplete="off" autofocus class="form-control" name="boxid" placeholder="boxid" type="text" size="5"/>

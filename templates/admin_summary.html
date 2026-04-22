@@ -13,12 +13,12 @@
     
     <p> Update a user's paid amount</p>
     <p> Total BOXES given out so far:  {{ total_max }} </p>
-    <form action="{{ url_for('admin_summary') }}" method="POST">
+    <form action="{{ url_for('admin.admin_summary') }}" method="POST">
         <input autocomplete="off" class="form-control" name="userid" placeholder="userid" type="text" size="5"/>
         <input autocomplete="off" class="form-control" name="amt_paid" placeholder="$amt" type="text" size="5"/>
         <button type="submit">Update Amt Paid</button>
     </form>
-    <form action="{{ url_for('add_boxes_for_user') }}" method="POST">
+    <form action="{{ url_for('admin.add_boxes_for_user') }}" method="POST">
         <input autocomplete="off" class="form-control" name="userid" placeholder="userid" type="text" size="5"/>
         <input autocomplete="off" class="form-control" name="boxes" placeholder="boxes" type="text" size="5"/>
         <button type="submit">Update Max Boxes</button>

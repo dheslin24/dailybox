@@ -13,7 +13,7 @@
     <h5><p> These games go off with random numbers once all spots are filled </p>
         <p> DAILY BOX is not live yet - but feel free to mess around </p></h5>
 
-    <a href="{{ url_for('completed_games') }}">View Completed Games</a>
+    <a href="{{ url_for('boxes.completed_games') }}">View Completed Games</a>
     </br>
     <h4>
         <table align = "center", cellpadding = "10">
@@ -26,7 +26,7 @@
         </tr>
             {% for row in game_list %}
             <tr>
-                <form action="{{ url_for("display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
+                <form action="{{ url_for("boxes.display_box") }}", method="post", name="boxid", value="{{ row[0] }}">
                 <td><input type="submit" value="{{ row[0] }}" name="boxid"></td>
                 {% for field in row[1:] %}
                     <td>{{ field }}</td>

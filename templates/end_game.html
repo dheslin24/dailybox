@@ -6,7 +6,7 @@
 
 {% block main %}
     <p>This will end the game.  Are you sure you want to do this?  It will add reverse and final scores to grid and be done</p>
-    <form action="{{ url_for('end_game') }}" method="post">
+    <form action="{{ url_for('boxes.end_game') }}" method="post">
         <fieldset>
             <div class="form-group">
                 <input autocomplete="off" autofocus class="form-control" name="boxid" placeholder="boxid" type="text" size="5"/>
@@ -19,7 +19,7 @@
         </fieldset>
     </form>
     <h4><p> OR - click here to end all games automatically </p></h4>
-    <form action="{{ url_for('end_games') }}" method="POST">
+    <form action="{{ url_for('boxes.end_games') }}" method="POST">
         <button class="btn btn-default" type="submit">End ALL ES Games</button>
     </form>
 
