@@ -6,8 +6,7 @@ from services.box_service import (box_string, assign_xy, assign_numbers, count_a
                                    payout_calc, calc_winner, find_winning_user, check_box_limit,
                                    create_new_game, get_games, find_winning_box, sanity_checks,
                                    find_touching_boxes, activate_game, get_user_games)
-from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game
-from espn_every_minute.get_espn_score import get_espn_every_min_scores
+from services.espn_client import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game, get_espn_every_min_scores
 from email_helper import send_email
 from werkzeug.utils import secure_filename
 from collections import defaultdict

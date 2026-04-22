@@ -3,7 +3,7 @@ from db_accessor.db_accessor import db, db2
 from constants import PAY_TYPE_ID, BOX_TYPE_ID, EMOJIS, ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from utils import apology, login_required, admin_required
 from services.box_service import get_games
-from espnapi import get_all_games_for_week
+from services.espn_client import get_all_games_for_week
 from funnel_helper import elimination_check
 from datetime import datetime, timedelta, timezone
 import pytz

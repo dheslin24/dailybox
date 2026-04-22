@@ -3,7 +3,7 @@ from db_accessor.db_accessor import db, db2
 from constants import PAY_TYPE_ID, BOX_TYPE_ID, EMOJIS, ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from utils import apology, login_required, admin_required
 from services.pickem_service import get_pickem_games, sref_to_pickem
-from espnapi import get_espn_scores, get_ncaab_games
+from services.espn_client import get_espn_scores, get_ncaab_games
 from funnel_helper import elimination_check
 from collections import OrderedDict
 from datetime import datetime, timedelta
