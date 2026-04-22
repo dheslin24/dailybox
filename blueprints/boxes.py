@@ -5,7 +5,7 @@ from utils import apology, login_required, admin_required, allowed_file
 from services.box_service import (box_string, assign_xy, assign_numbers, count_avail,
                                    payout_calc, calc_winner, find_winning_user, check_box_limit,
                                    create_new_game, get_games, find_winning_box, sanity_checks,
-                                   find_touching_boxes)
+                                   find_touching_boxes, activate_game, get_user_games)
 from espnapi import get_espn_scores, get_espn_score_by_qtr, get_espn_summary_single_game
 from espn_every_minute.get_espn_score import get_espn_every_min_scores
 from email_helper import send_email
@@ -73,48 +73,10 @@ def upload_file():
 @bp.route("/start_game", methods=["POST", "GET"])
 def start_game():
     boxid = request.form.get('boxid')
-
-    # check if we've already assigned numbers first
-    check_sql_string = "SELECT boxid FROM boxnums WHERE boxid = %s"
-    already_has_numbers = db2(check_sql_string, (boxid, ))
-
-    if already_has_numbers:
-        return apology("Escalate with tech support, this game has already drawn numbers")
-
-
-    avail = count_avail(boxid)
-    s = "SELECT box_type, pay_type from boxes WHERE boxid = {};".format(boxid)
-    box = db(s)
-    box_type = box[0][0]
-    pay_type = box[0][1]
-
-    print("boxtype in start game {}".format(box_type))
-    if avail == 0:
-        assign_numbers(boxid) # this assigns the row/col numbers
-        if box_type == BOX_TYPE_ID['dailybox']:  # this is a dailybox, so generate the winning numbers as well
-            winning_col = random.randint(0,9)
-            winning_row = random.randint(0,9)
-            scores = "INSERT INTO scores(boxid, x4, y4) VALUES('{}', '{}', '{}');".format(boxid, winning_col, winning_row)
-            db(scores)
-            # and... mark the game inactive in database
-            inactivate = "UPDATE boxes SET active = 0 WHERE boxid = {};".format(boxid)
-            db(inactivate)
-            # and... update the db with winner - in scores
-            w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid)[0], boxid)
-            db(w)
-        if pay_type == PAY_TYPE_ID['every_score'] or PAY_TYPE_ID['every_minute']:  # this is everyscore or everymin pool, so set 0, 0 as initial winning score
-            winner = find_winning_box(boxid, 0, 0)
-            win_box = winner[0]
-            win_uid = winner[1]
-
-            s = "INSERT INTO everyscore(score_num, score_type, boxid, x_score, y_score, winner, winning_box) VALUES('1', '0/0 Start Game', {}, '0', '0', '{}', '{}');".format(boxid, win_uid, win_box)
-            db(s)
-
-        return redirect(url_for("boxes.display_box", boxid=boxid))
-
-    else:
-        print("tried to start game, but boxes still available")
-        return apology("Cannot start game - still boxes available")
+    error = activate_game(boxid)
+    if error:
+        return apology(error)
+    return redirect(url_for("boxes.display_box", boxid=boxid))
 
 
 @bp.route("/init_box_db")
@@ -169,121 +131,16 @@ def gobble_games():
 @login_required
 def my_games():
     show_active = request.form.get("active")
-    print("activeactive")
-    print(show_active)
-    s = "SELECT * FROM boxes;"
-    games = db(s)
-    g_list = [list(game) for game in games]
-    pt = "SELECT pay_type_id, description from pay_type;"
-    payout_types = dict(db(pt))
-
-    game_list = []
-    completed_game_list = []
-    available = {}
-    user_nums = []
-
-    #### dict of boxid:winner ####
-    bw = "SELECT boxid, winner FROM scores ORDER BY score_id ASC;"
-    win_dict = dict(db(bw))
-
-    #### dict of box x,y if box is full ####
-    bn = "SELECT * FROM boxnums;"
-    boxnums = db(bn)
-    #print(boxnums)
-
-    u = "SELECT userid, username FROM users;"
-    user_dict = dict(db2(u))
-
-    alias_string = "SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"
-    aliases = dict(db2(alias_string))
-
-    t = "SELECT boxid, home, away from teams;"
-    teams_list = db2(t)
-
-    teams_dict = {}
-    for t_boxid, t_home, t_away in teams_list:
-        teams_dict[t_boxid] = {"home": t_home, "away": t_away}
-
-    # create dict of boxid:{x:{json}, y:{json}}
-    boxnum_x = {}
-    boxnum_y = {}
-    for b_id in boxnums:
-        boxnum_x[b_id[0]] = json.loads(b_id[1])
-        boxnum_y[b_id[0]] = json.loads(b_id[2])
-
-    for game in g_list:
-        count = 0
-        gameid = game[0]
-        active = game[1]
-        box_type = ''
-        b_type = game[2]
-        if b_type == 1:
-            box_type = 'Daily Box'
-        elif b_type == 2:
-            box_type = 'Custom Box'
-        elif b_type == 3:
-            box_type = 'Nutcracker'
-        elif b_type == None:
-            box_type = 'Daily Box'
-        box_name = game[3]
-        fee = game[4]
-        pay_type = payout_types[game[5]]
-        gobbler_id = game[6]
-        espn_id = game[7]
-        box_index = 0
-        if active == 0:
-            # find who won
-            #w = "SELECT username FROM users WHERE userid = {};".format(find_winning_user(gameid)[0])
-            #winner = db(w)[0][0]
-            if gameid not in win_dict:
-                winner = "multi" # these are cxl'd or every score
-            else:
-                #print(f"GAMEID before crash {gameid}")
-                # total hack, check if string is json format, then it's multi
-                if not win_dict[gameid]:
-                    winner = "none - game canceled"
-                elif win_dict[gameid][:1] == "{":
-                    winner = "multi" # will parse this later...
-                else:
-                    #w = "SELECT username FROM users WHERE userid = {};".format(win_dict[gameid])
-                    #winner = db(w)[0][0]
-                    winner = user_dict[int(win_dict[gameid])]
-
-        for b in game[8:]:  # BOX DB Change if schema change here
-            if b in aliases:
-                box = aliases[b]
-                alias = user_dict[b]
-            else:
-                box = b
-                alias = ''
-
-            if box == session['userid'] and active == 1:
-                if gameid in boxnum_x:
-                    h_num = teams_dict.get(gameid).get("home") + " " + str(boxnum_x[gameid][str(box_index % 10)])
-                    a_num = teams_dict.get(gameid).get("away") + " " + str(boxnum_y[gameid][str(box_index // 10)])
-                else:
-                    h_num = "TBD"
-                    a_num = "TBD"
-                game_list.append((gameid,box_name,box_index + 1,alias,fee,pay_type,h_num,a_num))
-
-            elif box == session['userid'] and active == 0:
-                completed_game_list.append((gameid,box_type,box_name,box_index + 1,alias,fee,pay_type,winner))
-
-            if box == 1 or box == 0:
-                count += 1
-            box_index += 1
-
-        available[game[0]] = count
-
+    game_list, completed_game_list, available = get_user_games(session['userid'])
+    total = len(game_list)
     hover_text_1 = "Click on cell in this column to re-label"
     hover_text_2 = "box to something other than your username"
 
-    total = len(game_list)
-    if show_active == 'True' or show_active == None:
-        return render_template("my_games.html", game_list = game_list, available = available, total=total, hover_text_1=hover_text_1, hover_text_2=hover_text_2)
+    if show_active == 'True' or show_active is None:
+        return render_template("my_games.html", game_list=game_list, available=available,
+                               total=total, hover_text_1=hover_text_1, hover_text_2=hover_text_2)
     else:
-        print("got to my completed list")
-        return render_template("my_completed_games.html", game_list = completed_game_list)
+        return render_template("my_completed_games.html", game_list=completed_game_list)
 
 @bp.route("/completed_games")
 @login_required
