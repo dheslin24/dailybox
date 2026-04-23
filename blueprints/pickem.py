@@ -1,5 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for, Markup
-from db_accessor.db_accessor import db, db2
+from db_accessor.db_accessor import db2
 from constants import PAY_TYPE_ID, BOX_TYPE_ID, EMOJIS, ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from utils import apology, login_required, admin_required
 from services.pickem_service import get_pickem_games, sref_to_pickem
@@ -29,12 +29,9 @@ def display_pickem_games():
     game_dict = {k: v for d in game_dicts for k, v in d.items()}
 
     sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x:x[1]['datetime']))
-    print(f"sorted game dict in display picks {sorted_game_dict}")
-
     # get users picks
     p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
     picks = db2(p, (session['userid'],))
-    print(f"dict picks: {dict(picks)}")
 
     # get tiebreaks
     t = "SELECT tiebreak FROM bowl_tiebreaks WHERE userid = %s and season = %s ORDER BY tiebreak_id DESC LIMIT 1;"
@@ -62,8 +59,6 @@ def select_bowl_games():
         game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
 
     game_dict = {k: v for d in game_dicts for k, v in d.items()}
-    print(game_dict)
-
     # iterate through them, getting the pick value
     # insert picks into bowlpicks table
     for game in game_dict:
@@ -72,14 +67,11 @@ def select_bowl_games():
             db2(s, (session['userid'], game_dict[game]['espn_id'], request.form.get(str(game_dict[game]['espn_id']))))
 
     tiebreak = request.form.get('tb')
-    print(f"tiebreak:  {tiebreak}")
-
     season = 2021
     if tiebreak != None and len(tiebreak) != 0:
         t = "INSERT INTO bowl_tiebreaks (season, userid, tiebreak, datetime) VALUES (%s, %s, %s, now());"
         db2(t, (season, session['userid'], tiebreak))
 
-    print(f"{session['username']} just selected bowl picks")
     logging.info("{} just actually selected picks".format(session["username"]))
 
     return redirect(url_for('pickem.view_all_picks'))
@@ -119,8 +111,6 @@ def view_all_picks():
     user_dict = {}
     for user in user_info:
         user_dict[user[0]] = {'username': user[1], 'name': user[2] + ' ' + user[3], 'is_admin': user[4]}
-
-    print(user_dict)
 
     # get last update in latest_lines table - display to admins
     l = "SELECT datetime FROM latest_lines WHERE datetime IS NOT NULL ORDER BY datetime DESC LIMIT 1"
@@ -163,13 +153,6 @@ def view_all_picks():
                 game_dict[game]['winner'] = 'PUSH'
                 winning_d[game] = 'PUSH'
 
-    print("HHHHHHHHHHHHHHHEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRREEEEEEEEEEEEEEE")
-    print("#<br>#<br>#<br>")
-    print(f"locked games {locked_games}")
-    print(f"winning teams {winning_teams}")
-    print(f"winning d {winning_d}")
-
-
     # get user picks
     #           |pick0| |pick1||pick2|
     #s = "SELECT userid, espnid, pick FROM bowlpicks ORDER BY pick_id ASC;"
@@ -206,7 +189,6 @@ def view_all_picks():
     # add users who are in but haven't picked yet, with 0 wins
     bu = "SELECT userid FROM users WHERE is_bowl_user = 1;"
     bowl_users = db2(bu)
-    print(f"bowl users: {bowl_users}")
 
     if bowl_users:
         for user in bowl_users:
@@ -230,7 +212,6 @@ def view_all_picks():
     # get tiebreaks
     t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
     tb_dict = dict(db2(t))
-    print(f"tb_dict {tb_dict}")
 
     return render_template("view_all_picks.html", game_dict=sorted_game_dict, d=sorted_d, locked_games=locked_games, user_dict=user_dict, tb_dict=tb_dict, now=now, last_line_time=last_line_time, emojis=EMOJIS, eliminated_list=eliminated_list, winner=winner, tb_log=tb_log, annual=annual)
 
@@ -280,7 +261,6 @@ def bowl_payment_status():
     admins = []
     for admin in a:
         admins.append(admin[0])
-    print(admins)
 
     thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
     thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
@@ -321,11 +301,6 @@ def bowl_payment_status():
 
     # print("after {}".format(display_list))
 
-    print("payment stuff")
-    print(bowl_users)
-    print(payment_list)
-    print(payment_list_dh)
-    print(display_list)
 
     logging.info(f"{session['username']} just hit view bowl payment status")
 
@@ -400,8 +375,6 @@ def select_pickem_games():
             db2(p, (session['userid'], season, game, pick))
 
     tiebreak = request.form.get('tb')
-    print("tbtiebreaktb!!")
-    print(tiebreak)
     if tiebreak != None and len(tiebreak) != 0:
         t = "INSERT INTO pickem.tiebreak (season, userid, tiebreak, datetime) values (%s, %s, %s, convert_tz(now(), '-00:00', '-05:00'));"
         db2(t, (season, session['userid'], tiebreak))
@@ -434,14 +407,12 @@ def pickem_game_list():
     t = "SELECT tiebreak FROM pickem.tiebreak WHERE userid = %s ORDER BY tiebreak_id DESC;"
     tb = db2(t, (session['userid'],))
 
-    print("pickem game list tie breaks {}".format(tb))
 
     if len(tb) != 0:
         user_picks['tb'] = tb[0][0]
     else:
         user_picks['tb'] = ''
 
-    print(user_picks)
 
     return render_template("pickem_game_list.html", game_dict=game_dict, game_list=game_list, user_picks=user_picks)
 
@@ -458,7 +429,6 @@ def pickem_all_picks():
     else:
         games_left = 13
         max_game = 0
-    print("max game {}".format(max_game))
     eliminated_list = []
 
 
@@ -530,14 +500,12 @@ def pickem_all_picks():
                 else:
                     user_picks[username].picks[pick[2]] = "hidden"      # obj already exists, add new game and it's pick
 
-    print("userpicks unplayed {}".format(user_picks_unplayed))
 
     # add pickem users who haven't selected any picks yet - for tracking
     uid = "SELECT userid FROM users WHERE is_pickem_user = 1"
     empty_users = db2(uid)
 
     # create empty User objects for them
-    print("empty users {}".format(empty_users))
     if len(empty_users) > 0:
         for userid in empty_users:
             if usernames[userid[0]] not in user_picks:
@@ -642,8 +610,6 @@ def pickem_all_picks():
     if game_dict[13].winner != "TBD":  # someone won the SB, figure out who won the pool
         s = "SELECT fav_score, dog_score FROM pickem.pickem_scores WHERE gameid = 13 ORDER BY score_id DESC;"
         score = db2(s)
-        print("maxwinuser{}".format(max_win_users))
-        print(score)
 
         if len(max_win_users) == 1:  #only one winner - easy
             winner.append(max_win_users[0])
@@ -652,7 +618,6 @@ def pickem_all_picks():
             closest_score = 1000
             closest_users = []
             for user in max_win_users:
-                print("user {}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score))
                 tb_log = "{}'s tiebreak of {} is {} away from the total score of {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score)
                 if abs(tb_dict[user] - total_score) < closest_score:
                     closest_score = abs(tb_dict[user] - total_score)
@@ -672,7 +637,6 @@ def pickem_all_picks():
                     winner.append(w)
 
         else:
-            print("something went very wrong figuring out who won")
 
     winning_user = '{} Playoff Pickem Winner'.format(season)
     if len(winner) > 1:
@@ -696,7 +660,6 @@ def pickem_all_picks():
     eliminated_list.append('GC1')
     eliminated_list.append('Algo_O')
     eliminated_list.append('rgimbel')
-    print("eliminated list: {}".format(eliminated_list))
 
     return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown, eliminated_list=eliminated_list)
 
@@ -758,7 +721,6 @@ def lock_pickem_game():
 
     s = "UPDATE pickem.games SET locked = %s WHERE gameid in ({});".format(param_string)
     db2(s, game_tup)
-    print("setting game {} lock status to {}".format(game_name, lock))
 
     # set anyone who hasn't picked to 'x'
     # 1. what is the first current game, and last game from last period?
@@ -779,16 +741,13 @@ def lock_pickem_game():
             elif user[1] not in user_dict[user[0]]:  # do not overwrite if multiple picks for a game, only use the first (really last) as we sorted by pickid desc
                 user_dict[user[0]][user[1]] = user[2]
 
-        print(user_dict)
 
         x_list = []
         for u in user_dict:
             if current_game not in user_dict[u]:
                 x_list.append(u)
 
-        print(x_list)
 
-        print(picks)
 
         for x in x_list:
             u = "INSERT INTO pickem.userpicks (userid, season, gameid, pick) VALUES ({}, 2021, {}, 'x');".format(x, current_game)
@@ -861,7 +820,6 @@ def pickem_payment_status():
     admins = []
     for admin in a:
         admins.append(admin[0])
-    print(admins)
 
     thumbs_up = '\uD83D\uDC4D'.encode('utf-16', 'surrogatepass').decode('utf-16')
     thumbs_down = '\uD83D\uDC4E'.encode('utf-16', 'surrogatepass').decode('utf-16')
@@ -881,10 +839,6 @@ def pickem_payment_status():
                 display_list.append((user, pickem_users[user], check))
             else:
                 display_list.append((user, pickem_users[user], ex))
-    print("payment stuff")
-    print(pickem_users)
-    print(payment_dict)
-    print(display_list)
 
     return render_template("pickem_payment_status.html", display_list=display_list, admins=admins, total_users=len(display_list), prize_pool=prize_pool)
 

@@ -1,9 +1,10 @@
 import json
+import logging
 import random
 
 from flask import Markup, session
-from db_accessor.db_accessor import db, db2
-from constants import PAY_TYPE_ID
+from db_accessor.db_accessor import db2
+from constants import PAY_TYPE_ID, BOX_TYPE_ID
 
 
 def box_string():
@@ -26,16 +27,14 @@ def assign_numbers(boxid):
     for i in range(10):
         x_string += '"' + str(i) + '"' + ':' + str(x_nums[i]) + ','
         y_string += '"' + str(i) + '"' + ':' + str(y_nums[i]) + ','
-    x_string = x_string[:-1] # chop off last ,
+    x_string = x_string[:-1]
     y_string = y_string[:-1]
     x_string += '}'
     y_string += '}'
-    s = "INSERT INTO boxnums(boxid, x, y) VALUES({}, '{}', '{}');".format(boxid, x_string, y_string)
-    db(s)
+    db2("INSERT INTO boxnums(boxid, x, y) VALUES(%s, %s, %s);", (int(boxid), x_string, y_string))
 
 def count_avail(boxid):
-    s = "SELECT * FROM boxes WHERE boxid = {};".format(boxid)
-    boxes = db(s)[0]
+    boxes = db2("SELECT * FROM boxes WHERE boxid = %s;", (int(boxid),))[0]
     count = 0
     for x in boxes[:len(boxes)-101:-1]:
         if x == 1 or x == 0:
@@ -67,17 +66,13 @@ def payout_calc(pay_type, fee):
     return s
 
 def calc_winner(boxid):
-    pt = "SELECT pay_type FROM boxes WHERE boxid = {};".format(boxid)
-    pay_type = db(pt)[0][0]
-    print(pay_type)
+    pay_type = db2("SELECT pay_type FROM boxes WHERE boxid = %s;", (int(boxid),))[0][0]
 
     winner_list = []
     if pay_type == PAY_TYPE_ID['single'] or pay_type == PAY_TYPE_ID['ten_man'] or pay_type == PAY_TYPE_ID['satellite'] or pay_type == PAY_TYPE_ID['ten_man_final_reverse']:  # final only
-        s = "SELECT x4, y4 FROM scores WHERE boxid = {};".format(boxid)
-        scores = db(s)
+        scores = db2("SELECT x4, y4 FROM scores WHERE boxid = %s;", (int(boxid),))
         if len(scores) == 0:
             return winner_list
-        print(scores[-1:][0])
         score = scores[-1:][0]
         if score[0] > 9:
             winner_list.append(str(score[0])[-1:])
@@ -89,36 +84,29 @@ def calc_winner(boxid):
             winner_list.append(str(score[1]))
 
     elif pay_type == PAY_TYPE_ID['four_qtr']: # all 4 qtrs
-        s = "SELECT x1, y1, x2, y2, x3, y3, x4, y4 FROM scores WHERE boxid = {};".format(boxid)
-        scores = db(s)
+        scores = db2("SELECT x1, y1, x2, y2, x3, y3, x4, y4 FROM scores WHERE boxid = %s;", (int(boxid),))
         if len(scores) == 0:
             return winner_list
         else:
             for score in scores[-1:][0]:
-                print(f"score in calc {score}")
                 if score is not None:
                     if score > 9:
                         winner_list.append(str(score)[-1:])
                     else:
                         winner_list.append(str(score))
 
-    print(winner_list)
     return winner_list
 
 def find_winning_user(boxid):
-    s = "SELECT * FROM scores WHERE boxid = {} ORDER BY score_id DESC LIMIT 1;".format(boxid)
-    print(s)
-    scores = db(s)[0]
+    scores = db2("SELECT * FROM scores WHERE boxid = %s ORDER BY score_id DESC LIMIT 1;", (int(boxid),))[0]
     score_list = []
     for score in scores[3:]:
         if score != None:
             score_list.append(str(score)[-1:])
         else:
             score_list.append(None)
-    print(score_list)
 
-    xy = "SELECT x, y FROM boxnums WHERE boxid = {};".format(boxid)
-    xy_list = db(xy)
+    xy_list = db2("SELECT x, y FROM boxnums WHERE boxid = %s;", (int(boxid),))
     x = json.loads(xy_list[0][0])
     y = json.loads(xy_list[0][1])
 
@@ -135,7 +123,6 @@ def find_winning_user(boxid):
             for n in y:
                 if y[n] == int(score):
                     box_y.append(n)
-    print(box_x, box_y)
 
     winner_list = []
     for n in range(len(box_x)):
@@ -143,29 +130,21 @@ def find_winning_user(boxid):
         if box_y[n] != '0':
             boxnum += box_y[n]
         boxnum += box_x[n]
-        w = "SELECT {} FROM boxes WHERE boxid = {};".format(boxnum, boxid)
-        winner = db(w)[0][0]
+        # column name can't be parameterized — values are from DB, cast to str for safety
+        winner = db2(f"SELECT {boxnum} FROM boxes WHERE boxid = %s;", (int(boxid),))[0][0]
         winner_list.append(winner)
-        print(winner)
 
-    print(winner_list)
-    return(winner_list)
+    return winner_list
 
 def check_box_limit(userid):
-    box_list = ['box' + str(x) + ' ,' for x in range(100)]
-    box_string = ''
-    for _ in box_list:
-        box_string += _
-    box_string = box_string[:-2]
-    box = "SELECT {} FROM boxes WHERE active = 1 or boxid between 26 and 36;".format(box_string)
-    all_boxes = db(box)
+    box = "SELECT {} FROM boxes WHERE active = 1 or boxid between 26 and 36;".format(box_string())
+    all_boxes = db2(box)
     count = 0
     for game in all_boxes:
         for b in game:
             if b == session['userid']:
                 count += 1
-    s = "SELECT max_boxes FROM max_boxes WHERE userid = {};".format(session['userid'])
-    mb = db(s)
+    mb = db2("SELECT max_boxes FROM max_boxes WHERE userid = %s;", (int(session['userid']),))
 
     if len(mb) == 0:
         return True
@@ -175,9 +154,8 @@ def check_box_limit(userid):
         return True
 
 def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None, espn_id=None):
-    if box_name == None:
-        s = "SELECT max(boxid) from boxes;"
-        max_box = db(s)[0][0]
+    if box_name is None:
+        max_box = db2("SELECT max(boxid) from boxes;")[0][0]
         box_name = "db" + str(max_box + 1)
 
     c = ''
@@ -190,28 +168,24 @@ def create_new_game(box_type, pay_type, fee, box_name=None, home=None, away=None
         v += str(1) + ", "
     v = v[:-2]
 
-    s = "INSERT INTO boxes(fee, active, box_type, box_name, pay_type, espn_id, {}) VALUES({});".format(c, v)
-    db(s)
+    # dynamic column list — values are from admin form, not user-controlled SQL
+    db2("INSERT INTO boxes(fee, active, box_type, box_name, pay_type, espn_id, {}) VALUES({});".format(c, v))
 
-    b = "SELECT max(boxid) FROM boxes;"
-    boxid = db(b)[0][0]
+    boxid = db2("SELECT max(boxid) FROM boxes;")[0][0]
 
-    t = "INSERT INTO teams(boxid, home, away) VALUES('{}', '{}', '{}');".format(boxid, home, away)
-    db(t)
+    db2("INSERT INTO teams(boxid, home, away) VALUES(%s, %s, %s);", (boxid, home, away))
 
 def get_games(box_type, active=1):
-    box_string = ''
+    box_string_vals = ''
     for b in box_type:
-        box_string += str(b) + ', '
-    box_string = box_string[:-2]
+        box_string_vals += str(b) + ', '
+    box_string_vals = box_string_vals[:-2]
 
     if active == 0:
-        s = "SELECT b.boxid, b.box_name, b.fee, pt.description, s.winner FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id LEFT JOIN scores s ON s.boxid = b.boxid WHERE b.active = {} and b.box_type in ({});".format(active, box_string)
-        games = db(s)
+        s = "SELECT b.boxid, b.box_name, b.fee, pt.description, s.winner FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id LEFT JOIN scores s ON s.boxid = b.boxid WHERE b.active = {} and b.box_type in ({});".format(active, box_string_vals)
+        games = db2(s)
         game_list = [list(game) for game in games]
-        u = "SELECT userid, username FROM users;"
-        user_dict = dict(db2(u))
-        print(user_dict)
+        user_dict = dict(db2("SELECT userid, username FROM users;"))
         for game in game_list:
             if game[4] is not None:
                 game[4] = user_dict[int(game[4])]
@@ -219,17 +193,10 @@ def get_games(box_type, active=1):
                 game[4] = "N/A"
 
     elif box_type[0] == 4:
-        priv_boxid_string = "SELECT boxid FROM privategames WHERE userid = %s;"
-        priv_boxes = db2(priv_boxid_string, (session['userid'], ))
+        priv_boxes = db2("SELECT boxid FROM privategames WHERE userid = %s;", (session['userid'],))
         if priv_boxes:
-            priv_boxids = []
-            for b in priv_boxes:
-                priv_boxids.append(b[0])
-            print(f"private boxids {priv_boxids}")
-            boxid_string = ""
-            for bs in priv_boxids:
-                boxid_string += str(bs) + ", "
-            boxid_string = boxid_string[:-2]
+            priv_boxids = [b[0] for b in priv_boxes]
+            boxid_string = ", ".join(str(b) for b in priv_boxids)
             s = f"SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {active} and b.boxid in ({boxid_string}) and b.box_type in ({box_type[0]});"
             games = db2(s)
             game_list = [list(game) for game in games]
@@ -237,17 +204,14 @@ def get_games(box_type, active=1):
             return []
 
     else:
-        s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type in ({});".format(active, box_string)
-        games = db(s)
+        s = "SELECT b.boxid, b.box_name, b.fee, pt.description FROM boxes b LEFT JOIN pay_type pt ON b.pay_type = pt.pay_type_id WHERE b.active = {} and b.box_type in ({});".format(active, box_string_vals)
+        games = db2(s)
         game_list = [list(game) for game in games]
 
-    print(game_list)
     if active == 1:
-        a = "SELECT * FROM boxes WHERE active = {};".format(active)
-        avail = db(a)
-
+        avail_rows = db2("SELECT * FROM boxes WHERE active = %s;", (active,))
         available = {}
-        for game in avail:
+        for game in avail_rows:
             count = 0
             for x in game[:len(game)-101:-1]:
                 if x == 1 or x == 0:
@@ -256,27 +220,24 @@ def get_games(box_type, active=1):
 
         for game in game_list:
             game.append(available[game[0]])
-        print(game_list)
 
     return game_list
 
 def auto_check_lines():
-    print("checking espn lines automatically")
+    logging.info("checking espn lines automatically")
     pass
 
 
 def activate_game(boxid):
-    check_sql_string = "SELECT boxid FROM boxnums WHERE boxid = %s"
-    if db2(check_sql_string, (boxid,)):
+    if db2("SELECT boxid FROM boxnums WHERE boxid = %s", (boxid,)):
         return "Escalate with tech support, this game has already drawn numbers"
 
     avail = count_avail(boxid)
-    s = "SELECT box_type, pay_type from boxes WHERE boxid = {};".format(boxid)
-    box = db(s)
+    box = db2("SELECT box_type, pay_type from boxes WHERE boxid = %s;", (int(boxid),))
     box_type = box[0][0]
     pay_type = box[0][1]
 
-    print("boxtype in start game {}".format(box_type))
+    logging.info("boxtype in start game %s", box_type)
     if avail != 0:
         return "Cannot start game - still boxes available"
 
@@ -284,44 +245,33 @@ def activate_game(boxid):
     if box_type == BOX_TYPE_ID['dailybox']:
         winning_col = random.randint(0, 9)
         winning_row = random.randint(0, 9)
-        scores = "INSERT INTO scores(boxid, x4, y4) VALUES('{}', '{}', '{}');".format(boxid, winning_col, winning_row)
-        db(scores)
-        inactivate = "UPDATE boxes SET active = 0 WHERE boxid = {};".format(boxid)
-        db(inactivate)
-        w = "UPDATE scores SET winner = {} WHERE boxid = {};".format(find_winning_user(boxid)[0], boxid)
-        db(w)
+        db2("INSERT INTO scores(boxid, x4, y4) VALUES(%s, %s, %s);", (int(boxid), winning_col, winning_row))
+        db2("UPDATE boxes SET active = 0 WHERE boxid = %s;", (int(boxid),))
+        winner = find_winning_user(boxid)[0]
+        db2("UPDATE scores SET winner = %s WHERE boxid = %s;", (winner, int(boxid)))
     if pay_type == PAY_TYPE_ID['every_score'] or PAY_TYPE_ID['every_minute']:
         winner = find_winning_box(boxid, 0, 0)
         win_box = winner[0]
         win_uid = winner[1]
-        s = "INSERT INTO everyscore(score_num, score_type, boxid, x_score, y_score, winner, winning_box) VALUES('1', '0/0 Start Game', {}, '0', '0', '{}', '{}');".format(boxid, win_uid, win_box)
-        db(s)
+        db2(
+            "INSERT INTO everyscore(score_num, score_type, boxid, x_score, y_score, winner, winning_box) VALUES('1', '0/0 Start Game', %s, '0', '0', %s, %s);",
+            (int(boxid), win_uid, win_box)
+        )
 
     return None  # success
 
 
 def get_user_games(userid):
-    s = "SELECT * FROM boxes;"
-    games = db(s)
+    games = db2("SELECT * FROM boxes;")
     g_list = [list(game) for game in games]
 
-    pt = "SELECT pay_type_id, description from pay_type;"
-    payout_types = dict(db(pt))
+    payout_types = dict(db2("SELECT pay_type_id, description from pay_type;"))
+    win_dict = dict(db2("SELECT boxid, winner FROM scores ORDER BY score_id ASC;"))
+    boxnums = db2("SELECT * FROM boxnums;")
+    user_dict = dict(db2("SELECT userid, username FROM users;"))
+    aliases = dict(db2("SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"))
 
-    bw = "SELECT boxid, winner FROM scores ORDER BY score_id ASC;"
-    win_dict = dict(db(bw))
-
-    bn = "SELECT * FROM boxnums;"
-    boxnums = db(bn)
-
-    u = "SELECT userid, username FROM users;"
-    user_dict = dict(db2(u))
-
-    alias_string = "SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"
-    aliases = dict(db2(alias_string))
-
-    t = "SELECT boxid, home, away from teams;"
-    teams_list = db2(t)
+    teams_list = db2("SELECT boxid, home, away from teams;")
     teams_dict = {}
     for t_boxid, t_home, t_away in teams_list:
         teams_dict[t_boxid] = {"home": t_home, "away": t_away}
@@ -403,12 +353,10 @@ def find_winning_box(boxid, home_score, away_score):
     else:
         a = str(away_score)
 
-    xy = "SELECT x, y from boxnums WHERE boxid = {};".format(boxid)
-    xy_list = db(xy)
+    xy_list = db2("SELECT x, y from boxnums WHERE boxid = %s;", (int(boxid),))
     x = json.loads(xy_list[0][0])
     y = json.loads(xy_list[0][1])
-    print(h, a)
-    print(x, y)
+    logging.debug("find_winning_box h=%s a=%s", h, a)
 
     boxnum = ''
     for item in y:
@@ -418,40 +366,37 @@ def find_winning_box(boxid, home_score, away_score):
     for item in x:
         if x[item] == int(h):
             boxnum += item
-    print("boxnum for ES is {}".format(boxnum))
+    logging.info("boxnum for ES is %s", boxnum)
 
-    w = "SELECT box{} FROM boxes WHERE boxid = {};".format(boxnum, boxid)
-    winner = db(w)[0][0]
-    print("winner {}".format(winner))
+    # column name can't be parameterized — boxnum is derived from DB data
+    winner = db2(f"SELECT box{boxnum} FROM boxes WHERE boxid = %s;", (int(boxid),))[0][0]
+    logging.info("winner %s", winner)
     return (boxnum, winner)
 
 def sanity_checks(boxid_list):
     check_result_list = []
     if len(boxid_list) > 1:
+        max_list = []
         for item in boxid_list:
-            max_list = []
-            m = "SELECT max(score_num) FROM everyscore WHERE boxid = {};".format(item)
-            max_list.append(db(m)[0][0])
+            result = db2("SELECT max(score_num) FROM everyscore WHERE boxid = %s;", (item,))
+            max_list.append(result[0][0])
         if len(set(max_list)) == 1:
             check_result_list.append('SUCCESS - all games have equal max score')
         else:
             check_result_list.append('WARNING - not all games have equal max score')
 
-    m = "SELECT e.boxid, e.score_num FROM everyscore e INNER JOIN boxes b ON e.boxid = b.boxid WHERE b.active = 1 ORDER BY boxid, score_num;"
-    max_check = db(m)
+    max_check = db2("SELECT e.boxid, e.score_num FROM everyscore e INNER JOIN boxes b ON e.boxid = b.boxid WHERE b.active = 1 ORDER BY boxid, score_num;")
     d = {}
     for x in max_check:
         if x[0] not in d:
             d[x[0]] = [x[1]]
         else:
             d[x[0]].append(x[1])
-    print(d)
     seq_list = []
     for key in d:
         if max(d[key]) != len(d[key]) and max(d[key]) != 200:
             check_result_list.append('WARNING - check score numbers for boxid {}, it may not be sequential'.format(key))
         if d[key][0] != 1:
-            print("first score check {}".format(d[key][0]))
             check_result_list.append('WARNING - your first score number should be 1.  it is not for boxid {}'.format(key))
         else:
             last = 1
@@ -463,8 +408,6 @@ def sanity_checks(boxid_list):
                 last = sn
             if good == True:
                 seq_list.append(str(key))
-    print("seq list")
-    print(len(seq_list), len(d))
     if len(seq_list) == len(d):
         check_result_list.append('SUCCESS - score nums are sequential for boxid(s) {}.'.format(", ".join(seq_list)))
     return check_result_list
@@ -491,5 +434,5 @@ def find_touching_boxes(boxnum):
     else:
         touch_list = (boxnum + 10, boxnum - 10, boxnum + 1, boxnum - 1)
 
-    print("{} are touching winner {}".format(touch_list, boxnum))
+    logging.debug("%s are touching winner %s", touch_list, boxnum)
     return touch_list
