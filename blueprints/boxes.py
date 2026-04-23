@@ -302,19 +302,15 @@ def display_box():
     for i in range(10):
         away_team[str(i)] = ''
     if len(away) == 3:
-        # away_team['2'] = team_scores[away]['logo']
         away_team['2'] = team_scores[away].get('logo', "TBD")
         away_team['3'] = away[0]
         away_team['4'] = away[1]
         away_team['5'] = away[2]
-        # away_team['6'] = team_scores[away]['logo']
         away_team['6'] = team_scores[away].get('logo', "TBD")
-        else:
-        # away_team['3'] = team_scores[away]['logo']
+    else:
         away_team['3'] = team_scores[away].get('logo', "TBD")
         away_team['4'] = away[0]
         away_team['5'] = away[1]
-        # away_team['6'] = team_scores[away]['logo']
         away_team['6'] = team_scores[away].get('logo', "TBD")
 
     logging.debug("paytype: %s", pay_type)

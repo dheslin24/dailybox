@@ -637,6 +637,7 @@ def pickem_all_picks():
                     winner.append(w)
 
         else:
+            pass
 
     winning_user = '{} Playoff Pickem Winner'.format(season)
     if len(winner) > 1:
