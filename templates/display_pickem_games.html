@@ -1,4 +1,10 @@
-{% extends "layout_bowls.html" %}
+{% extends "base.html" %}
+{% block navbar_links %}
+<li><a href="{{ url_for('pickem.display_pickem_games') }}">Select Games</a></li>
+<li><a href="{{ url_for('pickem.view_all_picks') }}">View All Picks</a></li>
+<li><a href="{{ url_for('pickem.bowl_payment_status') }}">Payment Status</a></li>
+<li><a href="{{ url_for('pickem.pickem_rules') }}">Pickem Rules</a></li>
+{% endblock %}
 
 {% block title %}
     Display Bowl Games

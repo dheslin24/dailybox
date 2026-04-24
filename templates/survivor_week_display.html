@@ -1,153 +1,143 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Survivor Week Games</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f8f8f8; }
-        .game-list { max-width: 800px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .game { border-bottom: 1px solid #eee; padding: 16px 0; position: relative; }
-        .game:last-child { border-bottom: none; }
-        .field { margin-bottom: 6px; }
-        .label { font-weight: bold; color: #333; }
-        .value { color: #555; }
-        .game-id-tooltip {
-            display: none;
-            position: absolute;
-            background: #222;
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.95em;
-            z-index: 10;
-            left: 50%;
-            top: 100%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .game:hover .game-id-tooltip {
-            display: block;
-        }
-    </style>
-</head>
-<body>
-    <div style="width:100%;background:#222;padding:0;margin:0;">
-        <nav style="display:flex;align-items:center;justify-content:left;padding:0 24px;height:48px;">
-            <div style="color:#fff;font-size:1.2em;font-weight:bold;margin-right:32px;">Survivor Navigation</div>
-            <div style="position:relative;">
-                <button style="background:#444;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:1em;">Jump To ▼</button>
-                    <div style="display:none;position:absolute;top:36px;left:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:4px;min-width:180px;z-index:100;" class="dropdown-content">
-                        <a href="/survivor_pool" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">Main Survivor Page</a>
-                        <a href="/survivor_pool_picks?pool_id={{ pool_id }}&season={{ season|default(2025) }}" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">View All Pool Picks</a>
-                        {% if session['is_admin'] == 1 %}
-                        <a href="/sv_create_pool" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">Create Survivor Pool</a>
-                        {% endif %}
-                    </div>
+{% extends "base.html" %}
+
+{% block title %}Survivor Week Games{% endblock %}
+
+{% block body_class %}{% endblock %}
+
+{% block head_extra %}
+<style>
+    .game-list { max-width: 800px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .game { border-bottom: 1px solid #eee; padding: 16px 0; position: relative; }
+    .game:last-child { border-bottom: none; }
+    .field { margin-bottom: 6px; }
+    .label { font-weight: bold; color: #333; }
+    .value { color: #555; }
+    .game-id-tooltip {
+        display: none; position: absolute; background: #222; color: #fff;
+        padding: 6px 12px; border-radius: 4px; font-size: 0.95em; z-index: 10;
+        left: 50%; top: 100%; transform: translateX(-50%); white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .game:hover .game-id-tooltip { display: block; }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<div style="width:100%;background:#222;padding:0;margin:0;">
+    <nav style="display:flex;align-items:center;justify-content:left;padding:0 24px;height:48px;">
+        <div style="color:#fff;font-size:1.2em;font-weight:bold;margin-right:32px;">Survivor Navigation</div>
+        <div style="position:relative;">
+            <button style="background:#444;color:#fff;border:none;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:1em;">Jump To ▼</button>
+            <div style="display:none;position:absolute;top:36px;left:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:4px;min-width:180px;z-index:100;" class="dropdown-content">
+                <a href="/survivor_pool" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">Main Survivor Page</a>
+                <a href="/survivor_pool_picks?pool_id={{ pool_id }}&season={{ season|default(2025) }}" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">View All Pool Picks</a>
+                {% if session['is_admin'] == 1 %}
+                <a href="/sv_create_pool" style="display:block;padding:10px 18px;color:#222;text-decoration:none;">Create Survivor Pool</a>
+                {% endif %}
             </div>
-        </nav>
-    </div>
-    <script>
-        // Simple dropdown logic
-        const btn = document.querySelector('nav button');
-        const dropdown = document.querySelector('.dropdown-content');
-        btn.addEventListener('click', function(e) {
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-        });
-        document.addEventListener('click', function(e) {
-            if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-    </script>
-
-    <!-- The upper right popup for selected team -->
-    <div class="game-list">
-        <h2>Survivor Week Games</h2>
-        {% if selected_team and selected_logo %}
-        <div class="selected-team" style="position:absolute;top:32px;right:48px;background:#fff;padding:18px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.10);text-align:center;">
-            <div class="selected-team-title" style="font-size:1.2em;font-weight:bold;margin-bottom:10px;">Team selected for week {{ week }}</div>
-            <div>{{ selected_team }}</div>
-            <img src="{{ selected_logo }}" alt="{{ selected_team }} logo" style="height:80px;margin-top:8px;">
-            <form method="POST" action="/submit_team" style="margin-top:12px;display:inline;">
-                <input type="hidden" name="team" value="{{ selected_team }}">
-                <input type="hidden" name="logo" value="{{ selected_logo }}">
-                <input type="hidden" name="week" value="{{ week }}">
-                <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                <button type="submit" style="padding:8px 18px;font-size:1em;">Submit</button>
-            </form>
-            <form method="GET" action="/survivor_teams_selected" style="display:inline;">
-                <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                <button type="submit" style="padding:8px 18px;font-size:1em;background:#eee;color:#333;border:1px solid #ccc;margin-left:8px;">Cancel</button>
-            </form>
         </div>
-        {% endif %}
+    </nav>
+</div>
+{% endblock %}
 
-        <!-- The list of games for the selected week -->
-        {% if games %}
-            {% for game in games %}
-                <div class="game">
-                    <div class="field"><span class="label"></span> <span class="value">
-                        {{ game['display_datetime'] }}
-                    </div>
-                    <div class="field">
-                    {% set home_used_week = used_teams.get(game.home_team) %}
-                    {% if home_used_week %}
-                        {% set home_btn_style = 'background:none;border:none;padding:0;vertical-align:middle;color:#aaa;cursor:not-allowed;text-decoration:none;' %}
-                    {% else %}
-                        {% set home_btn_style = 'background:none;border:none;padding:0;vertical-align:middle;color:#007bff;cursor:pointer;text-decoration:underline;' %}
-                    {% endif %}
-                    <form method="POST" action="/survivor_week_display?week={{ week }}" style="display:inline;">
-                        <input type="hidden" name="selected_team" value="{{ game.home_team }}">
-                        <input type="hidden" name="selected_logo" value="{{ game.home_logo }}">
-                        <input type="hidden" name="week" value="{{ week }}">
-                        <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                        <button type="submit" class="field" style="{{ home_btn_style }}" {% if home_used_week or game.locked %}disabled{% endif %}>
-                            <span class="label">Home Team:</span>
-                            <span class="value">{{ game.home_team }}</span>
-                            {% if game.home_logo %}
-                            <img src="{{ game.home_logo }}" alt="{{ game.home_team }} logo" style="height:32px;vertical-align:middle;margin-left:8px;">
-                            {% endif %}
-                            {% if home_used_week %}
-                            <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Used week {{ home_used_week }}</span>
-                            {% elif game.locked %}
-                            <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Locked</span>
-                            {% endif %}
-                        </button>
-                    </form>
-                    </div>
-                    <div class="field">
-                    {% set away_used_week = used_teams.get(game.away_team) %}
-                    {% if away_used_week %}
-                        {% set away_btn_style = 'background:none;border:none;padding:0;vertical-align:middle;color:#aaa;cursor:not-allowed;text-decoration:none;' %}
-                    {% else %}
-                        {% set away_btn_style = 'background:none;border:none;padding:0;vertical-align:middle;color:#007bff;cursor:pointer;text-decoration:underline;' %}
-                    {% endif %}
-                    <form method="POST" action="/survivor_week_display?week={{ week }}" style="display:inline;">
-                        <input type="hidden" name="selected_team" value="{{ game.away_team }}">
-                        <input type="hidden" name="selected_logo" value="{{ game.away_logo }}">
-                        <input type="hidden" name="week" value="{{ week }}">
-                        <input type="hidden" name="pool_id" value="{{ pool_id }}">
-                        <button type="submit" class="field" style="{{ away_btn_style }}" {% if away_used_week or game.locked %}disabled{% endif %}>
-                            <span class="label">Away Team:</span>
-                            <span class="value">{{ game.away_team }}</span>
-                            {% if game.away_logo %}
-                            <img src="{{ game.away_logo }}" alt="{{ game.away_team }} logo" style="height:32px;vertical-align:middle;margin-left:8px;">
-                            {% endif %}
-                            {% if away_used_week %}
-                            <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Used week {{ away_used_week }}</span>
-                            {% elif game.locked %}
-                            <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Locked</span>
-                            {% endif %}
-                        </button>
-                    </form>
-                    </div>
-                    <div class="field"><span class="label">Line:</span> <span class="value">{{ game.odds_details }}</span></div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No games found for this week.</p>
-        {% endif %}
+{% block main %}
+<div class="game-list">
+    <h2>Survivor Week Games</h2>
+    {% if selected_team and selected_logo %}
+    <div class="selected-team" style="position:absolute;top:32px;right:48px;background:#fff;padding:18px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.10);text-align:center;">
+        <div class="selected-team-title" style="font-size:1.2em;font-weight:bold;margin-bottom:10px;">Team selected for week {{ week }}</div>
+        <div>{{ selected_team }}</div>
+        <img src="{{ selected_logo }}" alt="{{ selected_team }} logo" style="height:80px;margin-top:8px;">
+        <form method="POST" action="/submit_team" style="margin-top:12px;display:inline;">
+            <input type="hidden" name="team" value="{{ selected_team }}">
+            <input type="hidden" name="logo" value="{{ selected_logo }}">
+            <input type="hidden" name="week" value="{{ week }}">
+            <input type="hidden" name="pool_id" value="{{ pool_id }}">
+            <button type="submit" style="padding:8px 18px;font-size:1em;">Submit</button>
+        </form>
+        <form method="GET" action="/survivor_teams_selected" style="display:inline;">
+            <input type="hidden" name="pool_id" value="{{ pool_id }}">
+            <button type="submit" style="padding:8px 18px;font-size:1em;background:#eee;color:#333;border:1px solid #ccc;margin-left:8px;">Cancel</button>
+        </form>
     </div>
-</body>
-</html>
+    {% endif %}
+
+    {% if games %}
+        {% for game in games %}
+            <div class="game">
+                <div class="field"><span class="value">{{ game['display_datetime'] }}</span></div>
+                <div class="field">
+                {% set home_used_week = used_teams.get(game.home_team) %}
+                {% if home_used_week %}
+                    {% set home_btn_style = 'background:none;border:none;padding:0;vertical-align:middle;color:#aaa;cursor:not-allowed;text-decoration:none;' %}
+                {% else %}
+                    {% set home_btn_style = 'background:none;border:none;padding:0;vertical-align:middle;color:#007bff;cursor:pointer;text-decoration:underline;' %}
+                {% endif %}
+                <form method="POST" action="/survivor_week_display?week={{ week }}" style="display:inline;">
+                    <input type="hidden" name="selected_team" value="{{ game.home_team }}">
+                    <input type="hidden" name="selected_logo" value="{{ game.home_logo }}">
+                    <input type="hidden" name="week" value="{{ week }}">
+                    <input type="hidden" name="pool_id" value="{{ pool_id }}">
+                    <button type="submit" class="field" style="{{ home_btn_style }}" {% if home_used_week or game.locked %}disabled{% endif %}>
+                        <span class="label">Home Team:</span>
+                        <span class="value">{{ game.home_team }}</span>
+                        {% if game.home_logo %}
+                        <img src="{{ game.home_logo }}" alt="{{ game.home_team }} logo" style="height:32px;vertical-align:middle;margin-left:8px;">
+                        {% endif %}
+                        {% if home_used_week %}
+                        <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Used week {{ home_used_week }}</span>
+                        {% elif game.locked %}
+                        <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Locked</span>
+                        {% endif %}
+                    </button>
+                </form>
+                </div>
+                <div class="field">
+                {% set away_used_week = used_teams.get(game.away_team) %}
+                {% if away_used_week %}
+                    {% set away_btn_style = 'background:none;border:none;padding:0;vertical-align:middle;color:#aaa;cursor:not-allowed;text-decoration:none;' %}
+                {% else %}
+                    {% set away_btn_style = 'background:none;border:none;padding:0;vertical-align:middle;color:#007bff;cursor:pointer;text-decoration:underline;' %}
+                {% endif %}
+                <form method="POST" action="/survivor_week_display?week={{ week }}" style="display:inline;">
+                    <input type="hidden" name="selected_team" value="{{ game.away_team }}">
+                    <input type="hidden" name="selected_logo" value="{{ game.away_logo }}">
+                    <input type="hidden" name="week" value="{{ week }}">
+                    <input type="hidden" name="pool_id" value="{{ pool_id }}">
+                    <button type="submit" class="field" style="{{ away_btn_style }}" {% if away_used_week or game.locked %}disabled{% endif %}>
+                        <span class="label">Away Team:</span>
+                        <span class="value">{{ game.away_team }}</span>
+                        {% if game.away_logo %}
+                        <img src="{{ game.away_logo }}" alt="{{ game.away_team }} logo" style="height:32px;vertical-align:middle;margin-left:8px;">
+                        {% endif %}
+                        {% if away_used_week %}
+                        <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Used week {{ away_used_week }}</span>
+                        {% elif game.locked %}
+                        <span style="color:#aaa;margin-left:10px;font-size:0.98em;">Locked</span>
+                        {% endif %}
+                    </button>
+                </form>
+                </div>
+                <div class="field"><span class="label">Line:</span> <span class="value">{{ game.odds_details }}</span></div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No games found for this week.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const btn = document.querySelector('nav button');
+    const dropdown = document.querySelector('.dropdown-content');
+    btn.addEventListener('click', function(e) {
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+    document.addEventListener('click', function(e) {
+        if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

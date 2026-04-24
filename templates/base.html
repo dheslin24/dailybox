@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='byg.png') }}">
+    <meta charset="utf-8"/>
+    <meta content="initial-scale=1, width=device-width" name="viewport"/>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='scripts-v6_nosnow.js') }}" defer></script>
+    {% if session.get('userid') %}
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $("#grid td.user_box:contains('{{ session['username'] }}')").css('background-color','#5DADE2');
+        $("#grid td.user_box:contains('Open')").css('background-color','#fff');
+        $("#grid td.user_box:contains('WINNER')").css('background-color','#28B463');
+    });
+    </script>
+    {% endif %}
+    {% block head_extra %}{% endblock %}
+    <title>BYGaming {% block title %}{% endblock %}</title>
+</head>
+<body>
+<div class="{% block body_class %}container{% endblock %}">
+
+    {% block navbar %}
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button aria-expanded="false" class="navbar-toggle collapsed" data-target="#navbar" data-toggle="collapse" type="button">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{{ url_for('auth.index') }}"><span class="blue">B</span><span class="blue">Y</span><span class="blue">G</span><span class="green">T</span>e<span class="red">c</span><span class="yellow">h</span></a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+                {% if session.userid %}
+                    <ul class="nav navbar-nav">
+                        {% block navbar_links %}
+                        <li><a href="{{ url_for('boxes.custom_game_list') }}">Super Bowl Boxes</a></li>
+                        <li><a href="{{ url_for('boxes.my_games') }}">My Games</a></li>
+                        {% if box_type != 4 %}
+                        <li><a href="{{ url_for('boxes.payment_status', sort_method='user', priv=False) }}">Payment Status</a></li>
+                        {% else %}
+                        <li><a href="{{ url_for('boxes.priv_payment_status', sort_method='user', boxid=boxid) }}">Payment Status</a></li>
+                        {% endif %}
+                        {% endblock %}
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        {% if session['is_admin'] == 1 %}
+                        <li><a href="{{ url_for('admin.bygzomo') }}">BYGZomo</a></li>
+                        <li><a href="{{ url_for('admin.admin') }}">Admin</a></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('auth.user_details') }}">User {{ session['username'] }}</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+                    </ul>
+                {% else %}
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+                        <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+
+    {% if get_flashed_messages() %}
+        <header>
+            <div class="alert alert-info" role="alert">
+                {{ get_flashed_messages() | join(" ") }}
+            </div>
+        </header>
+    {% endif %}
+
+    <main>
+        {% block main %}{% endblock %}
+    </main>
+
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

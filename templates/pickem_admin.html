@@ -1,4 +1,10 @@
-{% extends "pickem_layout.html" %}
+{% extends "base.html" %}
+{% block navbar_links %}
+<li><a href="{{ url_for('pickem.pickem_game_list') }}">Enter Your Picks</a></li>
+<li><a href="{{ url_for('pickem.pickem_all_picks') }}">See All User Picks</a></li>
+<li><a href="{{ url_for('pickem.pickem_payment_status') }}">Payment Status</a></li>
+<li><a href="{{ url_for('pickem.pickem_rules') }}">Pickem Rules</a></li>
+{% endblock %}
 
 {% block title %}
     Pickem Admin
