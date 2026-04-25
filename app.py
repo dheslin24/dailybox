@@ -61,5 +61,9 @@ def spa(path):
         return send_from_directory(dist, path)
     return send_from_directory(dist, 'index.html')
 
+@app.route('/assets/<path:filename>')
+def spa_assets(filename):
+    return send_from_directory(os.path.join(app.root_path, 'static', 'dist', 'assets'), filename)
+
 if __name__ == "__main__":
     app.run(debug=True)
