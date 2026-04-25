@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for, Markup
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for, Markup
 from db_accessor.db_accessor import db2
 from constants import PAY_TYPE_ID, BOX_TYPE_ID, EMOJIS, ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from utils import apology, login_required, admin_required
@@ -212,6 +212,25 @@ def user_details():
     userid_dict = dict(db2("SELECT username, userid FROM users WHERE alias_of_userid = %s", (session['userid'],)))
 
     return render_template("user_details.html", user_dict = user_dict, alias_dict = alias_dict, userid_dict=userid_dict)
+
+@bp.route("/api/user_details", methods=["GET"])
+@login_required
+def api_user_details():
+    user = db2("SELECT * FROM users WHERE userid = %s;", (session['userid'],))[0]
+    user_dict = {
+        'username': user[1],
+        'first_name': user[3],
+        'last_name': user[4],
+        'email': user[5],
+        'mobile': user[6],
+        'image': user[15],
+    }
+    aliases = db2(
+        "SELECT username, userid, IFNULL(image, '') FROM users WHERE alias_of_userid = %s;",
+        (session['userid'],)
+    )
+    aliases_list = [{'username': a[0], 'userid': a[1], 'image': a[2]} for a in aliases]
+    return jsonify({'user': user_dict, 'aliases': aliases_list, 'userid': session['userid']})
 
 @bp.route("/reset_password", methods=["GET", "POST"])
 def reset_password():

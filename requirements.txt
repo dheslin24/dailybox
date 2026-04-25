@@ -4,5 +4,6 @@ Flask==2.0.2
 Flask-Session==0.4.0
 mysql-connector-python==8.0.27
 passlib==1.7.4
+pytz
 python-dotenv==1.0.1
 requests==2.22.0

@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import timedelta
 
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_session import Session
 
 from blueprints.admin import bp as admin_bp
@@ -52,6 +52,14 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(boxes_bp)
 app.register_blueprint(pickem_bp)
 app.register_blueprint(survivor_bp)
+
+@app.route('/app', defaults={'path': ''})
+@app.route('/app/<path:path>')
+def spa(path):
+    dist = os.path.join(app.root_path, 'static', 'dist')
+    if path and os.path.exists(os.path.join(dist, path)):
+        return send_from_directory(dist, path)
+    return send_from_directory(dist, 'index.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
