@@ -992,3 +992,240 @@ def api_pickem_payment_status():
         display_list.append({'userid': user, 'username': pickem_users[user], 'status': status})
 
     return jsonify({'display_list': display_list, 'admins': admins, 'total_users': len(display_list), 'prize_pool': prize_pool})
+
+
+@bp.route("/api/enter_pickem_scores", methods=["POST"])
+def api_enter_pickem_scores():
+    if not session.get('userid'):
+        return jsonify({'error': 'unauthorized'}), 401
+    data = request.get_json()
+    gameid = data.get('gameid')
+    fav_score = data.get('fav')
+    dog_score = data.get('dog')
+    s = "INSERT INTO pickem.pickem_scores (gameid, fav_score, dog_score) values (%s, %s, %s);"
+    db2(s, (int(gameid), int(fav_score), int(dog_score)))
+    return jsonify({'success': True})
+
+
+@bp.route("/api/bowl_payment_status", methods=["GET"])
+@login_required
+def api_bowl_payment_status():
+    season = datetime.utcnow().year - 1
+
+    e = f"SELECT espnid FROM latest_lines WHERE season = {season} and league = 'nfl';"
+    espnids = db2(e)
+    if not espnids:
+        return jsonify({'display_list': [], 'admins': [], 'total_users': 0, 'prize_pool': 0, 'user_dict': {}})
+
+    espn_string = ', '.join(str(e[0]) for e in espnids)
+
+    u = f"SELECT DISTINCT up.userid, u.username FROM bowlpicks up LEFT JOIN users u ON up.userid = u.userid WHERE up.espnid in ({espn_string});"
+    bowl_users = dict(db2(u))
+
+    bu = "SELECT userid, username FROM users WHERE is_bowl_user = 1"
+    no_picks_users = db2(bu)
+    for user in no_picks_users:
+        if user[0] not in bowl_users:
+            bowl_users[user[0]] = user[1]
+
+    uname_string = "SELECT userid, username, first_name, last_name FROM users;"
+    usernames = db2(uname_string)
+    user_dict = {uid: {'username': un, 'first_name': fn, 'last_name': ln} for uid, un, fn, ln in usernames}
+
+    prize_pool = 50 * len(bowl_users)
+    admins = [a[0] for a in db2("SELECT userid FROM users WHERE is_admin = 1;")]
+
+    check = '✔'
+    ex = '❌'
+    thumbs_up = '👍'
+    thumbs_down = '👎'
+    middle_finger = '🖕'
+
+    p = f"SELECT userid, payment_status, payment_status_dh FROM bowl_payment where season = {season};"
+    payments = db2(p)
+    payment_list = []
+    payment_list_dh = []
+    for pu in payments:
+        if pu[1]: payment_list.append(pu[0])
+        if pu[2]: payment_list_dh.append(pu[0])
+
+    display_list = []
+    for user in bowl_users:
+        if user == 113:
+            paid_status = check if user in payment_list else middle_finger
+            dh_status = thumbs_down
+        elif user not in payment_list and user not in payment_list_dh:
+            paid_status = ex
+            dh_status = thumbs_down
+        elif user in payment_list_dh:
+            paid_status = check
+            dh_status = thumbs_up
+        else:
+            paid_status = check
+            dh_status = thumbs_down
+        display_list.append({'userid': user, 'username': bowl_users[user], 'paid': paid_status, 'paid_dh': dh_status})
+
+    return jsonify({'display_list': display_list, 'user_dict': user_dict, 'admins': admins, 'total_users': len(display_list), 'prize_pool': prize_pool})
+
+
+@bp.route("/api/pickem_all_picks", methods=["GET"])
+@login_required
+def api_pickem_all_picks():
+    season = 2021
+
+    g = "SELECT max(gameid) FROM pickem.pickem_scores;"
+    max_game = db2(g)[0][0]
+    if max_game:
+        games_left = 13 - max_game
+    else:
+        games_left = 13
+        max_game = 0
+    eliminated_list = []
+
+    game_dict = get_pickem_games(season, True)
+    game_list = get_pickem_games(season)
+    game_details = []
+    for game in game_list:
+        if game_dict[game].spread != 0:
+            game_details.append("{} {} {}".format(game_dict[game].fav, game_dict[game].spread, game_dict[game].dog))
+        else:
+            game_details.append("TBD")
+
+    p = "SELECT pickid, userid, gameid, pick from pickem.userpicks order by pickid desc;"
+    all_picks = db2(p)
+
+    user_pick_list = []
+    user_picks = {}
+    user_picks_unplayed_list = []
+    user_picks_unplayed = {}
+    current_user = session['userid']
+
+    u = "SELECT userid, username FROM users;"
+    usernames = dict(db2(u))
+
+    for pick in all_picks:
+        if pick[1] in usernames:
+            username = usernames[pick[1]]
+        else:
+            username = '*****DELETE'
+        if game_dict[pick[2]].locked == 1 or current_user == pick[1]:
+            if (pick[1], pick[2]) not in user_pick_list:
+                user_pick_list.append((pick[1], pick[2]))
+                if username not in user_picks:
+                    user_picks[username] = {'picks': {n: '' for n in range(1, 14)}, 'win_count': 0, 'max_wins': 13}
+                    user_picks[username]['picks'][pick[2]] = pick[3]
+                else:
+                    user_picks[username]['picks'][pick[2]] = pick[3]
+            if (pick[1], pick[2]) not in user_picks_unplayed_list:
+                user_picks_unplayed_list.append((pick[1], pick[2]))
+                if username not in user_picks_unplayed and pick[2] > max_game and game_dict[pick[2]].locked == 1:
+                    user_picks_unplayed[username] = [pick[3]]
+                elif pick[2] > max_game and game_dict[pick[2]].locked == 1:
+                    user_picks_unplayed[username].append(pick[3])
+        else:
+            if (pick[1], pick[2]) not in user_pick_list:
+                user_pick_list.append((pick[1], pick[2]))
+                if username not in user_picks:
+                    user_picks[username] = {'picks': {n: '' for n in range(1, 14)}, 'win_count': 0, 'max_wins': 13}
+                    user_picks[username]['picks'][pick[2]] = 'hidden'
+                else:
+                    user_picks[username]['picks'][pick[2]] = 'hidden'
+
+    uid = "SELECT userid FROM users WHERE is_pickem_user = 1"
+    empty_users = db2(uid)
+    if empty_users:
+        for userid_row in empty_users:
+            if usernames.get(userid_row[0]) and usernames[userid_row[0]] not in user_picks:
+                user_picks[usernames[userid_row[0]]] = {'picks': {n: '' for n in range(1, 14)}, 'win_count': 0, 'max_wins': 13}
+
+    t = "SELECT userid, tiebreak FROM pickem.tiebreak WHERE season = %s ORDER BY tiebreak_id DESC;"
+    tbs = db2(t, (season,))
+    tb_dict = {}
+    for tb in tbs:
+        username = usernames.get(tb[0], '')
+        if game_dict[13].locked == 1 or current_user == tb[0]:
+            if username not in tb_dict:
+                tb_dict[username] = tb[1]
+        else:
+            if username not in tb_dict:
+                tb_dict[username] = 'hidden'
+
+    max_wins = 0
+    max_win_users = []
+    second_best_users = []
+
+    for user in user_picks:
+        no_pick_count = 0
+        for game in user_picks[user]['picks']:
+            if game_dict[game].winner.upper() == user_picks[user]['picks'][game] and user_picks[user]['picks'][game] != '':
+                user_picks[user]['win_count'] += 1
+            elif user_picks[user]['picks'][game] == 'x':
+                no_pick_count += 1
+
+        if user_picks[user]['win_count'] > max_wins:
+            max_wins = user_picks[user]['win_count']
+            if max_win_users:
+                second_best_users = max_win_users
+            max_win_users = [user]
+        elif user_picks[user]['win_count'] == max_wins:
+            max_win_users.append(user)
+        elif user_picks[user]['win_count'] == max_wins - 1:
+            second_best_users.append(user)
+
+        user_picks[user]['max_wins'] = user_picks[user]['win_count'] + games_left - no_pick_count
+
+    for user in user_picks:
+        wins_behind = max_wins - user_picks[user]['win_count']
+        diff = games_left - wins_behind
+        if user_picks[user]['max_wins'] < max_wins:
+            eliminated_list.append(user)
+
+    winner = []
+    tie_break_log = []
+    if game_dict[13].winner != "TBD":
+        score = db2("SELECT fav_score, dog_score FROM pickem.pickem_scores WHERE gameid = 13 ORDER BY score_id DESC;")
+        if len(max_win_users) == 1:
+            winner.append(max_win_users[0])
+        elif len(max_win_users) > 1 and score:
+            total_score = score[0][0] + score[0][1]
+            closest_score = 1000
+            closest_users = []
+            for user in max_win_users:
+                if user in tb_dict and isinstance(tb_dict[user], (int, float)):
+                    tb_log_entry = "{}'s tiebreak of {} is {} away from {}".format(user, tb_dict[user], abs(tb_dict[user] - total_score), total_score)
+                    if abs(tb_dict[user] - total_score) < closest_score:
+                        closest_score = abs(tb_dict[user] - total_score)
+                        closest_users = [user]
+                        tie_break_log.insert(0, tb_log_entry)
+                    elif abs(tb_dict[user] - total_score) == closest_score:
+                        closest_users.append(user)
+                        tie_break_log.append(tb_log_entry)
+                    else:
+                        tie_break_log.append(tb_log_entry)
+            winner = closest_users
+
+    winning_user = '{} Playoff Pickem Winner'.format(season)
+    if len(winner) > 1:
+        winning_user += 's: ' + ' and '.join(winner)
+    elif len(winner) == 1:
+        winning_user += ': {}'.format(winner[0])
+    else:
+        winning_user = ''
+
+    eliminated_list += ['jzhao8', 'GC1', 'Algo_O', 'rgimbel']
+
+    sorted_user_picks = dict(sorted(user_picks.items(), key=lambda x: x[1]['win_count'], reverse=True))
+    game_dict_json = {str(gid): {'fav': g.fav, 'spread': g.spread, 'dog': g.dog, 'locked': g.locked, 'winner': g.winner} for gid, g in game_dict.items()}
+    user_picks_json = {u: {'picks': {str(k): v for k, v in up['picks'].items()}, 'win_count': up['win_count'], 'max_wins': up['max_wins']} for u, up in sorted_user_picks.items()}
+
+    return jsonify({
+        'game_details': game_details,
+        'user_picks': user_picks_json,
+        'game_dict': game_dict_json,
+        'current_username': session['username'],
+        'tb_dict': tb_dict,
+        'winning_user': winning_user,
+        'tie_break_log': tie_break_log,
+        'winner': winner,
+        'eliminated_list': eliminated_list,
+    })

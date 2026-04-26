@@ -25,6 +25,9 @@ import PickemAdmin from './pages/PickemAdmin.jsx'
 import PickemGameList from './pages/PickemGameList.jsx'
 import PickemRules from './pages/PickemRules.jsx'
 import PickemPaymentStatus from './pages/PickemPaymentStatus.jsx'
+import EnterPickemScores from './pages/EnterPickemScores.jsx'
+import BowlPaymentStatus from './pages/BowlPaymentStatus.jsx'
+import PickemAllPicks from './pages/PickemAllPicks.jsx'
 
 function App() {
   return (
@@ -55,6 +58,9 @@ function App() {
       <Route path="/pickem_game_list" element={<PickemGameList />} />
       <Route path="/pickem_rules" element={<PickemRules />} />
       <Route path="/pickem_payment_status" element={<PickemPaymentStatus />} />
+      <Route path="/enter_pickem_scores" element={<EnterPickemScores />} />
+      <Route path="/bowl_payment_status" element={<BowlPaymentStatus />} />
+      <Route path="/pickem_all_picks" element={<PickemAllPicks />} />
     </Routes>
   )
 }
