@@ -32,6 +32,12 @@ import SurvivorPool from './pages/SurvivorPool.jsx'
 import SurvivorTeamsSelected from './pages/SurvivorTeamsSelected.jsx'
 import SurvivorWeekDisplay from './pages/SurvivorWeekDisplay.jsx'
 import SurvivorPoolPicks from './pages/SurvivorPoolPicks.jsx'
+import CompletedPrivateGames from './pages/CompletedPrivateGames.jsx'
+import MyCompletedGames from './pages/MyCompletedGames.jsx'
+import Bygzomo from './pages/Bygzomo.jsx'
+import DisplayPickemGames from './pages/DisplayPickemGames.jsx'
+import LiveScores from './pages/LiveScores.jsx'
+import ViewAllPicks from './pages/ViewAllPicks.jsx'
 
 function App() {
   return (
@@ -69,6 +75,12 @@ function App() {
       <Route path="/survivor_teams_selected" element={<SurvivorTeamsSelected />} />
       <Route path="/survivor_week_display" element={<SurvivorWeekDisplay />} />
       <Route path="/survivor_pool_picks" element={<SurvivorPoolPicks />} />
+      <Route path="/completed_private_games" element={<CompletedPrivateGames />} />
+      <Route path="/my_completed_games" element={<MyCompletedGames />} />
+      <Route path="/bygzomo" element={<Bygzomo />} />
+      <Route path="/display_pickem_games" element={<DisplayPickemGames />} />
+      <Route path="/live_scores" element={<LiveScores />} />
+      <Route path="/view_all_picks" element={<ViewAllPicks />} />
     </Routes>
   )
 }

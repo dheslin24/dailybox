@@ -141,6 +141,24 @@ def bygzomo():
     return render_template("bygzomo.html", result=result, q=q, show_tables=show_tables)
 
 
+@bp.route("/api/bygzomo", methods=["GET", "POST"])
+@login_required
+@admin_required
+def api_bygzomo():
+    if request.method == "GET":
+        show_tables = db2("show tables;")
+        return jsonify({'tables': [t[0] for t in show_tables]})
+    data = request.get_json()
+    q = data.get('query', '').strip()
+    if not q:
+        return jsonify({'result': [], 'error': 'No query provided'})
+    try:
+        result = db2(q)
+        return jsonify({'result': [list(row) for row in (result or [])], 'query': q})
+    except Exception as e:
+        return jsonify({'result': [], 'error': str(e), 'query': q})
+
+
 @bp.route("/add_money", methods=["GET", "POST"])
 def add_money():
     username = request.form.get('username')

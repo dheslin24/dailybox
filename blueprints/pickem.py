@@ -1229,3 +1229,189 @@ def api_pickem_all_picks():
         'winner': winner,
         'eliminated_list': eliminated_list,
     })
+
+
+def _serialize_game(g):
+    """Convert a game_dict entry with a datetime to a JSON-safe dict."""
+    return {
+        'espn_id': g['espn_id'],
+        'date': g['date'],
+        'date_short': g.get('date_short', ''),
+        'datetime': g['datetime'].isoformat(),
+        'venue': g.get('venue', ''),
+        'competitors': g['competitors'],
+        'abbreviations': g['abbreviations'],
+        'line': g['line'],
+        'over_under': g.get('over_under', 'TBD'),
+        'headline': g.get('headline', ''),
+        'location': g.get('location', ''),
+        'status': g['status'],
+        'current_winner': g.get('current_winner', ''),
+        'winner': g.get('winner', 'TBD'),
+    }
+
+
+@bp.route("/api/display_pickem_games", methods=["GET"])
+@login_required
+def api_display_pickem_games():
+    now = datetime.utcnow() - timedelta(hours=5)
+    season = 2021
+    season_type = 3
+    weeks = [1, 2, 3, 5]
+    league = 'nfl'
+    game_dicts = []
+    for week in weeks:
+        game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
+    game_dict = {k: v for d in game_dicts for k, v in d.items()}
+    sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x: x[1]['datetime']))
+
+    p = "SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;"
+    picks = dict(db2(p, (session['userid'],)))
+
+    t = "SELECT tiebreak FROM bowl_tiebreaks WHERE userid = %s and season = %s ORDER BY tiebreak_id DESC LIMIT 1;"
+    tb = db2(t, (session['userid'], season))
+    tiebreak = tb[0][0] if tb else ''
+
+    return jsonify({
+        'games': {str(k): _serialize_game(v) for k, v in sorted_game_dict.items()},
+        'picks': {str(k): v for k, v in picks.items()},
+        'tiebreak': tiebreak,
+        'now': now.isoformat(),
+    })
+
+
+@bp.route("/api/select_bowl_games", methods=["POST"])
+@login_required
+def api_select_bowl_games():
+    data = request.get_json()
+    picks = data.get('picks', {})
+    tiebreak = data.get('tiebreak', '').strip()
+    season_type = 3
+    weeks = [1, 2, 3, 5]
+    league = 'nfl'
+    game_dicts = []
+    for week in weeks:
+        game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
+    game_dict = {k: v for d in game_dicts for k, v in d.items()}
+    for game in game_dict:
+        espnid = str(game_dict[game]['espn_id'])
+        if espnid in picks and picks[espnid] and picks[espnid] != 'TBD':
+            s = "INSERT INTO bowlpicks (userid, espnid, pick, datetime) VALUES (%s, %s, %s, now());"
+            db2(s, (session['userid'], game_dict[game]['espn_id'], picks[espnid]))
+    season = 2021
+    if tiebreak:
+        t = "INSERT INTO bowl_tiebreaks (season, userid, tiebreak, datetime) VALUES (%s, %s, %s, now());"
+        db2(t, (season, session['userid'], tiebreak))
+    logging.info("{} just selected bowl picks via API".format(session["username"]))
+    return jsonify({'success': True})
+
+
+@bp.route("/api/view_all_picks", methods=["GET"])
+@login_required
+def api_view_all_picks():
+    season_type = 3
+    weeks = [1, 2, 3, 5]
+    league = 'nfl'
+    now = datetime.utcnow() - timedelta(hours=5)
+    annual = now.year - 2010
+    game_dicts = []
+    for week in weeks:
+        game_dicts.append(get_espn_scores(False, season_type, week, league)['game'])
+    game_dict = {k: v for d in game_dicts for k, v in d.items()}
+
+    espnid_string = ', '.join(str(g) for g in game_dict) if game_dict else '0'
+
+    u = "SELECT userid, username, first_name, last_name, is_admin FROM users WHERE active = 1;"
+    user_info = db2(u)
+    user_dict = {user[0]: {'username': user[1], 'name': user[2] + ' ' + user[3], 'is_admin': user[4]} for user in user_info}
+
+    l = "SELECT datetime FROM latest_lines WHERE datetime IS NOT NULL ORDER BY datetime DESC LIMIT 1"
+    ll = db2(l)
+    last_line_time = (ll[0][0] - timedelta(hours=5)).isoformat() if ll else ''
+
+    locked_games = set()
+    winning_teams = set()
+    winning_d = {}
+    for game in game_dict:
+        if game_dict[game]['datetime'] > datetime.utcnow() - timedelta(hours=5) or game_dict[game]['status'].get('status') == 'Canceled':
+            locked_games.add(game_dict[game]['espn_id'])
+            game_dict[game]['winner'] = 'TBD'
+        else:
+            home_score = float(game_dict[game]['competitors'][0][2] or 0)
+            away_score = float(game_dict[game]['competitors'][1][2] or 0)
+            line = game_dict[game]['line']
+            if isinstance(line, list) and len(line) > 1 and line[0] == game_dict[game]['abbreviations'].get('HOME'):
+                home_score += float(line[1])
+            elif isinstance(line, list) and len(line) > 1 and line[0] == game_dict[game]['abbreviations'].get('AWAY'):
+                away_score += float(line[1])
+            if home_score > away_score:
+                game_dict[game]['winner'] = game_dict[game]['abbreviations'].get('HOME')
+                winning_teams.add((game, game_dict[game]['abbreviations'].get('HOME')))
+                winning_d[game] = game_dict[game]['abbreviations'].get('HOME')
+            elif away_score > home_score:
+                game_dict[game]['winner'] = game_dict[game]['abbreviations'].get('AWAY')
+                winning_teams.add((game, game_dict[game]['abbreviations'].get('AWAY')))
+                winning_d[game] = game_dict[game]['abbreviations'].get('AWAY')
+            else:
+                game_dict[game]['winner'] = 'PUSH'
+                winning_d[game] = 'PUSH'
+
+    s = f"SELECT userid, espnid, pick FROM bowlpicks WHERE espnid in ({espnid_string}) and pick_id in (SELECT max(pick_id) from bowlpicks GROUP BY userid, espnid);"
+    all_picks = db2(s)
+
+    t = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
+    tb_dict = dict(db2(t))
+
+    ignore = [401331242, 401331217, 401331220, 401339628, 401331225, 401352013]
+    d = {}
+    for pick in all_picks:
+        pick_userid, pick_espnid, pick_team = pick
+        if pick_espnid not in ignore:
+            if pick_userid not in d:
+                d[pick_userid] = {pick_espnid: pick_team, 'wins': 1 if (pick_espnid, pick_team) in winning_teams else 0}
+            else:
+                d[pick_userid][pick_espnid] = pick_team
+                if (pick_espnid, pick_team) in winning_teams:
+                    d[pick_userid]['wins'] += 1
+        if pick_userid in tb_dict:
+            d[pick_userid]['tb'] = tb_dict[pick_userid]
+
+    bu = "SELECT userid FROM users WHERE is_bowl_user = 1;"
+    bowl_users = db2(bu)
+    if bowl_users:
+        for user in bowl_users:
+            if user[0] not in d:
+                d[user[0]] = {'wins': 0}
+
+    sorted_d = OrderedDict(sorted(d.items(), key=lambda x: x[1]['wins'], reverse=True))
+    sorted_game_dict = OrderedDict(sorted(game_dict.items(), key=lambda x: x[1]['datetime']))
+
+    if sorted_d:
+        eliminated_check = elimination_check(sorted_game_dict, sorted_d, user_dict)
+        eliminated_list = eliminated_check['elim']
+        winner = eliminated_check['winner']
+        tb_log = eliminated_check['tb_log']
+    else:
+        eliminated_list = []
+        winner = []
+        tb_log = []
+
+    t2 = "SELECT userid, tiebreak FROM bowl_tiebreaks WHERE tiebreak_id in (SELECT max(tiebreak_id) FROM bowl_tiebreaks GROUP BY userid);"
+    tb_dict = dict(db2(t2))
+
+    return jsonify({
+        'games': {str(k): _serialize_game(v) for k, v in sorted_game_dict.items()},
+        'picks': {str(k): {str(ek): ev for ek, ev in v.items()} for k, v in sorted_d.items()},
+        'locked_games': list(locked_games),
+        'user_dict': {str(k): v for k, v in user_dict.items()},
+        'tb_dict': {str(k): v for k, v in tb_dict.items()},
+        'now': now.isoformat(),
+        'last_line_time': last_line_time,
+        'eliminated_list': eliminated_list,
+        'winner': winner,
+        'tb_log': tb_log,
+        'annual': annual,
+        'current_userid': session['userid'],
+        'current_username': session['username'],
+        'is_admin': user_dict.get(session['userid'], {}).get('is_admin', 0),
+    })

@@ -202,6 +202,25 @@ def completed_private_games():
 
     return render_template("completed_private_games.html", game_list = game_list)
 
+@bp.route("/api/completed_private_games", methods=["GET"])
+@login_required
+def api_completed_private_games():
+    game_list_pre = get_games([4], 0)
+    game_list_pre.sort(key=lambda x: x[0])
+    game_list = []
+    seen = set()
+    for game in game_list_pre:
+        if game[0] not in seen:
+            game_list.append(game)
+            seen.add(game[0])
+        else:
+            del game_list[-1]
+            game_list.append(game)
+    return jsonify({'games': [
+        {'boxid': g[0], 'box_name': g[1], 'fee': g[2], 'pay_type': g[3], 'winner': g[4]}
+        for g in game_list
+    ]})
+
 @bp.route("/api/completed_games", methods=["GET"])
 @login_required
 def api_completed_games():
@@ -1713,3 +1732,32 @@ def priv_payment_status():
         admins.append(3) # DH superuser
 
     return render_template("payment_status.html", user_dict=user_dict, users=users, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=True, boxid=boxid, box_type=4)
+
+
+@bp.route("/api/live_scores", methods=["GET"])
+@login_required
+def api_live_scores():
+    response = get_espn_scores(False)
+    game_dict = response['game']
+    now = datetime.utcnow() - timedelta(hours=5)
+    picks = dict(db2("SELECT espnid, pick FROM bowlpicks WHERE userid = %s ORDER BY pick_id ASC;", (session['userid'],)))
+    games_json = {}
+    for gid, g in sorted(game_dict.items(), key=lambda x: x[1]['datetime']):
+        games_json[str(gid)] = {
+            'espn_id': g['espn_id'],
+            'date': g['date'],
+            'datetime': g['datetime'].isoformat(),
+            'venue': g.get('venue', ''),
+            'competitors': g['competitors'],
+            'abbreviations': g['abbreviations'],
+            'line': g['line'],
+            'headline': g.get('headline', ''),
+            'location': g.get('location', ''),
+            'status': g['status'],
+            'current_winner': g.get('current_winner', ''),
+        }
+    return jsonify({
+        'games': games_json,
+        'picks': {str(k): v for k, v in picks.items()},
+        'now': now.isoformat(),
+    })
