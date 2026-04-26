@@ -1089,6 +1089,45 @@ def enter_every_score():
 
         return render_template("enter_every_score.html", scores=scores, box_list=box_list, check_result_list=check_result_list, home_team=home_team, away_team=away_team)
 
+@bp.route("/api/enter_every_score", methods=["GET", "POST"])
+@login_required
+def api_enter_every_score():
+    boxid_list = db2("SELECT boxid FROM boxes WHERE pay_type = 3 and active = 1;")
+    if not boxid_list:
+        return jsonify({'error': 'no active every score games'}), 404
+    teams = db2("SELECT home, away FROM teams WHERE boxid = %s;", (boxid_list[0][0],))[0]
+    home_team, away_team = teams[0], teams[1]
+    box_list = [b[0] for b in boxid_list]
+
+    if request.method == "POST":
+        data = request.get_json()
+        if data.get("HOME_BUTTON"):
+            last = db2("SELECT score_num, x_score, y_score FROM everyscore ORDER BY score_id DESC limit 1;")[0]
+            score_num, home_score, away_score = last[0] + 1, int(data["HOME_BUTTON"]) + last[1], last[2]
+        elif data.get("AWAY_BUTTON"):
+            last = db2("SELECT score_num, x_score, y_score FROM everyscore ORDER BY score_id DESC limit 1;")[0]
+            score_num, home_score, away_score = last[0] + 1, last[1], int(data["AWAY_BUTTON"]) + last[2]
+        else:
+            score_num = int(data.get("score_num"))
+            home_score = int(data.get("home"))
+            away_score = int(data.get("away"))
+        for boxid in box_list:
+            win_box = find_winning_box(boxid, home_score, away_score)
+            fee = db2("SELECT fee FROM boxes WHERE boxid = %s;", (int(boxid),))[0][0]
+            db2("INSERT INTO everyscore(boxid, score_num, score_type, x_score, y_score, winner, winning_box) VALUES(%s, %s, %s, %s, %s, %s, %s);",
+                (str(boxid), str(score_num), f"Score Change {fee * 3}", str(home_score), str(away_score), str(win_box[1]), str(win_box[0])))
+
+    scores = db2("SELECT e.boxid, e.score_id, e.score_num, e.x_score, e.y_score, e.score_type, e.winning_box, u.username, u.first_name, u.last_name FROM everyscore e LEFT JOIN users u ON e.winner = u.userid INNER JOIN boxes b ON b.boxid = e.boxid WHERE b.active = 1 and b.pay_type = 3 ORDER BY e.boxid, e.score_num, e.score_id;")
+    check_result_list = sanity_checks(box_list)
+    return jsonify({
+        'box_list': box_list,
+        'home_team': home_team,
+        'away_team': away_team,
+        'check_results': list(check_result_list),
+        'scores': [{'boxid': s[0], 'score_id': s[1], 'score_num': s[2], 'home': s[3], 'away': s[4],
+                    'desc': s[5], 'box': s[6], 'username': s[7], 'first_name': s[8], 'last_name': s[9]} for s in scores],
+    })
+
 @bp.route("/delete_score", methods=["POST", "GET"])
 @login_required
 def delete_score():

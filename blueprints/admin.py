@@ -180,6 +180,39 @@ def admin_summary():
     return render_template("admin_summary.html", users=users, d=user_box_count, fees=user_fees, paid=paid, mbd=mbd, total_max=total_max)
 
 
+@bp.route("/api/admin_summary", methods=["GET"])
+def api_admin_summary():
+    if not session.get('userid') or not db2("SELECT is_admin FROM users WHERE userid = %s;", (session['userid'],))[0][0]:
+        return jsonify({'error': 'forbidden'}), 403
+    users = db2("SELECT userid, username, first_name, last_name, last_update, email, mobile, is_admin, alias_of_userid FROM users WHERE active = 1;")
+    paid = {u[0]: (u[1] or 0) for u in db2("SELECT userid, amt_paid FROM users;")}
+    box_list = ['box' + str(x) + ' ,' for x in range(100)]
+    box_string = ''.join(box_list)[:-2]
+    all_boxes = db2("SELECT fee, pay_type, {} FROM boxes WHERE active = 1 or boxid between 26 and 36;".format(box_string))
+    user_box_count = {}
+    user_fees = {}
+    for game in all_boxes:
+        fee = game[0]
+        pay_type = game[1]
+        if pay_type in (5, 6, 7):
+            fee = fee // 10
+        for box in game[2:]:
+            if box not in (0, 1):
+                user_box_count[box] = user_box_count.get(box, 0) + 1
+                user_fees[box] = user_fees.get(box, 0) + fee
+    mbd = dict(db2("SELECT * FROM max_boxes;"))
+    total_max = sum(mbd.values())
+    return jsonify({
+        'users': [{'userid': u[0], 'username': u[1], 'first_name': u[2], 'last_name': u[3],
+                   'last_update': str(u[4]), 'email': u[5], 'mobile': u[6],
+                   'is_admin': u[7], 'alias_of_userid': u[8]} for u in users],
+        'box_counts': {str(k): v for k, v in user_box_count.items()},
+        'fees': {str(k): v for k, v in user_fees.items()},
+        'paid': {str(k): v for k, v in paid.items()},
+        'max_boxes': {str(k): v for k, v in mbd.items()},
+        'total_max': total_max,
+    })
+
 @bp.route("/email_users", methods=["GET", "POST"])
 @login_required
 def email_users():
