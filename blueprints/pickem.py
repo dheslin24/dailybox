@@ -885,3 +885,110 @@ def pickem_enable_user():
 @bp.route("/pickem_rules", methods=["GET", "POST"])
 def pickem_rules():
     return render_template("pickem_rules.html")
+
+
+@bp.route("/api/pickem_admin", methods=["GET"])
+def api_pickem_admin():
+    if not session.get('userid'):
+        return jsonify({'error': 'unauthorized'}), 401
+    season = 2021
+    game_name_list = ["WC 1", "WC 2", "WC 3", "WC 4", "WC 5", "WC 6", "DIV 7", "DIV 8", "DIV 9", "DIV 10", "CONF 11", "CONF 12", "Super Bowl"]
+    game_group_list = ["WC-Sat", "WC-Sun", "DIV-Sat", "DIV-Sun", "CONF-NFC", "CONF-AFC", "Super Bowl"]
+    return jsonify({'game_name_list': game_name_list, 'game_group_list': game_group_list, 'season': season})
+
+
+@bp.route("/api/pickem_game_list", methods=["GET"])
+@login_required
+def api_pickem_game_list():
+    season = 2021
+    game_list = get_pickem_games(season)
+    game_dict = get_pickem_games(season, True)
+
+    p = "SELECT gameid, pick FROM pickem.userpicks WHERE userid = %s ORDER BY pickid DESC"
+    picks = db2(p, (session['userid'],))
+    user_picks = {}
+    for pick in picks:
+        if pick[0] not in user_picks:
+            user_picks[pick[0]] = pick[1]
+
+    t = "SELECT tiebreak FROM pickem.tiebreak WHERE userid = %s ORDER BY tiebreak_id DESC;"
+    tb = db2(t, (session['userid'],))
+    user_picks['tb'] = tb[0][0] if tb else ''
+
+    games_json = {}
+    for gid in game_list:
+        g = game_dict[gid]
+        games_json[str(gid)] = {
+            'game_name': g.game_name,
+            'fav': g.fav,
+            'spread': g.spread,
+            'dog': g.dog,
+            'locked': g.locked,
+            'winner': g.winner,
+        }
+
+    picks_json = {str(k): v for k, v in user_picks.items()}
+    return jsonify({'game_list': game_list, 'games': games_json, 'user_picks': picks_json})
+
+
+@bp.route("/api/select_pickem_games", methods=["POST"])
+def api_select_pickem_games():
+    if not session.get('userid'):
+        return jsonify({'error': 'unauthorized'}), 401
+    data = request.get_json()
+    season = 2021
+    game_list = get_pickem_games(season)
+
+    for game in game_list:
+        pick = data.get(str(game), '').strip().upper()
+        if pick:
+            p = "INSERT INTO pickem.userpicks (userid, season, gameid, pick, datetime) VALUES (%s, %s, %s, %s, convert_tz(now(), '-00:00', '-05:00'));"
+            db2(p, (session['userid'], season, game, pick))
+
+    tiebreak = data.get('tb', '').strip()
+    if tiebreak:
+        t = "INSERT INTO pickem.tiebreak (season, userid, tiebreak, datetime) values (%s, %s, %s, convert_tz(now(), '-00:00', '-05:00'));"
+        db2(t, (season, session['userid'], tiebreak))
+
+    logging.info("{} just selected picks".format(session["username"]))
+    return jsonify({'success': True})
+
+
+@bp.route("/api/pickem_payment_status", methods=["GET"])
+def api_pickem_payment_status():
+    if not session.get('userid'):
+        return jsonify({'error': 'unauthorized'}), 401
+    season = 2021
+
+    u = "SELECT DISTINCT up.userid, u.username FROM pickem.userpicks up LEFT JOIN users u ON up.userid = u.userid WHERE up.season = {};".format(season)
+    pickem_users = dict(db2(u))
+
+    p = "SELECT * FROM pickem.pickem_payment;"
+    payment_dict = dict(db2(p))
+
+    uid = "SELECT userid, username FROM users WHERE is_pickem_user = 1"
+    empty_users = db2(uid)
+    if empty_users:
+        for user in empty_users:
+            pickem_users[user[0]] = user[1]
+
+    prize_pool = 50 * len(pickem_users)
+    admins = [a[0] for a in db2("SELECT userid FROM users WHERE is_admin = 1;")]
+
+    check = '✔'
+    ex = '❌'
+    middle_finger = '\U0001f595'
+
+    display_list = []
+    for user in pickem_users:
+        if user not in payment_dict:
+            status = ex
+        elif user == 113:
+            status = middle_finger
+        elif payment_dict[user]:
+            status = check
+        else:
+            status = ex
+        display_list.append({'userid': user, 'username': pickem_users[user], 'status': status})
+
+    return jsonify({'display_list': display_list, 'admins': admins, 'total_users': len(display_list), 'prize_pool': prize_pool})

@@ -61,6 +61,44 @@ def assign_alias():
     return redirect(url_for("boxes.my_games"))
 
 
+@bp.route("/api/create_alias", methods=["GET"])
+@login_required
+def api_create_alias():
+    boxid = request.args.get('boxid')
+    boxnum = request.args.get('boxnum')
+    user_dict = dict(db2("SELECT userid, username FROM users;"))
+    aliases_result = db2("SELECT userid FROM users WHERE alias_of_userid = %s and active = 1", (session['userid'],))
+    user_aliases = []
+    if aliases_result:
+        for alias in aliases_result:
+            user_aliases.append({'username': user_dict[alias[0]], 'userid': alias[0]})
+    return jsonify({'boxid': boxid, 'boxnum': boxnum, 'user_aliases': user_aliases})
+
+
+@bp.route("/api/assign_alias", methods=["POST"])
+@login_required
+def api_assign_alias():
+    data = request.get_json()
+    boxid = str(data.get('boxid'))
+    boxnum = str(int(data.get('boxnum')) - 1)
+    existing_alias = data.get('existing_alias')
+    new_alias = data.get('new_alias', '').strip()
+    user_aliases = data.get('user_aliases', [])
+    user_alias_dict = {u['username']: u['userid'] for u in user_aliases}
+
+    if existing_alias:
+        db2("UPDATE boxes SET box%s = %s WHERE boxid = %s;", (int(boxnum), existing_alias['userid'], int(boxid)))
+    elif new_alias and new_alias in user_alias_dict:
+        db2("UPDATE boxes SET box%s = %s WHERE boxid = %s;", (int(boxnum), user_alias_dict[new_alias], int(boxid)))
+    elif new_alias:
+        db2("INSERT INTO users (username, password, first_name, last_name, active, alias_of_userid) values (%s, 'x', 'alias', %s, 1, %s);",
+            (new_alias, session['username'], session['userid']))
+        new_userid = db2("SELECT userid FROM users WHERE username = %s;", (new_alias,))[0][0]
+        db2("UPDATE boxes SET box%s = %s WHERE boxid = %s;", (int(boxnum), int(new_userid), int(boxid)))
+
+    return jsonify({'success': True})
+
+
 @bp.route("/admin", methods=["GET", "POST"])
 def admin():
     is_admin = db2("SELECT is_admin FROM users WHERE userid = %s;", (session['userid'],))

@@ -20,6 +20,11 @@ import NcaabGames from './pages/NcaabGames.jsx'
 import PrivatePswd from './pages/PrivatePswd.jsx'
 import SvCreatePool from './pages/SvCreatePool.jsx'
 import TeamSelected from './pages/TeamSelected.jsx'
+import CreateAlias from './pages/CreateAlias.jsx'
+import PickemAdmin from './pages/PickemAdmin.jsx'
+import PickemGameList from './pages/PickemGameList.jsx'
+import PickemRules from './pages/PickemRules.jsx'
+import PickemPaymentStatus from './pages/PickemPaymentStatus.jsx'
 
 function App() {
   return (
@@ -45,6 +50,11 @@ function App() {
       <Route path="/private_pswd" element={<PrivatePswd />} />
       <Route path="/sv_create_pool" element={<SvCreatePool />} />
       <Route path="/team_selected" element={<TeamSelected />} />
+      <Route path="/create_alias" element={<CreateAlias />} />
+      <Route path="/pickem_admin" element={<PickemAdmin />} />
+      <Route path="/pickem_game_list" element={<PickemGameList />} />
+      <Route path="/pickem_rules" element={<PickemRules />} />
+      <Route path="/pickem_payment_status" element={<PickemPaymentStatus />} />
     </Routes>
   )
 }
