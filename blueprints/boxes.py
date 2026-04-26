@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for, Markup, send_file, current_app
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for, Markup, send_file, current_app
 from db_accessor.db_accessor import db2
 from constants import PAY_TYPE_ID, BOX_TYPE_ID, EMOJIS, ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from utils import apology, login_required, admin_required, allowed_file
@@ -137,6 +137,25 @@ def my_games():
     else:
         return render_template("my_completed_games.html", game_list=completed_game_list)
 
+@bp.route("/api/my_games", methods=["GET"])
+@login_required
+def api_my_games():
+    game_list, completed_game_list, available = get_user_games(session['userid'])
+    return jsonify({
+        'total': len(game_list),
+        'active_games': [
+            {'boxid': g[0], 'box_name': g[1], 'box_num': g[2], 'alias': g[3],
+             'fee': g[4], 'pay_type': g[5], 'home_num': g[6], 'away_num': g[7]}
+            for g in game_list
+        ],
+        'completed_games': [
+            {'boxid': g[0], 'box_type': g[1], 'box_name': g[2], 'box_num': g[3],
+             'alias': g[4], 'fee': g[5], 'pay_type': g[6], 'winner': g[7]}
+            for g in completed_game_list
+        ],
+        'available': {str(k): v for k, v in available.items()},
+    })
+
 @bp.route("/completed_games")
 @login_required
 def completed_games():
@@ -182,6 +201,33 @@ def completed_private_games():
 
 
     return render_template("completed_private_games.html", game_list = game_list)
+
+@bp.route("/api/completed_games", methods=["GET"])
+@login_required
+def api_completed_games():
+    game_list_pre = get_games([2, 3], 0)
+    game_list_pre.sort(key=lambda x: x[0])
+    game_list = []
+    seen = set()
+    for game in game_list_pre:
+        if game[0] not in seen:
+            game_list.append(game)
+            seen.add(game[0])
+        else:
+            del game_list[-1]
+            game_list.append(game)
+    return jsonify({'games': [
+        {'boxid': g[0], 'box_name': g[1], 'fee': g[2], 'pay_type': g[3], 'winner': g[4]}
+        for g in game_list
+    ]})
+
+@bp.route("/api/game_list", methods=["GET"])
+def api_game_list():
+    games = get_games([1])
+    return jsonify({'games': [
+        {'boxid': g[0], 'box_name': g[1], 'fee': g[2], 'pay_type': g[3], 'available': g[4]}
+        for g in games
+    ]})
 
 @bp.route("/game_list")
 def game_list():
@@ -1378,6 +1424,63 @@ def payment_status():
         admins.append(admin[0])
 
     return render_template("payment_status.html", users=users, user_dict=user_dict, sort_method=sort_method, d=user_box_count, fees=user_fees, paid=paid, admins=admins, emoji=emoji, priv=False)
+
+@bp.route("/api/payment_status", methods=["GET"])
+@login_required
+def api_payment_status():
+    sort_method = request.args.get('sort_method', 'user')
+    users_list = db2("SELECT userid, username FROM users WHERE active = 1;")
+    usernames = db2("SELECT userid, username, first_name, last_name FROM users;")
+    user_dict = {u[0]: {'first_name': u[2], 'last_name': u[3]} for u in usernames}
+    paid = dict(db2("SELECT userid, amt_paid FROM users;"))
+    for item in paid:
+        if paid[item] is None:
+            paid[item] = 0
+    box_list = ['box' + str(x) + ' ,' for x in range(100)]
+    box_string_val = ''.join(box_list)[:-2]
+    box = "SELECT fee, pay_type, {} FROM boxes WHERE active = 1 and boxid NOT IN (SELECT boxid FROM privatepass);".format(box_string_val)
+    all_boxes = db2(box)
+    aliases = dict(db2("SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"))
+    user_box_count = {}
+    user_fees = {}
+    for game in all_boxes:
+        fee = game[0]
+        pay_type = game[1]
+        if pay_type in (5, 6, 7):
+            fee = fee // 10
+        for b in game[2:]:
+            userid = aliases.get(b, b)
+            if userid not in (0, 1):
+                user_box_count[userid] = user_box_count.get(userid, 0) + 1
+                user_fees[userid] = user_fees.get(userid, 0) + fee
+    check, ex, middle_finger = '✔', '❌', '\U0001f595'
+    users = []
+    emoji = {}
+    for uid, username in users_list:
+        if uid in user_fees:
+            users.append({'userid': uid, 'username': username})
+            if uid in [31]:
+                emoji[uid] = middle_finger
+            elif user_fees[uid] > paid[uid]:
+                emoji[uid] = ex
+            else:
+                emoji[uid] = check
+    if sort_method == 'user':
+        users.sort(key=lambda x: x['username'].upper())
+    elif sort_method == 'pay_status':
+        users.sort(key=lambda x: user_fees[x['userid']] - paid[x['userid']], reverse=True)
+    admins = [r[0] for r in db2("SELECT userid FROM users WHERE is_admin = 1;")]
+    return jsonify({
+        'users': users,
+        'user_details': {str(k): v for k, v in user_dict.items()},
+        'box_counts': {str(k): v for k, v in user_box_count.items()},
+        'fees': {str(k): v for k, v in user_fees.items()},
+        'paid': {str(k): v for k, v in paid.items()},
+        'emoji': {str(k): v for k, v in emoji.items()},
+        'admins': admins,
+        'sort_method': sort_method,
+        'current_userid': session['userid'],
+    })
 
 @bp.route("/mark_paid", methods=["GET", "POST"])
 def mark_paid():
