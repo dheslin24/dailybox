@@ -27,15 +27,15 @@ export default function Layout({ children }) {
             {session?.logged_in ? (
               <>
                 <ul className="nav navbar-nav">
-                  <li><a href="/custom_game_list">Super Bowl Boxes</a></li>
-                  <li><a href="/my_games">My Games</a></li>
-                  <li><a href="/payment_status/user/False">Payment Status</a></li>
+                  <li><a href="/app/custom_game_list">Super Bowl Boxes</a></li>
+                  <li><a href="/app/my_games">My Games</a></li>
+                  <li><a href="/app/payment_status">Payment Status</a></li>
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
                   {session.is_admin === 1 && (
                     <>
-                      <li><a href="/bygzomo">BYGZomo</a></li>
-                      <li><a href="/admin">Admin</a></li>
+                      <li><a href="/app/bygzomo">BYGZomo</a></li>
+                      <li><a href="/app/admin">Admin</a></li>
                     </>
                   )}
                   <li><a href="/app/user_details">User {session.username}</a></li>

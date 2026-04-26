@@ -30,7 +30,7 @@ export default function CurrentWinners() {
           ))}
         </tbody>
       </table>
-      <a href={`/display_box?boxid=${data.boxid}`}>Back to BOX</a>
+      <a href={`/app/display_box?boxid=${data.boxid}`}>Back to BOX</a>
     </Layout>
   )
 }

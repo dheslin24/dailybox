@@ -38,6 +38,7 @@ import Bygzomo from './pages/Bygzomo.jsx'
 import DisplayPickemGames from './pages/DisplayPickemGames.jsx'
 import LiveScores from './pages/LiveScores.jsx'
 import ViewAllPicks from './pages/ViewAllPicks.jsx'
+import DisplayBox from './pages/DisplayBox.jsx'
 
 function App() {
   return (
@@ -81,6 +82,7 @@ function App() {
       <Route path="/display_pickem_games" element={<DisplayPickemGames />} />
       <Route path="/live_scores" element={<LiveScores />} />
       <Route path="/view_all_picks" element={<ViewAllPicks />} />
+      <Route path="/display_box" element={<DisplayBox />} />
     </Routes>
   )
 }

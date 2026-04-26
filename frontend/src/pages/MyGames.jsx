@@ -45,7 +45,7 @@ export default function MyGames() {
             <tbody>
               {data.active_games.map(g => (
                 <tr key={`${g.boxid}-${g.box_num}`}>
-                  <td className="team" onClick={() => window.location.href = `/display_box?boxid=${g.boxid}`} style={{cursor:'pointer'}}>{g.boxid}</td>
+                  <td className="team" onClick={() => window.location.href = `/app/display_box?boxid=${g.boxid}`} style={{cursor:'pointer'}}>{g.boxid}</td>
                   <td>{g.box_name}</td>
                   <td>{g.box_num}</td>
                   <td>{g.alias || 'Change box label'}</td>
@@ -76,7 +76,7 @@ export default function MyGames() {
           <tbody>
             {data.completed_games.map(g => (
               <tr key={`${g.boxid}-${g.box_num}`}>
-                <td className="team" onClick={() => window.location.href = `/display_box?boxid=${g.boxid}`} style={{cursor:'pointer'}}>{g.boxid}</td>
+                <td className="team" onClick={() => window.location.href = `/app/display_box?boxid=${g.boxid}`} style={{cursor:'pointer'}}>{g.boxid}</td>
                 <td>{g.box_type}</td>
                 <td>{g.box_name}</td>
                 <td>{g.box_num}</td>

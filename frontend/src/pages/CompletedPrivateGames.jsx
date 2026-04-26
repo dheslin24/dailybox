@@ -29,7 +29,7 @@ export default function CompletedPrivateGames() {
           <tbody>
             {games.map(g => (
               <tr key={g.boxid}>
-                <td className="team" style={{ cursor: 'pointer' }} onClick={() => { window.location.href = `/display_box?boxid=${g.boxid}` }}>{g.boxid}</td>
+                <td className="team" style={{ cursor: 'pointer' }} onClick={() => { window.location.href = `/app/display_box?boxid=${g.boxid}` }}>{g.boxid}</td>
                 <td>{g.box_name}</td>
                 <td>{g.fee}</td>
                 <td>{g.pay_type}</td>

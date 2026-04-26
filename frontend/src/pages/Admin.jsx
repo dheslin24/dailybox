@@ -29,8 +29,8 @@ export default function Admin() {
       <a href="/enter_custom_scores">Enter Custom Game Scores</a><br /><br />
       <a href="/enter_every_score">Enter Scores for Every Score Games</a><br /><br />
       <a href="/pickem_admin">Pickem Admin Page</a><br /><br />
-      <a href="/display_box?uat=1&boxid=56">UAT New BOX in DEV</a><br /><br />
-      <a href="/display_box?uat=1&boxid=37">UAT New BOX in PROD</a><br /><br />
+      <a href="/app/display_box?uat=1&boxid=56">UAT New BOX in DEV</a><br /><br />
+      <a href="/app/display_box?uat=1&boxid=37">UAT New BOX in PROD</a><br /><br />
 
       <form action="/add_money" method="POST">
         <label>Add Money: Username <input type="text" name="username" size="10" /></label>

@@ -1761,3 +1761,366 @@ def api_live_scores():
         'picks': {str(k): v for k, v in picks.items()},
         'now': now.isoformat(),
     })
+
+
+@bp.route("/api/display_box", methods=["GET"])
+@login_required
+def api_display_box():
+    boxid = request.args.get('boxid')
+    if not boxid:
+        return jsonify({"error": "boxid required"}), 400
+
+    box = list(db2("SELECT * FROM boxes where boxid = %s;", (int(boxid),)))[0]
+    box_type = box[2]
+    private_game_payment_link = "Click here for this game's payment status" if box_type == 4 else ""
+
+    box_name = box[3]
+    fee = box[4]
+    ptype = box[5]
+    pay_type = next(p for p in PAY_TYPE_ID if PAY_TYPE_ID[p] == ptype)
+    espn_id = box[7]
+    payout = payout_calc(ptype, fee)
+    rev_payout = 0
+
+    if ptype == PAY_TYPE_ID['four_qtr']:
+        final_payout = fee * 60
+    elif ptype == PAY_TYPE_ID['single']:
+        final_payout = fee * 100
+    elif ptype == PAY_TYPE_ID['ten_man']:
+        final_payout = fee * 10
+    elif ptype == PAY_TYPE_ID['satellite']:
+        final_payout = "Satellite"
+    else:
+        final_payout = None
+
+    if box_type != BOX_TYPE_ID['dailybox']:
+        teams = db2("SELECT home, away FROM teams WHERE boxid = %s;", (int(boxid),))
+        home = teams[0][0]
+        away = teams[0][1]
+    else:
+        home = 'XXX'
+        away = 'YYY'
+
+    game_status = get_espn_summary_single_game(espn_id)
+    live_quarter = int(game_status['quarter'])
+    status = game_status['game_status']
+    game_clock = game_status['game_clock']
+    kickoff_time = game_status['kickoff_time']
+    team_scores = get_espn_score_by_qtr(espn_id)
+
+    team_scores_json = {}
+    for abbr, ts in team_scores.items():
+        team_scores_json[abbr] = {
+            'current_score': ts.get('current_score', '0'),
+            'qtr_scores': {str(k): v for k, v in ts.get('qtr_scores', {}).items()},
+            'name': ts.get('name', ''),
+            'nickname': ts.get('nickname', ''),
+            'logo': ts.get('logo', ''),
+        }
+
+    if pay_type in ('single', 'ten_man', 'satellite', 'sattelite', 'ten_man_final_reverse'):
+        ts_home = team_scores.get(home, {})
+        ts_away = team_scores.get(away, {})
+        home_digit = ts_home['current_score'][-1] if ts_home.get('current_score') else '0'
+        away_digit = ts_away['current_score'][-1] if ts_away.get('current_score') else '0'
+    else:
+        home_digit = '0'
+        away_digit = '0'
+
+    away_team = {str(i): '' for i in range(10)}
+    if len(away) == 3:
+        away_team['2'] = team_scores.get(away, {}).get('logo', '')
+        away_team['3'] = away[0]
+        away_team['4'] = away[1]
+        away_team['5'] = away[2]
+        away_team['6'] = team_scores.get(away, {}).get('logo', '')
+    elif len(away) >= 2:
+        away_team['3'] = team_scores.get(away, {}).get('logo', '')
+        away_team['4'] = away[0]
+        away_team['5'] = away[1]
+        away_team['6'] = team_scores.get(away, {}).get('logo', '')
+
+    user_dict = dict(db2("SELECT userid, username FROM users;"))
+    alias_dict = dict(db2("SELECT userid, alias_of_userid FROM users WHERE alias_of_userid IS NOT NULL;"))
+
+    grid = []
+    box_num = 0
+    row_offset = 0
+    avail = 0
+    current_user_box_count = 0
+    for _ in range(10):
+        row_cells = []
+        for box_userid in box[8 + row_offset: 18 + row_offset]:
+            alias = None
+            if box_userid == 1 or box_userid == 0:
+                name = 'Available '
+                avail += 1
+            else:
+                if box_userid in alias_dict:
+                    alias = alias_dict[box_userid]
+                name = user_dict.get(box_userid, str(box_userid))
+            row_cells.append({
+                'box_num': box_num,
+                'name': name,
+                'userid': box_userid,
+                'alias': alias,
+                'winner_type': None,
+                'winner_label': None,
+            })
+            box_num += 1
+            if box_userid == session.get('userid'):
+                current_user_box_count += 1
+        grid.append(row_cells)
+        row_offset += 10
+
+    images = {str(k): v for k, v in dict(db2("SELECT userid, image FROM users WHERE image IS NOT NULL;")).items()}
+
+    xy_string = "SELECT x, y FROM boxnums WHERE boxid = %s;"
+    scores = []
+    if avail != 0 or len(db2(xy_string, (int(boxid),))) == 0:
+        num_selection = "Row/Column numbers will be randomly generated after all participants have paid."
+        x = {str(n): '?' for n in range(10)}
+        y = {str(n): '?' for n in range(10)}
+    else:
+        num_selection = ''
+        xy = db2(xy_string, (int(boxid),))[0]
+        x = json.loads(xy[0])
+        y = json.loads(xy[1])
+
+        winners = calc_winner(boxid)
+
+        if len(winners) == 0 and ptype not in (PAY_TYPE_ID['every_score'], PAY_TYPE_ID['four_qtr'], PAY_TYPE_ID['every_minute']):
+            try:
+                curr_win_col = next(int(col) for col in x if str(x[col]) == home_digit)
+                curr_win_row = next(int(r) for r in y if str(y[r]) == away_digit)
+                cell = grid[curr_win_row][curr_win_col]
+                cell['winner_type'] = 'final_winner' if status == 'Final' else 'current_winner'
+                cell['winner_label'] = 'WINNER' if status == 'Final' else 'Current WINNER'
+            except StopIteration:
+                pass
+
+        if ptype in (PAY_TYPE_ID['single'], PAY_TYPE_ID['ten_man'], PAY_TYPE_ID['satellite'], PAY_TYPE_ID['ten_man_final_reverse']) and len(winners) == 2:
+            try:
+                xw = next(int(item) for item in x if x[item] == int(winners[0]))
+                yw = next(int(item) for item in y if y[item] == int(winners[1]))
+                grid[yw][xw]['winner_type'] = 'final_winner'
+                grid[yw][xw]['winner_label'] = 'WINNER'
+            except StopIteration:
+                pass
+
+        if winners and ptype == PAY_TYPE_ID['four_qtr']:
+            quarter = len(winners) // 2
+            final_payout = f'{fee * 10} / {fee * 20} / {fee * 10} / {fee * 60}'
+
+            def _find_qw(x_dict, y_dict, xval, yval):
+                xw = next((int(i) for i in x_dict if x_dict[i] == int(xval)), None)
+                yw = next((int(i) for i in y_dict if y_dict[i] == int(yval)), None)
+                return xw, yw
+
+            if quarter >= 1:
+                xw, yw = _find_qw(x, y, winners[0], winners[1])
+                if xw is not None and yw is not None:
+                    is_current = live_quarter <= 1 and status != 'Final'
+                    grid[yw][xw]['winner_type'] = 'winning_q1' if is_current else 'q1_winner'
+                    grid[yw][xw]['winner_label'] = 'WINNING Q1' if is_current else 'Q1 WINNER'
+            if quarter >= 2:
+                xw, yw = _find_qw(x, y, winners[2], winners[3])
+                if xw is not None and yw is not None:
+                    is_current = live_quarter <= 2 and status not in ('Halftime', 'Final')
+                    grid[yw][xw]['winner_type'] = 'winning_q2' if is_current else 'q2_winner'
+                    grid[yw][xw]['winner_label'] = 'WINNING Q2' if is_current else 'Q2 WINNER'
+            if quarter >= 3:
+                xw, yw = _find_qw(x, y, winners[4], winners[5])
+                if xw is not None and yw is not None:
+                    is_current = live_quarter <= 3 and status != 'Final'
+                    grid[yw][xw]['winner_type'] = 'winning_q3' if is_current else 'q3_winner'
+                    grid[yw][xw]['winner_label'] = 'WINNING Q3' if is_current else 'Q3 WINNER'
+            if quarter == 4:
+                xw, yw = _find_qw(x, y, winners[6], winners[7])
+                if xw is not None and yw is not None:
+                    is_current = status != 'Final'
+                    grid[yw][xw]['winner_type'] = 'winning_q4' if is_current else 'q4_winner'
+                    grid[yw][xw]['winner_label'] = 'WINNING Q4' if is_current else 'Q4 WINNER'
+
+        if ptype == PAY_TYPE_ID['every_score']:
+            es_winners = db2("SELECT score_num, winning_box FROM everyscore where boxid = %s;", (int(boxid),))
+            max_score_num = 1
+            final_payout = (int(fee) * 100) - (max_score_num * (fee * 3)) - (fee * 10)
+            winner_dict = {}
+            if len(es_winners) != 0:
+                for w in es_winners:
+                    if w[0] >= max_score_num and w[0] < 100:
+                        max_score_num = w[0]
+                if max_score_num <= 24:
+                    final_payout = (int(fee) * 100) - (max_score_num * (fee * 3)) - (fee * 10) - (fee * 8)
+                    rev_payout = fee * 10
+                elif max_score_num == 25:
+                    final_payout = fee * 10
+                    rev_payout = (fee * 10) - (fee * 3)
+                elif max_score_num == 26:
+                    final_payout = fee * 10
+                    rev_payout = (fee * 10) - (fee * 6)
+                else:
+                    final_payout = fee * 10
+                    rev_payout = fee
+                for wb_row in es_winners:
+                    wb = wb_row[1]
+                    sn = wb_row[0]
+                    if sn < 100:
+                        winner_dict[wb] = winner_dict.get(wb, 0) + (fee * 3)
+                    elif sn == 101:
+                        winner_dict[wb] = winner_dict.get(wb, 0) + fee
+                    elif sn == 201:
+                        winner_dict[wb] = winner_dict.get(wb, 0) + fee
+                    elif sn == 100 and max_score_num <= 24:
+                        winner_dict[wb] = winner_dict.get(wb, 0) + (fee * 10)
+                    elif sn == 100 and max_score_num <= 26:
+                        winner_dict[wb] = winner_dict.get(wb, 0) + 1000 - ((max_score_num - 24) * (fee * 3))
+                    elif sn == 100 and max_score_num <= 27:
+                        winner_dict[wb] = winner_dict.get(wb, 0) + fee
+                    elif sn == 200:
+                        winner_dict[wb] = winner_dict.get(wb, 0) + final_payout
+                for wb, cash in winner_dict.items():
+                    if int(wb) > 9:
+                        x_win = int(str(wb)[-1:])
+                        y_win = int(str(wb)[:1])
+                    else:
+                        x_win = int(str(wb)[-1:])
+                        y_win = 0
+                    cell = grid[y_win][x_win]
+                    cell['winner_type'] = 'every_score_winner'
+                    cell['winner_label'] = f'WINNER {cell["name"][:10]} ${cash}'
+                    cell['winner_cash'] = cash
+            else:
+                final_payout = (fee * 100) - (fee * 10) - (fee * 3)
+
+            score_rows = db2(
+                "SELECT e.score_num, e.x_score, e.y_score, e.score_type, u.username, e.winning_box "
+                "FROM everyscore e LEFT JOIN users u ON e.winner = u.userid "
+                "WHERE e.boxid = %s ORDER BY e.score_num, e.score_id;",
+                (int(boxid),)
+            )
+            scores = [list(r) for r in score_rows]
+
+        if ptype == PAY_TYPE_ID['every_minute']:
+            em_winners = get_espn_every_min_scores(espn_id)
+            if not em_winners:
+                if x.get('0') != '?':
+                    try:
+                        win_col = next(int(col) for col in x if str(x[col]) == '0')
+                        win_row = next(int(r) for r in y if str(y[r]) == '0')
+                        winner_boxnum = grid[win_row][win_col]['box_num']
+                        winner_userid = grid[win_row][win_col]['userid']
+                        winner_username = user_dict.get(winner_userid, '')
+                        scores = [[0, 0, 0, f"Pre-Game 0/0 Winner ${int(fee * 1.5)}", winner_username, winner_boxnum]]
+                        grid[win_row][win_col]['winner_type'] = 'every_minute_winner'
+                        grid[win_row][win_col]['winner_label'] = f'WINNER {winner_username} ${int(fee * 1.5)}'
+                    except StopIteration:
+                        pass
+            else:
+                box_winners = {}
+                reverse_payout = fee * 5
+                final_payout_em = fee * 5
+                minute = 0
+                scores = []
+                for winner in em_winners:
+                    away_num = str(winner["away_score"])[-1]
+                    home_num = str(winner["home_score"])[-1]
+                    winning_minutes = winner["winning_minutes"]
+                    win_type = winner["type"]
+                    try:
+                        win_col = next(int(col) for col in x if str(x[col]) == home_num)
+                        win_row = next(int(r) for r in y if str(y[r]) == away_num)
+                    except StopIteration:
+                        continue
+                    winner_boxnum = grid[win_row][win_col]['box_num']
+                    winner_userid = grid[win_row][win_col]['userid']
+                    winner_username = user_dict.get(winner_userid, '')
+                    if win_type == "minute":
+                        for i in range(winning_minutes):
+                            scores.append([minute + i, str(winner["home_score"]), str(winner["away_score"]), f"MINUTE {minute + i} ${int(fee * 1.5)}", winner_username, winner_boxnum])
+                        minute += winning_minutes
+                        box_winners[winner_boxnum] = box_winners.get(winner_boxnum, 0) + int(winning_minutes * (fee * 1.5))
+                        grid[win_row][win_col]['winner_type'] = 'every_minute_winner'
+                        grid[win_row][win_col]['winner_label'] = f'WINNER {winner_username} ${box_winners[winner_boxnum]}'
+                    elif win_type in ("final", "OT FINAL"):
+                        scores.append([200, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} ${fee * 5}", winner_username, winner_boxnum])
+                        box_winners[winner_boxnum] = box_winners.get(winner_boxnum, 0) + final_payout_em
+                        grid[win_row][win_col]['winner_type'] = 'every_minute_winner'
+                        grid[win_row][win_col]['winner_label'] = f'WINNER FINAL {winner_username} ${box_winners[winner_boxnum]}'
+                    elif win_type in ("reverse", "OT FINAL REVERSE"):
+                        scores.append([100, str(winner["home_score"]), str(winner["away_score"]), f"{win_type.upper()} ${fee * 5}", winner_username, winner_boxnum])
+                        box_winners[winner_boxnum] = box_winners.get(winner_boxnum, 0) + reverse_payout
+                        grid[win_row][win_col]['winner_type'] = 'every_minute_winner'
+                        grid[win_row][win_col]['winner_label'] = f'WINNER REVERSE {winner_username} ${box_winners[winner_boxnum]}'
+                    grid[win_row][win_col]['winner_type'] = grid[win_row][win_col].get('winner_type', 'every_minute_winner')
+
+    if box_type == BOX_TYPE_ID['dailybox']:
+        final_payout = ''
+
+    return jsonify({
+        'boxid': boxid,
+        'box_name': box_name,
+        'fee': fee,
+        'avail': avail,
+        'payout': payout,
+        'final_payout': str(final_payout) if final_payout is not None else '',
+        'rev_payout': rev_payout,
+        'pay_type': pay_type,
+        'ptype': ptype,
+        'box_type': box_type,
+        'kickoff_time': kickoff_time,
+        'game_clock': game_clock,
+        'num_selection': num_selection,
+        'private_game_payment_link': private_game_payment_link,
+        'current_user_box_count': current_user_box_count,
+        'home': home,
+        'away': away,
+        'away_team': away_team,
+        'team_scores': team_scores_json,
+        'x': x,
+        'y': y,
+        'grid': grid,
+        'scores': scores,
+        'images': images,
+        'current_userid': session.get('userid'),
+        'current_username': session.get('username'),
+    })
+
+
+@bp.route("/api/select_box", methods=["POST"])
+@login_required
+def api_select_box():
+    data = request.get_json()
+    boxid = data.get('boxid')
+    box_num = int(data.get('box_num'))
+
+    box_attr = db2("SELECT box_type, pay_type FROM boxes WHERE boxid = %s;", (int(boxid),))[0]
+    box_type = box_attr[0]
+    pay_type = box_attr[1]
+    boxes = db2("SELECT {} FROM boxes WHERE boxid = %s;".format(box_string()), (int(boxid),))[0]
+
+    rand_list = [i for i, b in enumerate(boxes) if b == 0 or b == 1]
+    user_box_count = sum(1 for b in boxes if (box_type == BOX_TYPE_ID['nutcracker'] or pay_type == PAY_TYPE_ID['ten_man'] or pay_type == PAY_TYPE_ID['satellite']) and b == session['userid'])
+
+    if box_num not in rand_list:
+        if boxes[box_num] == session['userid']:
+            if len(rand_list) == 0:
+                return jsonify({"error": "Numbers were drawn — can't undo now"}), 400
+            db2("UPDATE boxes SET box{}= 1 WHERE boxid = %s;".format(box_num), (int(boxid),))
+            return jsonify({"success": True, "action": "undo"})
+        owner = db2("SELECT username FROM users WHERE userid = %s;", (boxes[box_num],))
+        owner_name = owner[0][0] if owner else "someone"
+        return jsonify({"error": f"{owner_name} already has this box"}), 400
+
+    if (box_type == BOX_TYPE_ID['nutcracker'] or pay_type == PAY_TYPE_ID['ten_man']) and user_box_count >= 10:
+        return jsonify({"error": "10 boxes max for this game"}), 400
+
+    if box_type == BOX_TYPE_ID['nutcracker']:
+        gobbler_id = db2("SELECT gobbler_id FROM boxes WHERE boxid = %s;", (int(boxid),))[0][0]
+        db2("UPDATE boxes SET box{}=%s WHERE gobbler_id = %s;".format(box_num), (session['userid'], gobbler_id))
+    else:
+        db2("UPDATE boxes SET box{}=%s WHERE boxid = %s;".format(box_num), (session['userid'], int(boxid)))
+        logging.info("user {} picked box {} in boxid {}".format(session['username'], box_num, boxid))
+
+    return jsonify({"success": True, "action": "select"})
