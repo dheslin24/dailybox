@@ -77,10 +77,8 @@ def login():
         return render_template("login.html")
 
 @bp.route('/')
-@login_required
 def index():
-    logging.info("%s just logged in", session["username"])
-    return render_template("landing_page.html")
+    return redirect('/app/landing_page')
 
 # new landing page - redirect btwn pickem & boxes
 @bp.route("/landing_page", methods=["GET", "POST"])

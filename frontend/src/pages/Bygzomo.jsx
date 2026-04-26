@@ -11,12 +11,12 @@ export default function Bygzomo() {
 
   useEffect(() => {
     fetch('/api/bygzomo')
-      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } if (res.status === 403) { window.location.href = '/'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } if (res.status === 403) { window.location.href = '/app/landing_page'; return null } return res.json() })
       .then(d => { if (d) setTables(d.tables) })
   }, [])
 
   if (session && session.is_admin !== 1) {
-    window.location.href = '/'
+    window.location.href = '/app/landing_page'
     return null
   }
 

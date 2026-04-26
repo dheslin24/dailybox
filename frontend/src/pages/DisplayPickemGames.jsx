@@ -32,7 +32,7 @@ export default function DisplayPickemGames() {
       body: JSON.stringify({ picks, tiebreak }),
     })
       .then(res => res.json())
-      .then(d => { if (d.success) { setSubmitted(true); window.location.href = '/view_all_picks' } })
+      .then(d => { if (d.success) { setSubmitted(true); window.location.href = '/app/view_all_picks' } })
   }
 
   if (!data) return <Layout><p>Loading...</p></Layout>

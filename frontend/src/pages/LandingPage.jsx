@@ -7,7 +7,7 @@ export default function LandingPage() {
       <table align="center" cellPadding="10">
         <tbody>
           <tr>
-            <td className="landing" style={{textAlign:'center', cursor:'pointer'}} onClick={() => window.location.href = '/view_all_picks'}>
+            <td className="landing" style={{textAlign:'center', cursor:'pointer'}} onClick={() => window.location.href = '/app/view_all_picks'}>
               <img src="https://www.wmse.org/wp-content/uploads/2017/12/ralph.gif" style={{display:'block', width:'90%', height:'auto', margin:'auto'}} alt="" />
               <br />PLAYOFF PICKEM
             </td>
@@ -17,13 +17,13 @@ export default function LandingPage() {
             </td>
           </tr>
           <tr style={{background:'#fff'}}>
-            <td colSpan="2" style={{textAlign:'center', cursor:'pointer', padding:'24px 0', background:'#fff'}} onClick={() => window.location.href = '/survivor_pool'}>
+            <td colSpan="2" style={{textAlign:'center', cursor:'pointer', padding:'24px 0', background:'#fff'}} onClick={() => window.location.href = '/app/survivor_pool'}>
               <img src="/static/simpsons_survivor.png" alt="Survivor Pools" style={{display:'block', margin:'auto', width:'90%', maxWidth:'900px', height:'auto', borderRadius:'8px'}} />
               <div style={{fontSize:'1.5em', fontWeight:'bold', marginTop:'12px'}}>Survivor Pools</div>
             </td>
           </tr>
           <tr>
-            <td className="landing" style={{textAlign:'center', cursor:'pointer'}} onClick={() => window.location.href = '/private_pswd'}>
+            <td className="landing" style={{textAlign:'center', cursor:'pointer'}} onClick={() => window.location.href = '/app/private_pswd'}>
               <img src="https://pbs.twimg.com/media/ECkwxxLX4AE_btl.jpg" style={{display:'block', width:'auto', height:'auto', margin:'auto'}} alt="" />
               <br />Register for Private Event<br />(password required)
             </td>

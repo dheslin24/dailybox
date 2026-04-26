@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import timedelta
 
-from flask import Flask, send_from_directory
+from flask import Flask, redirect, request, send_from_directory
 from flask_session import Session
 
 from blueprints.admin import bp as admin_bp
@@ -52,6 +52,21 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(boxes_bp)
 app.register_blueprint(pickem_bp)
 app.register_blueprint(survivor_bp)
+
+_PASSTHROUGH_PREFIXES = ('/api/', '/app/', '/static/', '/assets/')
+_PASSTHROUGH_EXACT = {'/logout'}
+
+@app.before_request
+def redirect_legacy_to_react():
+    if request.method != 'GET':
+        return
+    path = request.path
+    if path.startswith(_PASSTHROUGH_PREFIXES) or path in _PASSTHROUGH_EXACT:
+        return
+    qs = ('?' + request.query_string.decode()) if request.query_string else ''
+    if path == '/':
+        return redirect('/app/landing_page' + qs)
+    return redirect('/app' + path + qs)
 
 @app.route('/app', defaults={'path': ''})
 @app.route('/app/<path:path>')

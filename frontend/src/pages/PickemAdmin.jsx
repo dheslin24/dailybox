@@ -14,7 +14,7 @@ export default function PickemAdmin() {
   }, [])
 
   if (session && session.is_admin !== 1) {
-    window.location.href = '/pickem_admin'
+    window.location.href = '/app/pickem_admin'
     return null
   }
 

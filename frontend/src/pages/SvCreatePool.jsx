@@ -9,7 +9,7 @@ export default function SvCreatePool() {
   const [result, setResult] = useState(null)
 
   if (session && session.is_admin !== 1) {
-    window.location.href = '/survivor_pool'
+    window.location.href = '/app/survivor_pool'
     return null
   }
 

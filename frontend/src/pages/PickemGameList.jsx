@@ -40,7 +40,7 @@ export default function PickemGameList() {
       .then(d => {
         if (d.success) {
           setSubmitted(true)
-          window.location.href = '/pickem_all_picks'
+          window.location.href = '/app/pickem_all_picks'
         }
       })
   }
