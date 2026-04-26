@@ -235,6 +235,27 @@ def game_list():
 
     return render_template("game_list.html", game_list = game_list)
 
+@bp.route("/api/custom_game_list", methods=["GET"])
+@login_required
+def api_custom_game_list():
+    games = get_games([2, 3])
+    games.sort(key=lambda x: x[0])
+    return jsonify({
+        'games': [{'boxid': g[0], 'box_name': g[1], 'fee': g[2], 'pay_type': g[3], 'available': g[4]} for g in games],
+        'no_active_games_string': '' if games else 'No Active Games',
+    })
+
+@bp.route("/api/private_game_list", methods=["GET"])
+@login_required
+def api_private_game_list():
+    games = get_games([4])
+    if games:
+        games.sort(key=lambda x: x[0])
+    return jsonify({
+        'games': [{'boxid': g[0], 'box_name': g[1], 'fee': g[2], 'pay_type': g[3], 'available': g[4]} for g in games],
+        'no_active_games_string': '' if games else 'You have no active private games',
+    })
+
 @bp.route("/custom_game_list")
 @login_required
 def custom_game_list():
@@ -1074,6 +1095,20 @@ def delete_score():
     score_id = request.form.get('score_id')
     db2("DELETE FROM everyscore WHERE score_id = %s;", (int(score_id),))
     return redirect(url_for('boxes.enter_every_score'))
+
+@bp.route("/api/current_winners/<boxid>", methods=["GET"])
+@login_required
+def api_current_winners(boxid):
+    scores = db2(
+        "SELECT e.score_type, e.x_score, e.y_score, e.winning_box, u.username "
+        "FROM everyscore e LEFT JOIN users u ON e.winner = u.userid "
+        "WHERE boxid = %s ORDER BY e.score_num;",
+        (int(boxid),)
+    )
+    return jsonify({
+        'boxid': boxid,
+        'scores': [{'score_type': s[0], 'x_score': s[1], 'y_score': s[2], 'winning_box': s[3], 'winner': s[4]} for s in scores],
+    })
 
 @bp.route("/current_winners/<boxid>", methods=["POST", "GET"])
 @login_required
