@@ -28,6 +28,10 @@ import PickemPaymentStatus from './pages/PickemPaymentStatus.jsx'
 import EnterPickemScores from './pages/EnterPickemScores.jsx'
 import BowlPaymentStatus from './pages/BowlPaymentStatus.jsx'
 import PickemAllPicks from './pages/PickemAllPicks.jsx'
+import SurvivorPool from './pages/SurvivorPool.jsx'
+import SurvivorTeamsSelected from './pages/SurvivorTeamsSelected.jsx'
+import SurvivorWeekDisplay from './pages/SurvivorWeekDisplay.jsx'
+import SurvivorPoolPicks from './pages/SurvivorPoolPicks.jsx'
 
 function App() {
   return (
@@ -61,6 +65,10 @@ function App() {
       <Route path="/enter_pickem_scores" element={<EnterPickemScores />} />
       <Route path="/bowl_payment_status" element={<BowlPaymentStatus />} />
       <Route path="/pickem_all_picks" element={<PickemAllPicks />} />
+      <Route path="/survivor_pool" element={<SurvivorPool />} />
+      <Route path="/survivor_teams_selected" element={<SurvivorTeamsSelected />} />
+      <Route path="/survivor_week_display" element={<SurvivorWeekDisplay />} />
+      <Route path="/survivor_pool_picks" element={<SurvivorPoolPicks />} />
     </Routes>
   )
 }
