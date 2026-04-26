@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Layout from '../components/Layout'
 
 export default function UserDetails() {
   const [data, setData] = useState(null)
@@ -21,13 +22,13 @@ export default function UserDetails() {
       })
   }, [])
 
-  if (error) return <p>{error}</p>
-  if (!data) return <p>Loading...</p>
+  if (error) return <Layout><p>{error}</p></Layout>
+  if (!data) return <Layout><p>Loading...</p></Layout>
 
   const { user, aliases, userid } = data
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <Layout>
       <h1>User Details</h1>
 
       <table align="center" cellPadding="10">
@@ -72,13 +73,13 @@ export default function UserDetails() {
                 {alias.image
                   ? <img src={`/static/${alias.image}`} height="60" width="60" alt="" />
                   : null}
-              </td>
+            </td>
               <td><a href={`/upload_file?userid=${alias.userid}`}>Click here to upload a new image</a></td>
               <td><a href={`/remove_image?userid=${alias.userid}`}>Click here to display only username</a></td>
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
+    </Layout>
   )
 }

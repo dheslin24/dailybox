@@ -213,6 +213,17 @@ def user_details():
 
     return render_template("user_details.html", user_dict = user_dict, alias_dict = alias_dict, userid_dict=userid_dict)
 
+@bp.route("/api/me", methods=["GET"])
+def api_me():
+    if session.get('userid') is None:
+        return jsonify({'logged_in': False}), 200
+    return jsonify({
+        'logged_in': True,
+        'userid': session['userid'],
+        'username': session['username'],
+        'is_admin': session.get('is_admin', 0),
+    })
+
 @bp.route("/api/user_details", methods=["GET"])
 @login_required
 def api_user_details():
