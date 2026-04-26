@@ -21,16 +21,14 @@ export default function ViewAllPicks() {
   const gameStatus = (g) => g.status?.status || ''
   const isCurrentGame = (g) => new Date(g.datetime) <= now_dt && gameStatus(g) !== 'Final' && gameStatus(g) !== 'Canceled' && gameStatus(g) !== 'Postponed'
 
-  const pickCellStyle = (userId, espnId, pick) => {
+  const pickCellClass = (userId, espnId, pick) => {
     const g = games[String(espnId)]
-    if (!g) return {}
+    if (!g || !pick || pick === 'hidden') return ''
     const isCurrent = userId === current_userid
     const gWinner = g.winner
-    if (!pick || pick === 'hidden') return {}
-    if (gWinner === 'TBD') return isCurrent ? { background: '#cce5ff' } : {}
-    if (pick === gWinner) return isCurrent ? { background: '#b8f0b8' } : { background: '#d4f8d4' }
-    if (gWinner === 'PUSH') return {}
-    return isCurrent ? { background: '#f8c0c0' } : { background: '#f8d4d4' }
+    if (gWinner === 'TBD' || gWinner === 'PUSH') return ''
+    if (pick === gWinner) return isCurrent ? 'winner_cu' : 'winner'
+    return isCurrent ? 'loser_cu' : 'loser'
   }
 
   return (
@@ -124,7 +122,7 @@ export default function ViewAllPicks() {
             </tr>
           </thead>
           <tbody>
-            {Object.entries(picks).map(([userId, userPicks]) => {
+            {Object.entries(picks).sort((a, b) => (b[1]['wins'] || 0) - (a[1]['wins'] || 0)).map(([userId, userPicks]) => {
               const uid = parseInt(userId)
               const uinfo = user_dict[String(uid)] || {}
               const username = uinfo.username || userId
@@ -161,7 +159,7 @@ export default function ViewAllPicks() {
                     if (isCxl) return <td key={gid} style={{ backgroundColor: isCurrent ? 'gray' : 'darkgray' }}></td>
                     if (isLocked) return <td key={gid}>{pick ? 'XXX' : ''}</td>
 
-                    return <td key={gid} className={isCurrent ? 'current_user' : ''} style={{ whiteSpace: 'nowrap', ...pickCellStyle(uid, espnId, pick) }}>{pick}</td>
+                    return <td key={gid} className={pickCellClass(uid, espnId, pick) || (isCurrent ? 'current_user' : '')} style={{ whiteSpace: 'nowrap' }}>{pick}</td>
                   })}
                   {isCurrent
                     ? <><td className="current_user">{tb_dict[String(uid)]}</td><td className="current_user">{wins}</td></>
