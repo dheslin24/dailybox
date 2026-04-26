@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for, Markup
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for, Markup
 from db_accessor.db_accessor import db2
 from constants import PAY_TYPE_ID, BOX_TYPE_ID, EMOJIS, ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from utils import apology, login_required, admin_required
@@ -69,6 +69,13 @@ def admin():
         return render_template("admin.html", payout_type=payout_type)
     else:
         return apology("Sorry, you're not an admin")
+
+@bp.route("/api/admin", methods=["GET"])
+def api_admin():
+    if not session.get('userid') or not db2("SELECT is_admin FROM users WHERE userid = %s;", (session['userid'],))[0][0]:
+        return jsonify({'error': 'forbidden'}), 403
+    payout_types = db2("SELECT pay_type_id, description FROM pay_type;")
+    return jsonify({'payout_types': [{'id': r[0], 'description': r[1]} for r in payout_types]})
 
 @bp.route("/create_privategame_code", methods=["GET", "POST"])
 def create_privategame_code():
