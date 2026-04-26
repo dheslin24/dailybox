@@ -120,7 +120,7 @@ export default function DisplayBox() {
   const load = useCallback(() => {
     if (!boxid) return
     fetch(`/api/display_box?boxid=${boxid}`)
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) { if (d.error) setError(d.error); else setData(d) } })
   }, [boxid])
 

@@ -39,6 +39,8 @@ import DisplayPickemGames from './pages/DisplayPickemGames.jsx'
 import LiveScores from './pages/LiveScores.jsx'
 import ViewAllPicks from './pages/ViewAllPicks.jsx'
 import DisplayBox from './pages/DisplayBox.jsx'
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
 
 function App() {
   return (
@@ -83,6 +85,8 @@ function App() {
       <Route path="/live_scores" element={<LiveScores />} />
       <Route path="/view_all_picks" element={<ViewAllPicks />} />
       <Route path="/display_box" element={<DisplayBox />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
     </Routes>
   )
 }

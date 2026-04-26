@@ -213,6 +213,94 @@ def user_details():
 
     return render_template("user_details.html", user_dict = user_dict, alias_dict = alias_dict, userid_dict=userid_dict)
 
+@bp.route("/api/login", methods=["POST"])
+def api_login():
+    session.clear()
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+    if not username:
+        return jsonify({"error": "Must provide username"}), 400
+    if not password:
+        return jsonify({"error": "Must provide password"}), 400
+
+    s = "SELECT username, password, userid, failed_login_count, is_admin FROM users WHERE username = %s and active = 1"
+    user = db2(s, (username,))
+    if not user:
+        return jsonify({"error": "Username does not exist"}), 401
+
+    u, p, uid, failures, admin = user[0]
+    if failures > 9:
+        return jsonify({"error": "Too many failed attempts — contact TW to unlock"}), 403
+
+    if not pwd_context.verify(password, p):
+        failures += 1
+        db2("UPDATE users SET failed_login_count = %s WHERE userid = %s;", (failures, uid))
+        if failures >= 10:
+            return jsonify({"error": "Too many failed attempts — you're locked out, contact TW"}), 403
+        return jsonify({"error": f"Incorrect password — attempt {failures} of 10"}), 401
+
+    session["userid"] = uid
+    session["username"] = u
+    session["is_admin"] = admin
+    session.permanent = True
+    db2("UPDATE users SET failed_login_count = 0 WHERE userid = %s;", (uid,))
+    logging.info("%s just logged in via API", u)
+    return jsonify({"success": True, "username": u})
+
+
+@bp.route("/api/register", methods=["POST"])
+def api_register():
+    secret = config.captchasecret
+    data = request.get_json()
+
+    captcha_token = data.get("captcha_token", "")
+    r = requests.post('https://hcaptcha.com/siteverify', data={'secret': secret, 'response': captcha_token})
+    captcha_result = r.json()
+    if not captcha_result.get("success"):
+        return jsonify({"error": "Captcha verification failed — are you a robot?"}), 400
+
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+    password_confirm = data.get("password_confirm", "")
+    email = data.get("email", "").strip()
+    first_name = data.get("first_name", "").strip()
+    last_name = data.get("last_name", "").strip()
+    mobile = data.get("mobile", "").strip()
+
+    if not username: return jsonify({"error": "Must provide username"}), 400
+    if not password: return jsonify({"error": "Must provide password"}), 400
+    if not password_confirm: return jsonify({"error": "Must confirm password"}), 400
+    if not email: return jsonify({"error": "Must provide email"}), 400
+    if not first_name: return jsonify({"error": "Must provide first name"}), 400
+    if not last_name: return jsonify({"error": "Must provide last name"}), 400
+    if not mobile: return jsonify({"error": "Must provide mobile number"}), 400
+    if password != password_confirm: return jsonify({"error": "Passwords do not match"}), 400
+
+    try:
+        valid = validate_email(email)
+        email = valid.email
+    except EmailNotValidError:
+        return jsonify({"error": "Must use a valid email address"}), 400
+
+    if db2("SELECT userid FROM users WHERE username = %s;", (username,)):
+        return jsonify({"error": "Username already exists — contact TW to reset"}), 400
+
+    hash = pwd_context.hash(password)
+    db2(
+        "INSERT INTO users(username, password, email, active, is_admin, first_name, last_name, mobile, failed_login_count) VALUES(%s, %s, %s, 1, 0, %s, %s, %s, 0);",
+        (username, hash, email, first_name, last_name, mobile)
+    )
+    uid = db2("SELECT userid FROM users WHERE username = %s;", (username,))[0][0]
+    db2("UPDATE users SET balance = 100000 WHERE userid = %s;", (uid,))
+
+    session["userid"] = uid
+    session["username"] = username
+    session.permanent = True
+    logging.info("%s just registered via API", username)
+    return jsonify({"success": True, "username": username})
+
+
 @bp.route("/api/me", methods=["GET"])
 def api_me():
     if session.get('userid') is None:

@@ -8,7 +8,7 @@ export default function PickemAllPicks() {
 
   useEffect(() => {
     fetch('/api/pickem_all_picks')
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) setData(d) })
   }, [])
 

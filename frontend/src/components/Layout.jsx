@@ -44,8 +44,8 @@ export default function Layout({ children }) {
               </>
             ) : (
               <ul className="nav navbar-nav navbar-right">
-                <li><a href="/register">Register</a></li>
-                <li><a href="/login">Log In</a></li>
+                <li><a href="/app/register">Register</a></li>
+                <li><a href="/app/login">Log In</a></li>
               </ul>
             )}
           </div>

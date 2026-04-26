@@ -15,7 +15,7 @@ export default function UserDetails() {
       .then(setData)
       .catch(err => {
         if (err.message === 'not_logged_in') {
-          window.location.href = '/login'
+          window.location.href = '/app/login'
         } else {
           setError('Failed to load user details.')
         }

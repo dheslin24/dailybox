@@ -7,7 +7,7 @@ export default function EnterEveryScore() {
 
   const load = () =>
     fetch('/api/enter_every_score')
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) { if (d.error) setError(d.error); else setData(d) } })
 
   useEffect(() => { load() }, [])

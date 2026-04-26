@@ -7,7 +7,7 @@ export default function MyGames() {
 
   useEffect(() => {
     fetch('/api/my_games')
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) setData(d) })
   }, [])
 

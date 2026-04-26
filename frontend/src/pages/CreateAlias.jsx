@@ -16,7 +16,7 @@ export default function CreateAlias() {
   useEffect(() => {
     if (!boxid || !boxnum) return
     fetch(`/api/create_alias?boxid=${boxid}&boxnum=${boxnum}`)
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) setData(d) })
   }, [boxid, boxnum])
 

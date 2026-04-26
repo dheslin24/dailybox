@@ -9,7 +9,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (session === null) return
-    if (!session.logged_in) { window.location.href = '/login'; return }
+    if (!session.logged_in) { window.location.href = '/app/login'; return }
     if (session.is_admin !== 1) { setError("Sorry, you're not an admin"); return }
 
     fetch('/api/admin')

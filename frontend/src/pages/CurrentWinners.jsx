@@ -8,7 +8,7 @@ export default function CurrentWinners() {
 
   useEffect(() => {
     fetch(`/api/current_winners/${boxid}`)
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) setData(d) })
   }, [boxid])
 

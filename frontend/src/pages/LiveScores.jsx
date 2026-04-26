@@ -8,7 +8,7 @@ export default function LiveScores() {
 
   const load = () => {
     fetch('/api/live_scores')
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => {
         if (d) {
           setData(d)
@@ -32,7 +32,7 @@ export default function LiveScores() {
       body: JSON.stringify({ picks }),
     })
       .then(res => res.json())
-      .then(d => { if (d.success) { setSubmitted(true); window.location.href = '/view_all_picks' } })
+      .then(d => { if (d.success) { setSubmitted(true); window.location.href = '/app/view_all_picks' } })
   }
 
   if (!data) return <Layout><p>Loading...</p></Layout>

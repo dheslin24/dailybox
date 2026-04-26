@@ -7,7 +7,7 @@ export default function AdminSummary() {
 
   useEffect(() => {
     fetch('/api/admin_summary')
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) setData(d) })
       .catch(() => setError('Failed to load.'))
   }, [])

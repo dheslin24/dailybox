@@ -28,7 +28,7 @@ export default function SurvivorWeekDisplay() {
 
   useEffect(() => {
     fetch(`/api/survivor_week_display?week=${week}&season=${season}&pool_id=${poolId}`)
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) setData(d) })
   }, [week, season, poolId])
 

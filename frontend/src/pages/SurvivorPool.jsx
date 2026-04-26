@@ -12,7 +12,7 @@ export default function SurvivorPool() {
 
   useEffect(() => {
     fetch('/api/survivor_pool')
-      .then(res => { if (res.status === 401) { window.location.href = '/login'; return null } return res.json() })
+      .then(res => { if (res.status === 401) { window.location.href = '/app/login'; return null } return res.json() })
       .then(d => { if (d) setUserPools(d.user_pools) })
   }, [])
 
