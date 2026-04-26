@@ -51,43 +51,57 @@ function ScoresTable({ scores, home, away, ptype }) {
         <tbody>
           {scores.map((score, i) => {
             const sn = score[0]
-            if (sn === 100) return (
-              <tr key={i} style={{ backgroundColor: 'blue', color: 'white' }}>
-                <td>RF</td>
-                {score.slice(1, -2).map((f, j) => <td key={j}>{f}</td>)}
-                <td>{String(score[score.length - 2]).slice(0, 10)}</td>
-                <td>{parseInt(score[score.length - 1]) + 1}</td>
-              </tr>
-            )
-            if (sn === 101) return (
-              <tr key={i} style={{ backgroundColor: 'lightblue' }}>
-                <td>RFT</td><td>n/a</td><td>n/a</td>
-                {score.slice(3, -2).map((f, j) => <td key={j}>{f}</td>)}
-                <td>{String(score[score.length - 2]).slice(0, 10)}</td>
-                <td>{parseInt(score[score.length - 1]) + 1}</td>
-              </tr>
-            )
-            if (sn === 200) return (
-              <tr key={i} style={{ backgroundColor: 'darkgreen', color: 'white' }}>
-                <td>F</td>
-                {score.slice(1, -2).map((f, j) => <td key={j}>{f}</td>)}
-                <td>{String(score[score.length - 2]).slice(0, 10)}</td>
-                <td>{parseInt(score[score.length - 1]) + 1}</td>
-              </tr>
-            )
-            if (sn === 201) return (
-              <tr key={i} style={{ backgroundColor: 'lightgreen' }}>
-                <td>FT</td><td>n/a</td><td>n/a</td>
-                {score.slice(3, -2).map((f, j) => <td key={j}>{f}</td>)}
-                <td>{String(score[score.length - 2]).slice(0, 10)}</td>
-                <td>{parseInt(score[score.length - 1]) + 1}</td>
-              </tr>
-            )
+            const username = String(score[score.length - 2]).slice(0, 10)
+            const box = parseInt(score[score.length - 1]) + 1
+            if (sn === 100) {
+              const s = { backgroundColor: 'blue', color: 'white' }
+              return (
+                <tr key={i}>
+                  <td style={s}>RF</td>
+                  {score.slice(1, -2).map((f, j) => <td key={j} style={s}>{f}</td>)}
+                  <td style={s}>{username}</td>
+                  <td style={s}>{box}</td>
+                </tr>
+              )
+            }
+            if (sn === 101) {
+              const s = { backgroundColor: 'lightblue' }
+              return (
+                <tr key={i}>
+                  <td style={s}>RFT</td><td style={s}>n/a</td><td style={s}>n/a</td>
+                  {score.slice(3, -2).map((f, j) => <td key={j} style={s}>{f}</td>)}
+                  <td style={s}>{username}</td>
+                  <td style={s}>{box}</td>
+                </tr>
+              )
+            }
+            if (sn === 200) {
+              const s = { backgroundColor: 'darkgreen', color: 'white' }
+              return (
+                <tr key={i}>
+                  <td style={s}>F</td>
+                  {score.slice(1, -2).map((f, j) => <td key={j} style={s}>{f}</td>)}
+                  <td style={s}>{username}</td>
+                  <td style={s}>{box}</td>
+                </tr>
+              )
+            }
+            if (sn === 201) {
+              const s = { backgroundColor: 'lightgreen' }
+              return (
+                <tr key={i}>
+                  <td style={s}>FT</td><td style={s}>n/a</td><td style={s}>n/a</td>
+                  {score.slice(3, -2).map((f, j) => <td key={j} style={s}>{f}</td>)}
+                  <td style={s}>{username}</td>
+                  <td style={s}>{box}</td>
+                </tr>
+              )
+            }
             return (
               <tr key={i}>
                 {score.slice(0, -2).map((f, j) => <td key={j}>{f === null ? 'n/a' : f}</td>)}
-                <td>{String(score[score.length - 2]).slice(0, 10)}</td>
-                <td>{parseInt(score[score.length - 1]) + 1}</td>
+                <td>{username}</td>
+                <td>{box}</td>
               </tr>
             )
           })}
