@@ -982,6 +982,41 @@ def select_box():
 
         return redirect(url_for("boxes.display_box", boxid=boxid))
 
+@bp.route("/api/es_payout_details", methods=["GET"])
+@login_required
+def api_es_payout_details():
+    fee = int(request.args['fee'])
+    payouts = []
+    for i in range(1, 31):
+        if i <= 27:
+            es_total = 3 * fee * i
+        else:
+            es_total = 3 * fee * 27
+        touch_rev = f'{fee}x4'
+        touch_fin = f'{fee}x4'
+        if i <= 24:
+            rev_final = fee * 10
+            final = ((fee * 100) - (fee * 8) - (fee * 10)) - (fee * 3 * i)
+        elif i <= 26:
+            rev_final = (fee * 10) - ((fee * 3) * (i - 24))
+            final = fee * 10
+        else:
+            rev_final = fee
+            final = fee * 10
+        payouts.append({'scores': i, 'es_total': es_total, 'touch_rev': touch_rev, 'touch_fin': touch_fin, 'rev_final': rev_final, 'final': final})
+    return jsonify({'fee': fee, 'payouts': payouts})
+
+@bp.route("/api/private_pswd", methods=["POST"])
+@login_required
+def api_private_pswd():
+    pswd = request.get_json().get('password', '')
+    box = db2("SELECT boxid FROM privatepass WHERE pswd = %s;", (pswd,))
+    if box:
+        db2("INSERT INTO privategames (userid, boxid, paid) values (%s, %s, 0) ON DUPLICATE KEY UPDATE userid = %s, boxid=%s;",
+            (session['userid'], box[0][0], session['userid'], box[0][0]))
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Invalid code - please try again or contact the game admin.'})
+
 @bp.route("/es_payout_details", methods=["GET"])
 def es_payout_details():
     #fee = 100

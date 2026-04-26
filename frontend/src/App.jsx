@@ -15,6 +15,11 @@ import EmailUsers from './pages/EmailUsers.jsx'
 import EndGame from './pages/EndGame.jsx'
 import EnterCustomScores from './pages/EnterCustomScores.jsx'
 import EnterEveryScore from './pages/EnterEveryScore.jsx'
+import EsPayoutDetails from './pages/EsPayoutDetails.jsx'
+import NcaabGames from './pages/NcaabGames.jsx'
+import PrivatePswd from './pages/PrivatePswd.jsx'
+import SvCreatePool from './pages/SvCreatePool.jsx'
+import TeamSelected from './pages/TeamSelected.jsx'
 
 function App() {
   return (
@@ -35,6 +40,11 @@ function App() {
       <Route path="/end_game" element={<EndGame />} />
       <Route path="/enter_custom_scores" element={<EnterCustomScores />} />
       <Route path="/enter_every_score" element={<EnterEveryScore />} />
+      <Route path="/es_payout_details" element={<EsPayoutDetails />} />
+      <Route path="/ncaab_games" element={<NcaabGames />} />
+      <Route path="/private_pswd" element={<PrivatePswd />} />
+      <Route path="/sv_create_pool" element={<SvCreatePool />} />
+      <Route path="/team_selected" element={<TeamSelected />} />
     </Routes>
   )
 }

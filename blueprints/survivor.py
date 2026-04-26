@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 from db_accessor.db_accessor import db2
 from constants import PAY_TYPE_ID, BOX_TYPE_ID, EMOJIS, ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from utils import apology, login_required, admin_required
@@ -11,6 +11,24 @@ import logging
 
 bp = Blueprint('survivor', __name__)
 
+
+@bp.route('/api/sv_create_pool', methods=['POST'])
+def api_sv_create_pool():
+    if session.get('is_admin') != 1:
+        return jsonify({'error': 'forbidden'}), 403
+    data = request.get_json()
+    pool_name = data.get('pool_name', '').strip()
+    pool_password = data.get('pool_password', '').strip()
+    if not pool_name or not pool_password:
+        return jsonify({'error': 'Pool name and password are required.'})
+    if db2("SELECT pool_id FROM sv_pools WHERE pool_name = %s", (pool_name,)):
+        return jsonify({'error': f'A pool named "{pool_name}" already exists.'})
+    try:
+        db2("INSERT INTO sv_pools (pool_name, password, admin) VALUES (%s, %s, %s)", (pool_name, pool_password, session['userid']))
+        result = db2("SELECT pool_id FROM sv_pools WHERE pool_name = %s", (pool_name,))
+        return jsonify({'success': True, 'pool_id': result[0][0] if result else None, 'pool_name': pool_name})
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 @bp.route('/sv_create_pool', methods=['GET', 'POST'])
 def sv_create_pool():

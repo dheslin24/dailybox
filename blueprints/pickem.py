@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for, Markup
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for, Markup
 from db_accessor.db_accessor import db2
 from constants import PAY_TYPE_ID, BOX_TYPE_ID, EMOJIS, ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from utils import apology, login_required, admin_required
@@ -663,6 +663,19 @@ def pickem_all_picks():
     eliminated_list.append('rgimbel')
 
     return render_template("pickem_all_picks.html", game_details=game_details, user_picks=user_picks_dict, game_dict=game_dict, current_username=session['username'], tb_dict=tb_dict, winning_user=winning_user, tie_break_log=tie_break_log, winner=winner, crown=crown, eliminated_list=eliminated_list)
+
+@bp.route("/api/ncaab_games", methods=["GET"])
+@login_required
+def api_ncaab_games():
+    data = get_ncaab_games()
+    events = []
+    for event in data.get('events', []):
+        competitors = []
+        for competition in event.get('competitions', []):
+            for competitor in competition.get('competitors', []):
+                competitors.append({'abbr': competitor['team']['abbreviation'], 'score': competitor['score']})
+        events.append({'id': event['id'], 'date': event['date'], 'name': event['shortName'], 'competitors': competitors})
+    return jsonify({'events': events})
 
 @bp.route("/ncaab_games", methods=["GET", "POST"])
 def ncaab_games():
