@@ -33,7 +33,7 @@ function ScoresTable({ scores, home, away, ptype }) {
   const isMinute = ptype === 8
   return (
     <div className="col-lg-4 col-md-6 col-xs-12">
-      <p className="text-center">Live IN-Game Updates (must refresh)</p>
+      <p className="text-center">Live IN-Game Updates (auto-refreshes every 30s)</p>
       {ptype === 3 && (
         <p className="text-center">Curious about how payouts work?? Click <a href={`/app/es_payout_details`}>here</a></p>
       )}
@@ -125,6 +125,11 @@ export default function DisplayBox() {
   }, [boxid])
 
   useEffect(load, [load])
+
+  useEffect(() => {
+    const id = setInterval(load, 30000)
+    return () => clearInterval(id)
+  }, [load])
 
   const handleBoxClick = (boxNum) => {
     fetch('/api/select_box', {
