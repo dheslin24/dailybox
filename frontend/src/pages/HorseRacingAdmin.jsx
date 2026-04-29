@@ -77,11 +77,13 @@ export default function HorseRacingAdmin() {
       .then(d => { if (d.success) loadPool(selectedRace.race_id); else flash(d.error, false) })
 
   const saveDraftOrder = () => {
-    const order = draftOrder.filter(u => u !== '').map(Number)
+    const order = draftOrder
+      .map((u, i) => u !== '' ? { pick_order: i + 1, user_id: Number(u) } : null)
+      .filter(Boolean)
     const seen = new Set()
-    for (const id of order) {
-      if (seen.has(id)) { flash('Duplicate user in draft order — please fix', false); return }
-      seen.add(id)
+    for (const { user_id } of order) {
+      if (seen.has(user_id)) { flash('Duplicate user in draft order — please fix', false); return }
+      seen.add(user_id)
     }
     post('/api/hr_set_draft_order', { race_id: selectedRace.race_id, order })
       .then(d => { flash(d.success ? 'Draft order saved!' : d.error, !!d.success); if (d.success) loadPool(selectedRace.race_id) })

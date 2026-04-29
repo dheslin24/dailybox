@@ -98,9 +98,9 @@ def api_hr_set_draft_order():
     if not race_id or not order:
         return jsonify({'error': 'race_id and order required'}), 400
     db2("DELETE FROM hr_draft_order WHERE race_id = %s", (race_id,))
-    for i, user_id in enumerate(order, start=1):
+    for slot in order:
         db2("INSERT INTO hr_draft_order (race_id, user_id, pick_order) VALUES (%s, %s, %s)",
-            (race_id, user_id, i))
+            (race_id, slot['user_id'], slot['pick_order']))
     return jsonify({'success': True})
 
 
