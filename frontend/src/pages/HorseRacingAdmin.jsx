@@ -28,9 +28,8 @@ export default function HorseRacingAdmin() {
     fetch(`/api/hr_pool?race_id=${raceId}`)
       .then(r => r.json())
       .then(d => {
-        if (d.error) return
+        if (d.error) { flash(d.error, false); return }
         setPoolData(d)
-        // Pre-fill draft order dropdowns from saved data
         const order = Array(20).fill('')
         d.draft_order.forEach(slot => {
           if (slot.pick_order >= 1 && slot.pick_order <= 20)
@@ -38,6 +37,7 @@ export default function HorseRacingAdmin() {
         })
         setDraftOrder(order)
       })
+      .catch(e => flash(`Load failed: ${e.message}`, false))
 
   useEffect(() => { loadRaces(); loadUsers() }, [])
 
