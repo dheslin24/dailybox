@@ -30,12 +30,14 @@ export default function Layout({ children }) {
                   <li><a href="/app/custom_game_list">Super Bowl Boxes</a></li>
                   <li><a href="/app/my_games">My Games</a></li>
                   <li><a href="/app/payment_status">Payment Status</a></li>
+                  <li><a href="/app/horse_racing">Derby Pool</a></li>
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
                   {session.is_admin === 1 && (
                     <>
                       <li><a href="/app/bygzomo">BYGZomo</a></li>
                       <li><a href="/app/admin">Admin</a></li>
+                      <li><a href="/app/horse_racing_admin">HR Admin</a></li>
                     </>
                   )}
                   <li><a href="/app/user_details">User {session.username}</a></li>

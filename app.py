@@ -11,6 +11,7 @@ from blueprints.auth import bp as auth_bp
 from blueprints.boxes import bp as boxes_bp
 from blueprints.pickem import bp as pickem_bp
 from blueprints.survivor import bp as survivor_bp
+from blueprints.horse_racing import bp as horse_racing_bp
 from constants import UPLOAD_FOLDER
 
 
@@ -52,6 +53,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(boxes_bp)
 app.register_blueprint(pickem_bp)
 app.register_blueprint(survivor_bp)
+app.register_blueprint(horse_racing_bp)
 
 _PASSTHROUGH_PREFIXES = ('/api/', '/app/', '/static/', '/assets/')
 _PASSTHROUGH_EXACT = {'/logout', '/remove_image', '/upload_file'}

@@ -41,6 +41,8 @@ import ViewAllPicks from './pages/ViewAllPicks.jsx'
 import DisplayBox from './pages/DisplayBox.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import HorseRacingPool from './pages/HorseRacingPool.jsx'
+import HorseRacingAdmin from './pages/HorseRacingAdmin.jsx'
 
 function App() {
   return (
@@ -87,6 +89,8 @@ function App() {
       <Route path="/display_box" element={<DisplayBox />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/horse_racing" element={<HorseRacingPool />} />
+      <Route path="/horse_racing_admin" element={<HorseRacingAdmin />} />
     </Routes>
   )
 }
