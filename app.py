@@ -54,7 +54,7 @@ app.register_blueprint(pickem_bp)
 app.register_blueprint(survivor_bp)
 
 _PASSTHROUGH_PREFIXES = ('/api/', '/app/', '/static/', '/assets/')
-_PASSTHROUGH_EXACT = {'/logout'}
+_PASSTHROUGH_EXACT = {'/logout', '/remove_image', '/upload_file'}
 
 @app.before_request
 def redirect_legacy_to_react():
