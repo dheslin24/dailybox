@@ -27,7 +27,7 @@ def db2(s, params=(), db_config=db_config):
         cursor.execute(s)
 
     rv = ()
-    if s[:4].upper() in ("SELE", "SHOW", "DESC"):
+    if s.lstrip()[:4].upper() in ("SELE", "SHOW", "DESC"):
         rv = cursor.fetchall()
         cursor.close()
         cnx.close()

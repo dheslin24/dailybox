@@ -26,8 +26,12 @@ export default function HorseRacingAdmin() {
 
   const loadPool = (raceId) =>
     fetch(`/api/hr_pool?race_id=${raceId}`)
-      .then(r => r.json())
-      .then(d => {
+      .then(r => r.text())
+      .then(text => {
+        let d
+        try { d = JSON.parse(text) } catch (e) {
+          flash(`Non-JSON response: ${text.slice(0, 300)}`, false); return
+        }
         if (d.error) { flash(d.error, false); return }
         setPoolData(d)
         const order = Array(20).fill('')

@@ -186,29 +186,25 @@ def api_hr_pool():
             'status': race_row[0][3]}
 
     # Horses with pick info
-    entry_rows = db2("""
-        SELECT e.entry_id, e.post_position, e.horse_name, e.is_winner,
+    entry_rows = db2("""SELECT e.entry_id, e.post_position, e.horse_name, e.is_winner,
                p.user_id, u.username
         FROM hr_entries e
         LEFT JOIN hr_picks p ON p.entry_id = e.entry_id AND p.race_id = %s
         LEFT JOIN users u ON u.userid = p.user_id
         WHERE e.race_id = %s
-        ORDER BY e.post_position ASC, e.entry_id ASC
-    """, (race_id, race_id))
+        ORDER BY e.post_position ASC, e.entry_id ASC""", (race_id, race_id))
     entries = [{'entry_id': r[0], 'post_position': r[1], 'horse_name': r[2],
                 'is_winner': bool(r[3]), 'picked_by': r[4], 'picked_by_name': r[5]}
                for r in entry_rows]
 
     # Draft order with pick info
-    draft_rows = db2("""
-        SELECT d.pick_order, d.user_id, u.username, p.entry_id, e.horse_name
+    draft_rows = db2("""SELECT d.pick_order, d.user_id, u.username, p.entry_id, e.horse_name
         FROM hr_draft_order d
         JOIN  users u ON u.userid = d.user_id
         LEFT JOIN hr_picks p ON p.user_id = d.user_id AND p.race_id = %s
         LEFT JOIN hr_entries e ON e.entry_id = p.entry_id
         WHERE d.race_id = %s
-        ORDER BY d.pick_order ASC
-    """, (race_id, race_id))
+        ORDER BY d.pick_order ASC""", (race_id, race_id))
     draft_order = [{'pick_order': r[0], 'user_id': r[1], 'username': r[2],
                     'has_picked': r[3] is not None, 'entry_id': r[3], 'horse_name': r[4]}
                    for r in draft_rows]
