@@ -22,6 +22,12 @@ export default function LandingPage() {
               <div style={{fontSize:'1.5em', fontWeight:'bold', marginTop:'12px'}}>Survivor Pools</div>
             </td>
           </tr>
+          <tr style={{background:'#fff'}}>
+            <td colSpan="2" style={{textAlign:'center', cursor:'pointer', padding:'24px 0', background:'#fff'}} onClick={() => window.location.href = '/app/horse_racing'}>
+              <img src="/static/simpsons_horse.gif" alt="Derby Pool" style={{display:'block', margin:'auto', width:'90%', maxWidth:'900px', height:'auto', borderRadius:'8px'}} />
+              <div style={{fontSize:'1.5em', fontWeight:'bold', marginTop:'12px'}}>Kentucky Derby Pool</div>
+            </td>
+          </tr>
           <tr>
             <td className="landing" style={{textAlign:'center', cursor:'pointer'}} onClick={() => window.location.href = '/app/private_pswd'}>
               <img src="https://pbs.twimg.com/media/ECkwxxLX4AE_btl.jpg" style={{display:'block', width:'auto', height:'auto', margin:'auto'}} alt="" />
