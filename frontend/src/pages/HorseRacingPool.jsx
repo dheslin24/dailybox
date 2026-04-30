@@ -93,7 +93,7 @@ export default function HorseRacingPool() {
 
   const hasOdds = entries.some(e => e.odds)
   const oddsUpdated = race.odds_updated_at
-    ? new Date(race.odds_updated_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    ? new Date(race.odds_updated_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York', timeZoneName: 'short' })
     : null
 
   return (
