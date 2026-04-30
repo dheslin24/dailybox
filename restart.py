@@ -10,7 +10,7 @@ build_frontend = '--build' in sys.argv or '-b' in sys.argv
 
 if build_frontend:
     print("building frontend...")
-    result = subprocess.run(['npm', 'run', 'build'], cwd='/home/dheslin/bygtech/dailybox/frontend')
+    result = subprocess.run(['npm', 'run', 'build'], cwd='/home/dheslin/dailybox/frontend')
     if result.returncode != 0:
         print("frontend build failed — aborting restart")
         sys.exit(1)
