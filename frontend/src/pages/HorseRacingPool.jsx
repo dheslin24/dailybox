@@ -187,7 +187,7 @@ export default function HorseRacingPool() {
           <h4>Draft Board</h4>
           <table className="table table-condensed table-striped" style={{ fontSize: 13 }}>
             <thead>
-              <tr><th style={{ width: 30 }}>#</th><th>Picker</th><th>Horse</th></tr>
+              <tr><th style={{ width: 30 }}>#</th><th>Picker</th><th>Horse</th><th style={{ width: 40 }}></th></tr>
             </thead>
             <tbody>
               {draft_order.map(d => {
@@ -200,6 +200,9 @@ export default function HorseRacingPool() {
                     <td>{d.pick_order}</td>
                     <td>{d.username}{isOnClock ? ' ⏰' : ''}</td>
                     <td>{d.horse_name || (isOnClock ? '...' : '—')}</td>
+                    <td style={{ textAlign: 'center', color: d.paid ? '#28a745' : '#ccc' }} title={d.paid ? 'Paid' : 'Unpaid'}>
+                      $
+                    </td>
                   </tr>
                 )
               })}

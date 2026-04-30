@@ -98,6 +98,10 @@ export default function HorseRacingAdmin() {
         else flash(d.error, false)
       })
 
+  const togglePaid = (userId, currentPaid) =>
+    post('/api/hr_set_paid', { race_id: selectedRace.race_id, user_id: userId, paid: !currentPaid })
+      .then(d => { if (d.success) loadPool(selectedRace.race_id); else flash(d.error, false) })
+
   const adminSetPick = () => {
     if (!adminPickUserId || !adminPickEntryId) return
     const user = poolData.draft_order.find(d => d.user_id === Number(adminPickUserId))
@@ -324,7 +328,7 @@ export default function HorseRacingAdmin() {
               <div className="panel-body">
                 <table className="table table-condensed table-striped" style={{ fontSize: 13 }}>
                   <thead>
-                    <tr><th>#</th><th>User</th><th>Pick</th></tr>
+                    <tr><th>#</th><th>User</th><th>Pick</th><th>Paid</th></tr>
                   </thead>
                   <tbody>
                     {poolData.draft_order.map(d => {
@@ -334,6 +338,13 @@ export default function HorseRacingAdmin() {
                           <td>{d.pick_order}</td>
                           <td>{d.username}{isOnClock ? ' ⏰' : ''}</td>
                           <td>{d.horse_name || '—'}</td>
+                          <td>
+                            <button
+                              className={`btn btn-xs ${d.paid ? 'btn-success' : 'btn-default'}`}
+                              onClick={() => togglePaid(d.user_id, d.paid)}>
+                              {d.paid ? '✓ Paid' : 'Unpaid'}
+                            </button>
+                          </td>
                         </tr>
                       )
                     })}

@@ -30,9 +30,14 @@ def api_hr_init_db():
             race_id    INT NOT NULL,
             user_id    INT NOT NULL,
             pick_order INT NOT NULL,
+            paid       TINYINT DEFAULT 0,
             UNIQUE KEY uq_race_user  (race_id, user_id),
             UNIQUE KEY uq_race_order (race_id, pick_order)
         )""")
+    try:
+        db2("ALTER TABLE hr_draft_order ADD COLUMN paid TINYINT DEFAULT 0")
+    except Exception:
+        pass  # column already exists
     db2("""CREATE TABLE IF NOT EXISTS hr_picks (
             pick_id  INT AUTO_INCREMENT PRIMARY KEY,
             race_id  INT NOT NULL,
@@ -143,6 +148,21 @@ def api_hr_users():
                                'first_name': r[2], 'last_name': r[3]} for r in rows]})
 
 
+@bp.route('/api/hr_set_paid', methods=['POST'])
+def api_hr_set_paid():
+    if session.get('is_admin') != 1:
+        return jsonify({'error': 'forbidden'}), 403
+    data = request.get_json()
+    race_id = data.get('race_id')
+    user_id = data.get('user_id')
+    paid = data.get('paid')
+    if race_id is None or user_id is None or paid is None:
+        return jsonify({'error': 'race_id, user_id, and paid required'}), 400
+    db2("UPDATE hr_draft_order SET paid = %s WHERE race_id = %s AND user_id = %s",
+        (1 if paid else 0, race_id, user_id))
+    return jsonify({'success': True})
+
+
 @bp.route('/api/hr_admin_set_pick', methods=['POST'])
 def api_hr_admin_set_pick():
     if session.get('is_admin') != 1:
@@ -231,7 +251,7 @@ def api_hr_pool():
                for r in entry_rows]
 
     # Draft order with pick info
-    draft_rows = db2("""SELECT d.pick_order, d.user_id, u.username, p.entry_id, e.horse_name
+    draft_rows = db2("""SELECT d.pick_order, d.user_id, u.username, p.entry_id, e.horse_name, d.paid
         FROM hr_draft_order d
         JOIN  users u ON u.userid = d.user_id
         LEFT JOIN hr_picks p ON p.user_id = d.user_id AND p.race_id = %s
@@ -239,7 +259,8 @@ def api_hr_pool():
         WHERE d.race_id = %s
         ORDER BY d.pick_order ASC""", (race_id, race_id))
     draft_order = [{'pick_order': r[0], 'user_id': r[1], 'username': r[2],
-                    'has_picked': r[3] is not None, 'entry_id': r[3], 'horse_name': r[4]}
+                    'has_picked': r[3] is not None, 'entry_id': r[3], 'horse_name': r[4],
+                    'paid': bool(r[5])}
                    for r in draft_rows]
 
     on_clock = next((d for d in draft_order if not d['has_picked']), None)
