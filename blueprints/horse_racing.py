@@ -290,7 +290,7 @@ def api_hr_pool():
     race = {'race_id': race_row[0][0], 'name': race_row[0][1],
             'race_date': str(race_row[0][2]) if race_row[0][2] else '',
             'status': race_row[0][3],
-            'odds_updated_at': race_row[0][4].isoformat() if race_row[0][4] else None}
+            'odds_updated_at': race_row[0][4].isoformat() + 'Z' if race_row[0][4] else None}
 
     # Horses with pick info
     entry_rows = db2("""SELECT e.entry_id, e.post_position, e.horse_name, e.is_winner,
