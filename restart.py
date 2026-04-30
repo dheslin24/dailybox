@@ -3,7 +3,18 @@ import psutil
 import subprocess
 import signal
 import os
+import sys
 import time
+
+build_frontend = '--build' in sys.argv or '-b' in sys.argv
+
+if build_frontend:
+    print("building frontend...")
+    result = subprocess.run(['npm', 'run', 'build'], cwd='/home/dheslin/bygtech/dailybox/frontend')
+    if result.returncode != 0:
+        print("frontend build failed — aborting restart")
+        sys.exit(1)
+    print("frontend build complete")
 
 flask_apps = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'flask' in p.info['name']]
 
