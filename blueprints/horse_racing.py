@@ -13,23 +13,37 @@ def api_hr_init_db():
     if session.get('is_admin') != 1:
         return jsonify({'error': 'forbidden'}), 403
     db2("""CREATE TABLE IF NOT EXISTS hr_races (
-            race_id  INT AUTO_INCREMENT PRIMARY KEY,
-            name     VARCHAR(100) NOT NULL,
-            race_date DATE,
-            status   VARCHAR(20) DEFAULT 'setup'
+            race_id          INT AUTO_INCREMENT PRIMARY KEY,
+            name             VARCHAR(100) NOT NULL,
+            race_date        DATE,
+            status           VARCHAR(20) DEFAULT 'setup',
+            odds_updated_at  DATETIME DEFAULT NULL
         )""")
+    try:
+        db2("ALTER TABLE hr_races ADD COLUMN odds_updated_at DATETIME DEFAULT NULL")
+    except Exception:
+        pass
     db2("""CREATE TABLE IF NOT EXISTS hr_entries (
             entry_id      INT AUTO_INCREMENT PRIMARY KEY,
             race_id       INT NOT NULL,
             post_position INT,
             horse_name    VARCHAR(100) NOT NULL,
             is_winner     TINYINT DEFAULT 0,
-            scratched     TINYINT DEFAULT 0
+            scratched     TINYINT DEFAULT 0,
+            odds          VARCHAR(30) DEFAULT NULL,
+            jockey        VARCHAR(100) DEFAULT NULL,
+            trainer       VARCHAR(100) DEFAULT NULL
         )""")
-    try:
-        db2("ALTER TABLE hr_entries ADD COLUMN scratched TINYINT DEFAULT 0")
-    except Exception:
-        pass  # column already exists
+    for col, defn in [
+        ('scratched', 'TINYINT DEFAULT 0'),
+        ('odds',      "VARCHAR(30) DEFAULT NULL"),
+        ('jockey',    "VARCHAR(100) DEFAULT NULL"),
+        ('trainer',   "VARCHAR(100) DEFAULT NULL"),
+    ]:
+        try:
+            db2(f"ALTER TABLE hr_entries ADD COLUMN {col} {defn}")
+        except Exception:
+            pass
     db2("""CREATE TABLE IF NOT EXISTS hr_draft_order (
             id         INT AUTO_INCREMENT PRIMARY KEY,
             race_id    INT NOT NULL,
@@ -166,6 +180,24 @@ def api_hr_scratch_horse():
     return jsonify({'success': True})
 
 
+@bp.route('/api/hr_set_horse_meta', methods=['POST'])
+def api_hr_set_horse_meta():
+    if session.get('is_admin') != 1:
+        return jsonify({'error': 'forbidden'}), 403
+    data = request.get_json()
+    entry_id = data.get('entry_id')
+    race_id  = data.get('race_id')
+    if not entry_id or not race_id:
+        return jsonify({'error': 'entry_id and race_id required'}), 400
+    odds    = data.get('odds',    '').strip() or None
+    jockey  = data.get('jockey',  '').strip() or None
+    trainer = data.get('trainer', '').strip() or None
+    db2("UPDATE hr_entries SET odds = %s, jockey = %s, trainer = %s WHERE entry_id = %s",
+        (odds, jockey, trainer, entry_id))
+    db2("UPDATE hr_races SET odds_updated_at = NOW() WHERE race_id = %s", (race_id,))
+    return jsonify({'success': True})
+
+
 @bp.route('/api/hr_set_paid', methods=['POST'])
 def api_hr_set_paid():
     if session.get('is_admin') != 1:
@@ -252,16 +284,17 @@ def api_hr_pool():
     if not in_pool:
         return jsonify({'error': 'You are not in this pool'}), 403
 
-    race_row = db2("SELECT race_id, name, race_date, status FROM hr_races WHERE race_id = %s", (race_id,))
+    race_row = db2("SELECT race_id, name, race_date, status, odds_updated_at FROM hr_races WHERE race_id = %s", (race_id,))
     if not race_row:
         return jsonify({'error': 'Race not found'}), 404
     race = {'race_id': race_row[0][0], 'name': race_row[0][1],
             'race_date': str(race_row[0][2]) if race_row[0][2] else '',
-            'status': race_row[0][3]}
+            'status': race_row[0][3],
+            'odds_updated_at': race_row[0][4].isoformat() if race_row[0][4] else None}
 
     # Horses with pick info
     entry_rows = db2("""SELECT e.entry_id, e.post_position, e.horse_name, e.is_winner,
-               p.user_id, u.username, e.scratched
+               p.user_id, u.username, e.scratched, e.odds, e.jockey, e.trainer
         FROM hr_entries e
         LEFT JOIN hr_picks p ON p.entry_id = e.entry_id AND p.race_id = %s
         LEFT JOIN users u ON u.userid = p.user_id
@@ -269,7 +302,7 @@ def api_hr_pool():
         ORDER BY e.post_position ASC, e.entry_id ASC""", (race_id, race_id))
     entries = [{'entry_id': r[0], 'post_position': r[1], 'horse_name': r[2],
                 'is_winner': bool(r[3]), 'picked_by': r[4], 'picked_by_name': r[5],
-                'scratched': bool(r[6])}
+                'scratched': bool(r[6]), 'odds': r[7], 'jockey': r[8], 'trainer': r[9]}
                for r in entry_rows]
 
     # Draft order with pick info

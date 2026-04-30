@@ -91,6 +91,11 @@ export default function HorseRacingPool() {
 
   const { race, entries, draft_order, on_clock, is_on_clock, current_user_pick, winner } = data
 
+  const hasOdds = entries.some(e => e.odds)
+  const oddsUpdated = race.odds_updated_at
+    ? new Date(race.odds_updated_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    : null
+
   return (
     <Layout>
       {/* Header */}
@@ -142,7 +147,10 @@ export default function HorseRacingPool() {
       <div className="row">
         {/* ── Horse field ─────────────────────────────────────────────────── */}
         <div className="col-md-7">
-          <h4>The Field ({entries.length} horses)</h4>
+          <h4 style={{ marginBottom: hasOdds && oddsUpdated ? 2 : undefined }}>The Field ({entries.length} horses)</h4>
+          {hasOdds && oddsUpdated && (
+            <p className="text-muted" style={{ fontSize: 11, marginBottom: 8 }}>Odds as of {oddsUpdated}</p>
+          )}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {entries.map(e => {
               const isMine = current_user_pick?.entry_id === e.entry_id
@@ -170,6 +178,15 @@ export default function HorseRacingPool() {
                   <div style={{ fontWeight: 'bold', fontSize: 13, textDecoration: e.scratched ? 'line-through' : undefined }}>
                     {e.post_position ? `#${e.post_position} ` : ''}{e.horse_name}
                   </div>
+                  {e.odds && !e.scratched && (
+                    <div style={{ fontSize: 12, fontWeight: 'bold', color: '#333', marginTop: 2 }}>{e.odds}</div>
+                  )}
+                  {(e.jockey || e.trainer) && !e.scratched && (
+                    <div style={{ fontSize: 10, color: '#666', marginTop: 2, lineHeight: 1.4 }}>
+                      {e.jockey && <div>J: {e.jockey}</div>}
+                      {e.trainer && <div>T: {e.trainer}</div>}
+                    </div>
+                  )}
                   <div style={{ fontSize: 11, marginTop: 3, color: '#555' }}>
                     {e.scratched && <span style={{ color: '#999' }}>Scratched</span>}
                     {!e.scratched && e.is_winner && '🏆 Winner'}

@@ -17,6 +17,10 @@ export default function HorseRacingAdmin() {
   const [draftOrder, setDraftOrder] = useState(Array(20).fill(''))
   const [adminPickUserId, setAdminPickUserId] = useState('')
   const [adminPickEntryId, setAdminPickEntryId] = useState('')
+  const [metaEntryId, setMetaEntryId] = useState('')
+  const [metaOdds, setMetaOdds] = useState('')
+  const [metaJockey, setMetaJockey] = useState('')
+  const [metaTrainer, setMetaTrainer] = useState('')
 
   const flash = (text, ok = true) => { setMsg({ text, ok }); setTimeout(() => setMsg({ text: '', ok: true }), 4000) }
 
@@ -97,6 +101,28 @@ export default function HorseRacingAdmin() {
         if (d.success) { flash(`Status → ${status}`); loadRaces(); loadPool(selectedRace.race_id) }
         else flash(d.error, false)
       })
+
+  const selectMetaEntry = (entryId) => {
+    setMetaEntryId(entryId)
+    const e = poolData?.entries.find(e => e.entry_id === Number(entryId))
+    setMetaOdds(e?.odds || '')
+    setMetaJockey(e?.jockey || '')
+    setMetaTrainer(e?.trainer || '')
+  }
+
+  const saveHorseMeta = () => {
+    if (!metaEntryId) return
+    post('/api/hr_set_horse_meta', {
+      race_id: selectedRace.race_id,
+      entry_id: Number(metaEntryId),
+      odds: metaOdds,
+      jockey: metaJockey,
+      trainer: metaTrainer,
+    }).then(d => {
+      if (d.success) { flash('Horse info saved'); loadPool(selectedRace.race_id) }
+      else flash(d.error, false)
+    })
+  }
 
   const toggleScratched = (entryId, currentScratched) =>
     post('/api/hr_scratch_horse', { entry_id: entryId, scratched: !currentScratched })
@@ -296,6 +322,38 @@ export default function HorseRacingAdmin() {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Horse metadata */}
+          <div className="panel panel-default">
+            <div className="panel-heading"><strong>Horse Info (Odds / Jockey / Trainer)</strong></div>
+            <div className="panel-body">
+              <div className="form-inline" style={{ marginBottom: 8 }}>
+                <select className="form-control input-sm" style={{ marginRight: 8, minWidth: 180 }}
+                  value={metaEntryId} onChange={e => selectMetaEntry(e.target.value)}>
+                  <option value="">— select horse —</option>
+                  {poolData.entries.map(e => (
+                    <option key={e.entry_id} value={e.entry_id}>
+                      {e.post_position ? `#${e.post_position} ` : ''}{e.horse_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {metaEntryId && (
+                <div className="form-inline">
+                  <input className="form-control input-sm" placeholder="Odds (e.g. 5/2)"
+                    value={metaOdds} onChange={e => setMetaOdds(e.target.value)}
+                    style={{ width: 100, marginRight: 6 }} />
+                  <input className="form-control input-sm" placeholder="Jockey"
+                    value={metaJockey} onChange={e => setMetaJockey(e.target.value)}
+                    style={{ width: 150, marginRight: 6 }} />
+                  <input className="form-control input-sm" placeholder="Trainer"
+                    value={metaTrainer} onChange={e => setMetaTrainer(e.target.value)}
+                    style={{ width: 150, marginRight: 6 }} />
+                  <button className="btn btn-sm btn-primary" onClick={saveHorseMeta}>Save</button>
+                </div>
+              )}
             </div>
           </div>
 
