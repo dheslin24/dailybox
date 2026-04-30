@@ -15,6 +15,8 @@ export default function HorseRacingAdmin() {
   const [postPos, setPostPos] = useState('')
   const [horseName, setHorseName] = useState('')
   const [draftOrder, setDraftOrder] = useState(Array(20).fill(''))
+  const [adminPickUserId, setAdminPickUserId] = useState('')
+  const [adminPickEntryId, setAdminPickEntryId] = useState('')
 
   const flash = (text, ok = true) => { setMsg({ text, ok }); setTimeout(() => setMsg({ text: '', ok: true }), 4000) }
 
@@ -95,6 +97,27 @@ export default function HorseRacingAdmin() {
         if (d.success) { flash(`Status → ${status}`); loadRaces(); loadPool(selectedRace.race_id) }
         else flash(d.error, false)
       })
+
+  const adminSetPick = () => {
+    if (!adminPickUserId || !adminPickEntryId) return
+    const user = poolData.draft_order.find(d => d.user_id === Number(adminPickUserId))
+    const entry = poolData.entries.find(e => e.entry_id === Number(adminPickEntryId))
+    if (!window.confirm(`Set ${user?.username}'s pick to "${entry?.horse_name}"?`)) return
+    post('/api/hr_admin_set_pick', {
+      race_id: selectedRace.race_id,
+      user_id: Number(adminPickUserId),
+      entry_id: Number(adminPickEntryId),
+    }).then(d => {
+      if (d.success) {
+        flash(`Pick set: ${user?.username} → ${entry?.horse_name}`)
+        setAdminPickUserId('')
+        setAdminPickEntryId('')
+        loadPool(selectedRace.race_id)
+      } else {
+        flash(d.error, false)
+      }
+    })
+  }
 
   const markWinner = (entryId, horseName) => {
     if (!window.confirm(`Mark "${horseName}" as the winner?`)) return
@@ -259,6 +282,40 @@ export default function HorseRacingAdmin() {
               </div>
             </div>
           </div>
+
+          {/* Admin override pick */}
+          {poolData.race.status === 'open' && poolData.draft_order.length > 0 && (
+            <div className="panel panel-warning">
+              <div className="panel-heading"><strong>Admin Override Pick</strong></div>
+              <div className="panel-body">
+                <div className="form-inline">
+                  <select className="form-control input-sm" style={{ marginRight: 8, minWidth: 140 }}
+                    value={adminPickUserId} onChange={e => setAdminPickUserId(e.target.value)}>
+                    <option value="">— select user —</option>
+                    {poolData.draft_order.map(d => (
+                      <option key={d.user_id} value={d.user_id}>
+                        {d.username}{d.has_picked ? ' (has pick)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <select className="form-control input-sm" style={{ marginRight: 8, minWidth: 180 }}
+                    value={adminPickEntryId} onChange={e => setAdminPickEntryId(e.target.value)}>
+                    <option value="">— select horse —</option>
+                    {poolData.entries.filter(e => !e.picked_by).map(e => (
+                      <option key={e.entry_id} value={e.entry_id}>
+                        {e.post_position ? `#${e.post_position} ` : ''}{e.horse_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="btn btn-sm btn-warning"
+                    disabled={!adminPickUserId || !adminPickEntryId}
+                    onClick={adminSetPick}>
+                    Set Pick
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Current picks summary */}
           {poolData.draft_order.length > 0 && (

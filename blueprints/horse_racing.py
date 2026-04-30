@@ -143,6 +143,39 @@ def api_hr_users():
                                'first_name': r[2], 'last_name': r[3]} for r in rows]})
 
 
+@bp.route('/api/hr_admin_set_pick', methods=['POST'])
+def api_hr_admin_set_pick():
+    if session.get('is_admin') != 1:
+        return jsonify({'error': 'forbidden'}), 403
+    data = request.get_json()
+    race_id = data.get('race_id')
+    user_id = data.get('user_id')
+    entry_id = data.get('entry_id')
+    if not race_id or not user_id or not entry_id:
+        return jsonify({'error': 'race_id, user_id, and entry_id required'}), 400
+
+    race = db2("SELECT status FROM hr_races WHERE race_id = %s", (race_id,))
+    if not race:
+        return jsonify({'error': 'Race not found'}), 404
+    if race[0][0] != 'open':
+        return jsonify({'error': 'Race is not open'}), 400
+
+    if not db2("SELECT 1 FROM hr_draft_order WHERE race_id = %s AND user_id = %s", (race_id, user_id)):
+        return jsonify({'error': 'User is not in this draft'}), 400
+
+    if not db2("SELECT 1 FROM hr_entries WHERE entry_id = %s AND race_id = %s", (entry_id, race_id)):
+        return jsonify({'error': 'Horse not found in this race'}), 400
+
+    taken = db2("SELECT user_id FROM hr_picks WHERE race_id = %s AND entry_id = %s", (race_id, entry_id))
+    if taken and taken[0][0] != user_id:
+        return jsonify({'error': 'That horse is already picked by another user'}), 400
+
+    db2("DELETE FROM hr_picks WHERE race_id = %s AND user_id = %s", (race_id, user_id))
+    db2("INSERT INTO hr_picks (race_id, user_id, entry_id) VALUES (%s, %s, %s)", (race_id, user_id, entry_id))
+    logging.info("Admin set pick: user %s → entry %s in race %s", user_id, entry_id, race_id)
+    return jsonify({'success': True})
+
+
 # ── POOL DATA ─────────────────────────────────────────────────────────────────
 
 @bp.route('/api/hr_races', methods=['GET'])
