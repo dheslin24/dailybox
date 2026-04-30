@@ -98,6 +98,10 @@ export default function HorseRacingAdmin() {
         else flash(d.error, false)
       })
 
+  const toggleScratched = (entryId, currentScratched) =>
+    post('/api/hr_scratch_horse', { entry_id: entryId, scratched: !currentScratched })
+      .then(d => { if (d.success) loadPool(selectedRace.race_id); else flash(d.error, false) })
+
   const togglePaid = (userId, currentPaid) =>
     post('/api/hr_set_paid', { race_id: selectedRace.race_id, user_id: userId, paid: !currentPaid })
       .then(d => { if (d.success) loadPool(selectedRace.race_id); else flash(d.error, false) })
@@ -215,11 +219,19 @@ export default function HorseRacingAdmin() {
                   <table className="table table-condensed" style={{ fontSize: 12 }}>
                     <tbody>
                       {poolData.entries.map(e => (
-                        <tr key={e.entry_id} style={{ background: e.is_winner ? '#ffd700' : undefined }}>
+                        <tr key={e.entry_id} style={{ background: e.is_winner ? '#ffd700' : e.scratched ? '#f5f5f5' : undefined }}>
                           <td style={{ width: 28 }}>{e.post_position ? `#${e.post_position}` : ''}</td>
-                          <td>{e.horse_name}{e.is_winner ? ' 🏆' : ''}</td>
-                          <td style={{ width: 28 }}>
-                            {!e.picked_by && (
+                          <td style={{ textDecoration: e.scratched ? 'line-through' : undefined, color: e.scratched ? '#999' : undefined }}>
+                            {e.horse_name}{e.is_winner ? ' 🏆' : ''}
+                          </td>
+                          <td style={{ width: 60, whiteSpace: 'nowrap' }}>
+                            <button
+                              className={`btn btn-xs ${e.scratched ? 'btn-warning' : 'btn-default'}`}
+                              style={{ marginRight: 2 }}
+                              onClick={() => toggleScratched(e.entry_id, e.scratched)}>
+                              {e.scratched ? '↺ Unscr' : 'Scratch'}
+                            </button>
+                            {!e.picked_by && !e.scratched && (
                               <button className="btn btn-xs btn-danger"
                                 onClick={() => deleteHorse(e.entry_id)}>×</button>
                             )}
@@ -305,7 +317,7 @@ export default function HorseRacingAdmin() {
                   <select className="form-control input-sm" style={{ marginRight: 8, minWidth: 180 }}
                     value={adminPickEntryId} onChange={e => setAdminPickEntryId(e.target.value)}>
                     <option value="">— select horse —</option>
-                    {poolData.entries.filter(e => !e.picked_by).map(e => (
+                    {poolData.entries.filter(e => !e.picked_by && !e.scratched).map(e => (
                       <option key={e.entry_id} value={e.entry_id}>
                         {e.post_position ? `#${e.post_position} ` : ''}{e.horse_name}
                       </option>

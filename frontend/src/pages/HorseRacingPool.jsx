@@ -147,10 +147,11 @@ export default function HorseRacingPool() {
             {entries.map(e => {
               const isMine = current_user_pick?.entry_id === e.entry_id
               const isTaken = !!e.picked_by
-              const canPick = race.status === 'open' && is_on_clock && !isTaken && !current_user_pick
+              const canPick = race.status === 'open' && is_on_clock && !isTaken && !current_user_pick && !e.scratched
 
               let bg = '#f8f9fa', border = '1px solid #ccc', cursor = 'default'
-              if (e.is_winner)  { bg = '#ffd700'; border = '2px solid #b8860b' }
+              if (e.scratched)  { bg = '#f5f5f5'; border = '1px solid #ddd' }
+              else if (e.is_winner)  { bg = '#ffd700'; border = '2px solid #b8860b' }
               else if (isMine)  { bg = '#cce5ff'; border = '2px solid #0066cc' }
               else if (isTaken) { bg = '#e9ecef' }
               else if (canPick) { bg = '#d4edda'; border = '1px solid #28a745'; cursor = 'pointer' }
@@ -162,19 +163,20 @@ export default function HorseRacingPool() {
                   style={{
                     width: 148, padding: '8px 10px', borderRadius: 6,
                     background: bg, border, cursor,
-                    opacity: isTaken && !isMine && !e.is_winner ? 0.55 : 1,
+                    opacity: (isTaken && !isMine && !e.is_winner) || e.scratched ? 0.55 : 1,
                     transition: 'opacity 0.15s',
                   }}
                 >
-                  <div style={{ fontWeight: 'bold', fontSize: 13 }}>
+                  <div style={{ fontWeight: 'bold', fontSize: 13, textDecoration: e.scratched ? 'line-through' : undefined }}>
                     {e.post_position ? `#${e.post_position} ` : ''}{e.horse_name}
                   </div>
                   <div style={{ fontSize: 11, marginTop: 3, color: '#555' }}>
-                    {e.is_winner && '🏆 Winner'}
-                    {!e.is_winner && isMine && '✓ Your pick'}
-                    {!e.is_winner && !isMine && isTaken && e.picked_by_name}
-                    {!isTaken && canPick && <span style={{ color: '#28a745' }}>Click to pick</span>}
-                    {!isTaken && !canPick && race.status === 'open' && <span style={{ color: '#999' }}>Available</span>}
+                    {e.scratched && <span style={{ color: '#999' }}>Scratched</span>}
+                    {!e.scratched && e.is_winner && '🏆 Winner'}
+                    {!e.scratched && !e.is_winner && isMine && '✓ Your pick'}
+                    {!e.scratched && !e.is_winner && !isMine && isTaken && e.picked_by_name}
+                    {!e.scratched && !isTaken && canPick && <span style={{ color: '#28a745' }}>Click to pick</span>}
+                    {!e.scratched && !isTaken && !canPick && race.status === 'open' && <span style={{ color: '#999' }}>Available</span>}
                   </div>
                 </div>
               )

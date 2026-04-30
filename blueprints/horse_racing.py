@@ -23,8 +23,13 @@ def api_hr_init_db():
             race_id       INT NOT NULL,
             post_position INT,
             horse_name    VARCHAR(100) NOT NULL,
-            is_winner     TINYINT DEFAULT 0
+            is_winner     TINYINT DEFAULT 0,
+            scratched     TINYINT DEFAULT 0
         )""")
+    try:
+        db2("ALTER TABLE hr_entries ADD COLUMN scratched TINYINT DEFAULT 0")
+    except Exception:
+        pass  # column already exists
     db2("""CREATE TABLE IF NOT EXISTS hr_draft_order (
             id         INT AUTO_INCREMENT PRIMARY KEY,
             race_id    INT NOT NULL,
@@ -148,6 +153,19 @@ def api_hr_users():
                                'first_name': r[2], 'last_name': r[3]} for r in rows]})
 
 
+@bp.route('/api/hr_scratch_horse', methods=['POST'])
+def api_hr_scratch_horse():
+    if session.get('is_admin') != 1:
+        return jsonify({'error': 'forbidden'}), 403
+    data = request.get_json()
+    entry_id = data.get('entry_id')
+    scratched = data.get('scratched')
+    if entry_id is None or scratched is None:
+        return jsonify({'error': 'entry_id and scratched required'}), 400
+    db2("UPDATE hr_entries SET scratched = %s WHERE entry_id = %s", (1 if scratched else 0, entry_id))
+    return jsonify({'success': True})
+
+
 @bp.route('/api/hr_set_paid', methods=['POST'])
 def api_hr_set_paid():
     if session.get('is_admin') != 1:
@@ -183,8 +201,11 @@ def api_hr_admin_set_pick():
     if not db2("SELECT 1 FROM hr_draft_order WHERE race_id = %s AND user_id = %s", (race_id, user_id)):
         return jsonify({'error': 'User is not in this draft'}), 400
 
-    if not db2("SELECT 1 FROM hr_entries WHERE entry_id = %s AND race_id = %s", (entry_id, race_id)):
+    entry = db2("SELECT scratched FROM hr_entries WHERE entry_id = %s AND race_id = %s", (entry_id, race_id))
+    if not entry:
         return jsonify({'error': 'Horse not found in this race'}), 400
+    if entry[0][0]:
+        return jsonify({'error': 'That horse has been scratched'}), 400
 
     taken = db2("SELECT user_id FROM hr_picks WHERE race_id = %s AND entry_id = %s", (race_id, entry_id))
     if taken and taken[0][0] != user_id:
@@ -240,14 +261,15 @@ def api_hr_pool():
 
     # Horses with pick info
     entry_rows = db2("""SELECT e.entry_id, e.post_position, e.horse_name, e.is_winner,
-               p.user_id, u.username
+               p.user_id, u.username, e.scratched
         FROM hr_entries e
         LEFT JOIN hr_picks p ON p.entry_id = e.entry_id AND p.race_id = %s
         LEFT JOIN users u ON u.userid = p.user_id
         WHERE e.race_id = %s
         ORDER BY e.post_position ASC, e.entry_id ASC""", (race_id, race_id))
     entries = [{'entry_id': r[0], 'post_position': r[1], 'horse_name': r[2],
-                'is_winner': bool(r[3]), 'picked_by': r[4], 'picked_by_name': r[5]}
+                'is_winner': bool(r[3]), 'picked_by': r[4], 'picked_by_name': r[5],
+                'scratched': bool(r[6])}
                for r in entry_rows]
 
     # Draft order with pick info
@@ -314,8 +336,11 @@ def api_hr_pick():
     if not on_clock or on_clock[0][0] != user_id:
         return jsonify({'error': "It's not your turn yet"}), 400
 
-    if not db2("SELECT 1 FROM hr_entries WHERE entry_id = %s AND race_id = %s", (entry_id, race_id)):
+    entry = db2("SELECT scratched FROM hr_entries WHERE entry_id = %s AND race_id = %s", (entry_id, race_id))
+    if not entry:
         return jsonify({'error': 'Horse not found in this race'}), 400
+    if entry[0][0]:
+        return jsonify({'error': 'That horse has been scratched'}), 400
 
     try:
         db2("INSERT INTO hr_picks (race_id, user_id, entry_id) VALUES (%s, %s, %s)",
