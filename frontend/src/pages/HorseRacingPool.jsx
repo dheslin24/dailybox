@@ -200,8 +200,8 @@ export default function HorseRacingPool() {
                     <td>{d.pick_order}</td>
                     <td>{d.username}{isOnClock ? ' ⏰' : ''}</td>
                     <td>{d.horse_name || (isOnClock ? '...' : '—')}</td>
-                    <td style={{ textAlign: 'center', color: d.paid ? '#28a745' : '#ccc' }} title={d.paid ? 'Paid' : 'Unpaid'}>
-                      $
+                    <td style={{ textAlign: 'center', color: '#28a745', fontWeight: 'bold' }}>
+                      {d.paid ? '$' : ''}
                     </td>
                   </tr>
                 )
