@@ -21,6 +21,7 @@ export default function HorseRacingAdmin() {
   const [metaOdds, setMetaOdds] = useState('')
   const [metaJockey, setMetaJockey] = useState('')
   const [metaTrainer, setMetaTrainer] = useState('')
+  const [csvFile, setCsvFile] = useState(null)
 
   const flash = (text, ok = true) => { setMsg({ text, ok }); setTimeout(() => setMsg({ text: '', ok: true }), 4000) }
 
@@ -122,6 +123,24 @@ export default function HorseRacingAdmin() {
       if (d.success) { flash('Horse info saved'); loadPool(selectedRace.race_id) }
       else flash(d.error, false)
     })
+  }
+
+  const importCsv = () => {
+    if (!csvFile || !selectedRace) return
+    const fd = new FormData()
+    fd.append('race_id', selectedRace.race_id)
+    fd.append('file', csvFile)
+    fetch('/api/hr_import_horses', { method: 'POST', body: fd })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          flash(`Imported ${d.added} horse${d.added !== 1 ? 's' : ''}`)
+          setCsvFile(null)
+          loadPool(selectedRace.race_id)
+        } else {
+          flash(d.error, false)
+        }
+      })
   }
 
   const toggleScratched = (entryId, currentScratched) =>
@@ -232,7 +251,7 @@ export default function HorseRacingAdmin() {
                   <strong>Horses ({poolData.entries.length})</strong>
                 </div>
                 <div className="panel-body">
-                  <div className="form-inline" style={{ marginBottom: 10 }}>
+                  <div className="form-inline" style={{ marginBottom: 6 }}>
                     <input className="form-control input-sm" placeholder="Post #"
                       value={postPos} onChange={e => setPostPos(e.target.value)}
                       style={{ width: 55, marginRight: 4 }} />
@@ -241,6 +260,21 @@ export default function HorseRacingAdmin() {
                       style={{ width: 130, marginRight: 4 }}
                       onKeyDown={e => e.key === 'Enter' && addHorse()} />
                     <button className="btn btn-sm btn-success" onClick={addHorse}>Add</button>
+                  </div>
+                  <div style={{ borderTop: '1px solid #eee', paddingTop: 8, marginBottom: 10 }}>
+                    <div className="form-inline">
+                      <input type="file" accept=".csv"
+                        style={{ marginRight: 6, fontSize: 12 }}
+                        onChange={e => setCsvFile(e.target.files[0] || null)} />
+                      <button className="btn btn-sm btn-default"
+                        disabled={!csvFile}
+                        onClick={importCsv}>
+                        Import CSV
+                      </button>
+                    </div>
+                    <p className="text-muted" style={{ fontSize: 11, marginTop: 4, marginBottom: 0 }}>
+                      Columns: horse name, post #, odds, jockey, trainer
+                    </p>
                   </div>
                   <table className="table table-condensed" style={{ fontSize: 12 }}>
                     <tbody>

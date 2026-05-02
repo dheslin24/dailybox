@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request, session
 from db_accessor.db_accessor import db2
 from utils import login_required
+import csv
+import io
 import logging
 
 bp = Blueprint('horse_racing', __name__)
@@ -165,6 +167,45 @@ def api_hr_users():
                   ORDER BY username""")
     return jsonify({'users': [{'userid': r[0], 'username': r[1],
                                'first_name': r[2], 'last_name': r[3]} for r in rows]})
+
+
+@bp.route('/api/hr_import_horses', methods=['POST'])
+def api_hr_import_horses():
+    if session.get('is_admin') != 1:
+        return jsonify({'error': 'forbidden'}), 403
+    race_id = request.form.get('race_id', type=int)
+    if not race_id:
+        return jsonify({'error': 'race_id required'}), 400
+    f = request.files.get('file')
+    if not f:
+        return jsonify({'error': 'file required'}), 400
+
+    content = f.read().decode('utf-8-sig')  # utf-8-sig strips Excel BOM
+    reader = csv.reader(io.StringIO(content))
+    added = 0
+    has_odds = False
+    for i, row in enumerate(reader):
+        if not row or not row[0].strip():
+            continue
+        # skip header row
+        if i == 0 and row[0].strip().lower() in ('horse', 'horse name', 'name'):
+            continue
+        horse_name    = row[0].strip()
+        post_position = int(row[1].strip()) if len(row) > 1 and row[1].strip().isdigit() else None
+        odds          = row[2].strip() or None if len(row) > 2 else None
+        jockey        = row[3].strip() or None if len(row) > 3 else None
+        trainer       = row[4].strip() or None if len(row) > 4 else None
+        if odds:
+            has_odds = True
+        db2("INSERT INTO hr_entries (race_id, post_position, horse_name, odds, jockey, trainer) VALUES (%s, %s, %s, %s, %s, %s)",
+            (race_id, post_position, horse_name, odds, jockey, trainer))
+        added += 1
+
+    if has_odds:
+        db2("UPDATE hr_races SET odds_updated_at = NOW() WHERE race_id = %s", (race_id,))
+
+    logging.info("Imported %s horses into race %s", added, race_id)
+    return jsonify({'success': True, 'added': added})
 
 
 @bp.route('/api/hr_scratch_horse', methods=['POST'])
