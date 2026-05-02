@@ -109,12 +109,15 @@ main table.box_table td {
 }
 
 main td.revfinal {
-    background-color: lightgreen !important;
+    background-color: #f0fdf4 !important;
+    color: #15803d !important;
+    font-weight: bold;
 }
 
 main td.final {
-    background-color: darkgreen !important;
-    color: white !important;
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    font-weight: bold;
 }
 
 main table.table-striped>tbody>tr:nth-child(odd)>td {
@@ -150,18 +153,16 @@ main td.headline {
 main td.box {
     vertical-align: top;
     background-color: white;
-    color: white;
+    color: #374151;
     width: 100px;
     height: 100px;
     padding: 0px;
-    padding-top: 0px;
-    padding-bottom: 0px;
     overflow: hidden;
 }
 
 main td.box:hover {
-    background-color: lightblue;
-    color: white;
+    background-color: #eff6ff;
+    color: #1e40af;
     cursor: pointer;
 }
 
@@ -169,54 +170,48 @@ main td.user_box {
     vertical-align: top;
     width: 100px;
     height: 100px;
-    background-color: dodgerblue;
-    color: black;
+    background-color: #dbeafe;
+    color: #1e40af;
+    font-weight: bold;
     cursor: pointer;
     padding: 0px;
-    padding-top: 0px;
-    padding-bottom: 0px;
     overflow: hidden;
 }
 
 main td.user_box:hover {
-    background-color: darkred;
-    color: white;
+    background-color: #fee2e2;
+    color: #b91c1c;
     cursor: pointer;
 }
 
 main td.winning_box {
     vertical-align: top;
-    background-color: lightgreen;
-    color: black;
+    background-color: #dcfce7;
+    color: #15803d;
+    font-weight: bold;
     width: 100px;
     height: 100px;
-    padding-top: 0px;
-    padding-bottom: 0px;
     padding: 0px;
     overflow: hidden;
 }
 
 main td.my_winning_box {
     vertical-align: top;
-    background-color: darkgreen;
+    background-color: #16a34a;
     color: white;
     font-weight: bold;
     width: 100px;
     height: 100px;
-    padding-top: 0px;
-    padding-bottom: 0px;
     padding: 0px;
     overflow: hidden;
 }
 
 main td.taken_box {
     position: relative;
-    background-color: grey;
+    background-color: #f1f5f9;
     width: 100px;
     height: 100px;
-    color: black;
-    padding-top: 0px;
-    padding-bottom: 0px;
+    color: #475569;
     padding: 0px;
     vertical-align: top;
     overflow: hidden;
@@ -240,11 +235,10 @@ main td.locked_ptd {
 }    
 
 main td.BYG {
-    background-color: blue;
+    background-color: #1d4ed8;
     color: white;
-    border-left: 5px green;
-    border-right: 2px solid black;
-    border-bottom: solid black;
+    border-right: 1px solid #3b82f6;
+    border-bottom: 1px solid #3b82f6;
 }
 
 
