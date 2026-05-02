@@ -15,6 +15,7 @@ const CARDS = [
     label: 'Survivor Pools',
     href: '/app/survivor_pool',
     img: '/static/simpsons_survivor.png',
+    fit: 'contain',
   },
   {
     label: 'Kentucky Derby Pool',
@@ -39,10 +40,10 @@ export default function LandingPage() {
     <Layout>
       <h1>Choose Your Game</h1>
       <div className="landing-grid">
-        {CARDS.map(({ label, href, img, sub }) => (
+        {CARDS.map(({ label, href, img, sub, fit }) => (
           <a key={href} href={href} className="landing-card">
             <div className="landing-card-img">
-              <img src={img} alt={label} />
+              <img src={img} alt={label} style={fit ? { objectFit: fit } : undefined} />
             </div>
             <div className="landing-card-label">
               {label}
