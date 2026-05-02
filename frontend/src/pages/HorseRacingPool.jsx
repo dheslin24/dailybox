@@ -188,12 +188,13 @@ export default function HorseRacingPool() {
                     </div>
                   )}
                   <div style={{ fontSize: 11, marginTop: 3, color: '#555' }}>
-                    {e.scratched && <span style={{ color: '#999' }}>Scratched</span>}
-                    {!e.scratched && e.is_winner && '🏆 Winner'}
-                    {!e.scratched && !e.is_winner && isMine && '✓ Your pick'}
-                    {!e.scratched && !e.is_winner && !isMine && isTaken && e.picked_by_name}
-                    {!e.scratched && !isTaken && canPick && <span style={{ color: '#28a745' }}>Click to pick</span>}
-                    {!e.scratched && !isTaken && !canPick && race.status === 'open' && <span style={{ color: '#999' }}>Available</span>}
+                    {e.scratched ? <span style={{ color: '#999' }}>Scratched</span>
+                      : e.is_winner ? '🏆 Winner'
+                      : isMine ? '✓ Your pick'
+                      : isTaken ? e.picked_by_name
+                      : canPick ? <span style={{ color: '#28a745' }}>Click to pick</span>
+                      : race.status === 'open' ? <span style={{ color: '#999' }}>Available</span>
+                      : null}
                   </div>
                 </div>
               )

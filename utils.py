@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import redirect, render_template, session
+from flask import jsonify, redirect, render_template, session
 
 from constants import ALLOWED_EXTENSIONS
 
@@ -24,6 +24,15 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if session.get("is_admin") == 0:
             return redirect("/")
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def api_admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('is_admin') != 1:
+            return jsonify({'error': 'forbidden'}), 403
         return f(*args, **kwargs)
     return decorated_function
 

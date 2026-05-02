@@ -58,9 +58,6 @@ body {
   border-collapse: collapse !important;
   width: 100%;
 }
-.table-modern thead tr {
-  background-color: #343a40 !important;
-}
 .table-modern thead th {
   background-color: #343a40 !important;
   color: #ffffff !important;

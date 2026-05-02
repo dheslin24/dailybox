@@ -143,13 +143,14 @@ export default function HorseRacingAdmin() {
       })
   }
 
+  const adminToggle = (url, body) =>
+    post(url, body).then(d => { if (d.success) loadPool(selectedRace.race_id); else flash(d.error, false) })
+
   const toggleScratched = (entryId, currentScratched) =>
-    post('/api/hr_scratch_horse', { entry_id: entryId, scratched: !currentScratched })
-      .then(d => { if (d.success) loadPool(selectedRace.race_id); else flash(d.error, false) })
+    adminToggle('/api/hr_scratch_horse', { entry_id: entryId, scratched: !currentScratched })
 
   const togglePaid = (userId, currentPaid) =>
-    post('/api/hr_set_paid', { race_id: selectedRace.race_id, user_id: userId, paid: !currentPaid })
-      .then(d => { if (d.success) loadPool(selectedRace.race_id); else flash(d.error, false) })
+    adminToggle('/api/hr_set_paid', { race_id: selectedRace.race_id, user_id: userId, paid: !currentPaid })
 
   const adminSetPick = () => {
     if (!adminPickUserId || !adminPickEntryId) return

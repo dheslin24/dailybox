@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from db_accessor.db_accessor import db2
-from utils import login_required
+from utils import login_required, api_admin_required
 import csv
 import io
 import logging
@@ -11,9 +11,8 @@ bp = Blueprint('horse_racing', __name__)
 # ── DB INIT ───────────────────────────────────────────────────────────────────
 
 @bp.route('/api/hr_init_db', methods=['POST'])
+@api_admin_required
 def api_hr_init_db():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     db2("""CREATE TABLE IF NOT EXISTS hr_races (
             race_id          INT AUTO_INCREMENT PRIMARY KEY,
             name             VARCHAR(100) NOT NULL,
@@ -74,9 +73,8 @@ def api_hr_init_db():
 # ── ADMIN ENDPOINTS ───────────────────────────────────────────────────────────
 
 @bp.route('/api/hr_create_race', methods=['POST'])
+@api_admin_required
 def api_hr_create_race():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     name = data.get('name', '').strip()
     race_date = data.get('race_date', '').strip() or None
@@ -89,9 +87,8 @@ def api_hr_create_race():
 
 
 @bp.route('/api/hr_add_horse', methods=['POST'])
+@api_admin_required
 def api_hr_add_horse():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     race_id = data.get('race_id')
     post_position = data.get('post_position')
@@ -104,9 +101,8 @@ def api_hr_add_horse():
 
 
 @bp.route('/api/hr_delete_horse', methods=['POST'])
+@api_admin_required
 def api_hr_delete_horse():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     entry_id = data.get('entry_id')
     db2("DELETE FROM hr_picks  WHERE entry_id = %s", (entry_id,))
@@ -115,9 +111,8 @@ def api_hr_delete_horse():
 
 
 @bp.route('/api/hr_set_draft_order', methods=['POST'])
+@api_admin_required
 def api_hr_set_draft_order():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     race_id = data.get('race_id')
     order = data.get('order', [])   # ordered list of user_ids
@@ -131,9 +126,8 @@ def api_hr_set_draft_order():
 
 
 @bp.route('/api/hr_set_race_status', methods=['POST'])
+@api_admin_required
 def api_hr_set_race_status():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     race_id = data.get('race_id')
     status = data.get('status')
@@ -144,9 +138,8 @@ def api_hr_set_race_status():
 
 
 @bp.route('/api/hr_mark_winner', methods=['POST'])
+@api_admin_required
 def api_hr_mark_winner():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     race_id = data.get('race_id')
     entry_id = data.get('entry_id')
@@ -159,9 +152,8 @@ def api_hr_mark_winner():
 
 
 @bp.route('/api/hr_users', methods=['GET'])
+@api_admin_required
 def api_hr_users():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     rows = db2("""SELECT userid, username, first_name, last_name
                   FROM users WHERE active = 1 AND alias_of_userid IS NULL
                   ORDER BY username""")
@@ -170,9 +162,8 @@ def api_hr_users():
 
 
 @bp.route('/api/hr_import_horses', methods=['POST'])
+@api_admin_required
 def api_hr_import_horses():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     race_id = request.form.get('race_id', type=int)
     if not race_id:
         return jsonify({'error': 'race_id required'}), 400
@@ -182,12 +173,11 @@ def api_hr_import_horses():
 
     content = f.read().decode('utf-8-sig')  # utf-8-sig strips Excel BOM
     reader = csv.reader(io.StringIO(content))
-    added = 0
+    rows = []
     has_odds = False
     for i, row in enumerate(reader):
         if not row or not row[0].strip():
             continue
-        # skip header row
         if i == 0 and row[0].strip().lower() in ('horse', 'horse name', 'name'):
             continue
         horse_name    = row[0].strip()
@@ -197,21 +187,22 @@ def api_hr_import_horses():
         trainer       = row[4].strip() or None if len(row) > 4 else None
         if odds:
             has_odds = True
-        db2("INSERT INTO hr_entries (race_id, post_position, horse_name, odds, jockey, trainer) VALUES (%s, %s, %s, %s, %s, %s)",
-            (race_id, post_position, horse_name, odds, jockey, trainer))
-        added += 1
+        rows.append((race_id, post_position, horse_name, odds, jockey, trainer))
 
-    if has_odds:
-        db2("UPDATE hr_races SET odds_updated_at = NOW() WHERE race_id = %s", (race_id,))
+    if rows:
+        placeholders = ', '.join(['(%s, %s, %s, %s, %s, %s)'] * len(rows))
+        flat = [v for row in rows for v in row]
+        db2(f"INSERT INTO hr_entries (race_id, post_position, horse_name, odds, jockey, trainer) VALUES {placeholders}", flat)
+        if has_odds:
+            db2("UPDATE hr_races SET odds_updated_at = NOW() WHERE race_id = %s", (race_id,))
 
-    logging.info("Imported %s horses into race %s", added, race_id)
-    return jsonify({'success': True, 'added': added})
+    logging.info("Imported %s horses into race %s", len(rows), race_id)
+    return jsonify({'success': True, 'added': len(rows)})
 
 
 @bp.route('/api/hr_scratch_horse', methods=['POST'])
+@api_admin_required
 def api_hr_scratch_horse():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     entry_id = data.get('entry_id')
     scratched = data.get('scratched')
@@ -222,9 +213,8 @@ def api_hr_scratch_horse():
 
 
 @bp.route('/api/hr_set_horse_meta', methods=['POST'])
+@api_admin_required
 def api_hr_set_horse_meta():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     entry_id = data.get('entry_id')
     race_id  = data.get('race_id')
@@ -235,14 +225,14 @@ def api_hr_set_horse_meta():
     trainer = data.get('trainer', '').strip() or None
     db2("UPDATE hr_entries SET odds = %s, jockey = %s, trainer = %s WHERE entry_id = %s",
         (odds, jockey, trainer, entry_id))
-    db2("UPDATE hr_races SET odds_updated_at = NOW() WHERE race_id = %s", (race_id,))
+    if odds:
+        db2("UPDATE hr_races SET odds_updated_at = NOW() WHERE race_id = %s", (race_id,))
     return jsonify({'success': True})
 
 
 @bp.route('/api/hr_set_paid', methods=['POST'])
+@api_admin_required
 def api_hr_set_paid():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     race_id = data.get('race_id')
     user_id = data.get('user_id')
@@ -255,9 +245,8 @@ def api_hr_set_paid():
 
 
 @bp.route('/api/hr_admin_set_pick', methods=['POST'])
+@api_admin_required
 def api_hr_admin_set_pick():
-    if session.get('is_admin') != 1:
-        return jsonify({'error': 'forbidden'}), 403
     data = request.get_json()
     race_id = data.get('race_id')
     user_id = data.get('user_id')
