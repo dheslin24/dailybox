@@ -2,6 +2,7 @@
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
+  --card-bg: #fff;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
   --accent: #aa3bff;
@@ -17,7 +18,7 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: only light;
+  color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -35,6 +36,7 @@
     --text: #9ca3af;
     --text-h: #f3f4f6;
     --bg: #16171d;
+    --card-bg: #1e2028;
     --border: #2e303a;
     --code-bg: #1f2028;
     --accent: #c084fc;
@@ -52,6 +54,8 @@
 
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .landing-grid {
@@ -72,10 +76,10 @@ body {
 .landing-card {
   display: block;
   text-decoration: none;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  background: #fff;
+  background: var(--card-bg);
   transition: box-shadow 0.15s, transform 0.15s;
 }
 
@@ -106,7 +110,7 @@ body {
   text-align: center;
   font-size: 17px;
   font-weight: bold;
-  color: #111827;
+  color: var(--text-h);
 }
 
 .landing-card-sub {
