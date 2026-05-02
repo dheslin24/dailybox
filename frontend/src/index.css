@@ -35,9 +35,9 @@
   :root {
     --text: #9ca3af;
     --text-h: #f3f4f6;
-    --bg: #16171d;
-    --card-bg: #1e2028;
-    --border: #2e303a;
+    --bg: #1f2937;
+    --card-bg: #2d3748;
+    --border: #374151;
     --code-bg: #1f2028;
     --accent: #c084fc;
     --accent-bg: rgba(192, 132, 252, 0.15);
@@ -49,6 +49,33 @@
 
   #social .button-icon {
     filter: invert(1) brightness(2);
+  }
+
+  .navbar-default {
+    background-color: #253347;
+    border-color: #374151;
+  }
+  .navbar-default .navbar-brand,
+  .navbar-default .navbar-nav > li > a {
+    color: #d1d5db;
+  }
+  .navbar-default .navbar-nav > li > a:hover,
+  .navbar-default .navbar-nav > li > a:focus {
+    color: #f3f4f6;
+    background-color: #2d3748;
+  }
+  .navbar-default .navbar-toggle {
+    border-color: #374151;
+  }
+  .navbar-default .navbar-toggle .icon-bar {
+    background-color: #d1d5db;
+  }
+  .navbar-default .navbar-toggle:hover,
+  .navbar-default .navbar-toggle:focus {
+    background-color: #2d3748;
+  }
+  .navbar-default .navbar-collapse {
+    border-color: #374151;
   }
 }
 
