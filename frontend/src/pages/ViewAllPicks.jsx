@@ -70,28 +70,28 @@ export default function ViewAllPicks() {
         <table className="pickem_table" align="center" style={{ fontSize: '12px' }}>
           <thead>
             <tr>
-              <th rowSpan={3} colSpan={2} style={{ width: '200px', backgroundColor: 'gray' }}>{annual}th Annual<br />Playoff Pickem</th>
+              <th rowSpan={3} colSpan={2} style={{ width: '200px', backgroundColor: '#6b7280' }}>{annual}th Annual<br />Playoff Pickem</th>
               {gameIds.map(gid => {
                 const g = games[gid]
                 const inProg = isCurrentGame(g)
                 const thClass = inProg ? 'current_user' : ''
                 const isCxl = gameStatus(g) === 'Canceled' || gameStatus(g) === 'Postponed'
                 return (
-                  <th key={gid} className={thClass} style={{ fontSize: '9px', ...(isCxl ? { backgroundColor: 'gray' } : {}) }}>
+                  <th key={gid} className={thClass} style={{ fontSize: '9px', ...(isCxl ? { backgroundColor: '#9ca3af' } : {}) }}>
                     {g.abbreviations?.AWAY} at {g.abbreviations?.HOME}
                   </th>
                 )
               })}
-              <th rowSpan={4} style={{ backgroundColor: 'gray' }}>T<br />B</th>
-              <th rowSpan={4} style={{ backgroundColor: 'gray' }}>W<br />I<br />N<br />S</th>
+              <th rowSpan={4} style={{ backgroundColor: '#6b7280' }}>T<br />B</th>
+              <th rowSpan={4} style={{ backgroundColor: '#6b7280' }}>W<br />I<br />N<br />S</th>
             </tr>
             <tr>
               {gameIds.map(gid => {
                 const g = games[gid]
                 const st = gameStatus(g)
                 const inProg = isCurrentGame(g)
-                if (st === 'Canceled') return <th key={gid} style={{ fontSize: '8px', backgroundColor: 'gray', whiteSpace: 'nowrap' }}>Canceled</th>
-                if (st === 'Postponed') return <th key={gid} style={{ fontSize: '8px', backgroundColor: 'gray', whiteSpace: 'nowrap' }}>Postponed</th>
+                if (st === 'Canceled') return <th key={gid} style={{ fontSize: '8px', backgroundColor: '#9ca3af', whiteSpace: 'nowrap' }}>Canceled</th>
+                if (st === 'Postponed') return <th key={gid} style={{ fontSize: '8px', backgroundColor: '#9ca3af', whiteSpace: 'nowrap' }}>Postponed</th>
                 const lineStr = Array.isArray(g.line) ? g.line.join(' ') : (g.line || 'TBD')
                 return <th key={gid} className={inProg ? 'current_user' : ''} style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{lineStr}</th>
               })}
@@ -101,21 +101,21 @@ export default function ViewAllPicks() {
                 const g = games[gid]
                 const st = gameStatus(g)
                 const inProg = isCurrentGame(g)
-                if (st === 'Canceled' || st === 'Postponed') return <th key={gid} style={{ fontSize: '8px', backgroundColor: 'gray' }}>{st}</th>
+                if (st === 'Canceled' || st === 'Postponed') return <th key={gid} style={{ fontSize: '8px', backgroundColor: '#9ca3af' }}>{st}</th>
                 if (st === 'Final') return <th key={gid} style={{ fontSize: '9px' }}>Final</th>
                 if (inProg) return <th key={gid} className="current_user" style={{ fontSize: '9px' }}>Q{g.status?.quarter}<br />{g.status?.displayClock}</th>
                 return <th key={gid} style={{ fontSize: '9px' }}>{g.date_short}</th>
               })}
             </tr>
             <tr>
-              <th style={{ fontSize: '12px', backgroundColor: 'gray' }}>Wins</th>
+              <th style={{ fontSize: '12px', backgroundColor: '#6b7280' }}>Wins</th>
               <th style={{ fontSize: '12px', whiteSpace: 'nowrap', backgroundColor: 'white', color: 'darkblue' }}>Live Scoring</th>
               {gameIds.map(gid => {
                 const g = games[gid]
                 const st = gameStatus(g)
                 const inProg = isCurrentGame(g)
-                if (st === 'Canceled') return <th key={gid} style={{ fontSize: '8px', backgroundColor: 'gray', whiteSpace: 'nowrap' }}>Canceled</th>
-                if (st === 'Postponed') return <th key={gid} style={{ fontSize: '8px', backgroundColor: 'gray', whiteSpace: 'nowrap' }}>Postponed</th>
+                if (st === 'Canceled') return <th key={gid} style={{ fontSize: '8px', backgroundColor: '#9ca3af', whiteSpace: 'nowrap' }}>Canceled</th>
+                if (st === 'Postponed') return <th key={gid} style={{ fontSize: '8px', backgroundColor: '#9ca3af', whiteSpace: 'nowrap' }}>Postponed</th>
                 const scores = `${g.competitors?.[1]?.[2] ?? ''} - ${g.competitors?.[0]?.[2] ?? ''}`
                 return <th key={gid} className={inProg ? 'current_user' : ''} style={{ fontSize: '12px', whiteSpace: 'nowrap', backgroundColor: 'white', color: 'darkblue' }}>{scores}</th>
               })}
@@ -146,7 +146,7 @@ export default function ViewAllPicks() {
 
               return (
                 <tr key={userId}>
-                  <td style={{ fontSize: '12px', backgroundColor: isCurrent ? undefined : 'gray' }} className={isCurrent ? 'current_user' : ''}>{wins}</td>
+                  <td style={{ fontSize: '12px', backgroundColor: isCurrent ? undefined : '#f3f4f6' }} className={isCurrent ? 'current_user' : ''}>{wins}</td>
                   {nameTd}
                   {gameIds.map(gid => {
                     const g = games[gid]
@@ -156,14 +156,14 @@ export default function ViewAllPicks() {
                     const pick = userPicks[String(espnId)]
                     const isLocked = locked_games.includes(espnId) && !isCurrent
 
-                    if (isCxl) return <td key={gid} style={{ backgroundColor: isCurrent ? 'gray' : 'darkgray' }}></td>
+                    if (isCxl) return <td key={gid} style={{ backgroundColor: isCurrent ? '#e5e7eb' : '#d1d5db' }}></td>
                     if (isLocked) return <td key={gid}>{pick ? 'XXX' : ''}</td>
 
                     return <td key={gid} className={pickCellClass(uid, espnId, pick) || (isCurrent ? 'current_user' : '')} style={{ whiteSpace: 'nowrap' }}>{pick}</td>
                   })}
                   {isCurrent
                     ? <><td className="current_user">{tb_dict[String(uid)]}</td><td className="current_user">{wins}</td></>
-                    : <><td style={{ fontSize: '12px', backgroundColor: 'gray' }}>{tb_dict[String(uid)]}</td><td style={{ fontSize: '12px', backgroundColor: 'gray' }}>{wins}</td></>
+                    : <><td style={{ fontSize: '12px', backgroundColor: '#f3f4f6' }}>{tb_dict[String(uid)]}</td><td style={{ fontSize: '12px', backgroundColor: '#f3f4f6' }}>{wins}</td></>
                   }
                 </tr>
               )

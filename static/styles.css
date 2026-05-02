@@ -637,51 +637,59 @@ main input[type=submit].pick {
 }
 
 main td.loser {
-    background: lightcoral !important;
+    background: #fff1f2 !important;
+    color: #b91c1c !important;
     font-weight: bold;
 }
 
 main td.winner {
-    background: lightgreen !important;
+    background: #f0fdf4 !important;
+    color: #15803d !important;
     font-weight: bold;
 }
 
 main td.current_user {
-    background: navy !important;
+    background: #f0f8ff !important;
     text-align: center;
-    color: white !important;
+    color: #1e3a5f !important;
+}
+
+main td.current_user:first-child {
+    border-left: 3px solid #3b82f6 !important;
 }
 
 main th.current_user {
-    background: navy !important;
+    background: #1d4ed8 !important;
     text-align: center;
     color: white !important;
 }
 
 main td.current_user_elim {
-    background: navy !important;
+    background: #f0f8ff !important;
     font-weight: bold;
     text-align: center;
-    color: red !important;
+    color: #dc2626 !important;
     font-size: 16px;
 }
 
 main td.winning_user {
-    background: green !important;
+    background: #fefce8 !important;
     font-weight: bold;
     text-align: center;
-    color: white !important;
+    color: #92400e !important;
     font-size: 18px;
 }
 
 main td.winner_cu {
-    background: darkgreen !important;
-    color: white !important;
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    font-weight: bold;
 }
 
 main td.loser_cu {
-    background: maroon !important;
-    color: white !important;
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    font-weight: bold;
 }
 
 main td.landing {
