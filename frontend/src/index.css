@@ -54,6 +54,38 @@ body {
   margin: 0;
 }
 
+.table-modern {
+  border-collapse: collapse !important;
+  width: 100%;
+}
+.table-modern thead tr {
+  background-color: #343a40 !important;
+}
+.table-modern thead th {
+  background-color: #343a40 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 10px !important;
+  border: none !important;
+  border-bottom: 2px solid #454d55 !important;
+}
+.table-modern tbody tr {
+  background-color: #ffffff !important;
+}
+.table-modern tbody tr:nth-child(even) {
+  background-color: #f8f9fa !important;
+}
+.table-modern tbody td {
+  border: none !important;
+  border-bottom: 1px solid #e9ecef !important;
+  padding: 7px 10px !important;
+  background-color: inherit !important;
+}
+.table-modern tbody tr[style*="background"] td {
+  background-color: inherit !important;
+}
+
 #root {
   width: 1126px;
   max-width: 100%;

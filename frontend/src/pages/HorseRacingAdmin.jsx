@@ -276,7 +276,7 @@ export default function HorseRacingAdmin() {
                       Columns: horse name, post #, odds, jockey, trainer
                     </p>
                   </div>
-                  <table className="table table-condensed" style={{ fontSize: 12 }}>
+                  <table className="table table-condensed table-modern" style={{ fontSize: 12 }}>
                     <tbody>
                       {poolData.entries.map(e => (
                         <tr key={e.entry_id} style={{ background: e.is_winner ? '#ffd700' : e.scratched ? '#f5f5f5' : undefined }}>
@@ -430,7 +430,7 @@ export default function HorseRacingAdmin() {
             <div className="panel panel-default">
               <div className="panel-heading"><strong>Draft Board</strong></div>
               <div className="panel-body">
-                <table className="table table-condensed table-striped" style={{ fontSize: 13 }}>
+                <table className="table table-condensed table-modern" style={{ fontSize: 13 }}>
                   <thead>
                     <tr><th>#</th><th>User</th><th>Pick</th><th>Paid</th></tr>
                   </thead>

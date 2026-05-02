@@ -204,7 +204,7 @@ export default function HorseRacingPool() {
         {/* ── Draft board ──────────────────────────────────────────────────── */}
         <div className="col-md-5">
           <h4>Draft Board</h4>
-          <table className="table table-condensed table-striped" style={{ fontSize: 13 }}>
+          <table className="table table-condensed table-modern" style={{ fontSize: 13 }}>
             <thead>
               <tr><th style={{ width: 30 }}>#</th><th>Picker</th><th>Horse</th><th style={{ width: 40 }}></th></tr>
             </thead>
