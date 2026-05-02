@@ -21,8 +21,8 @@ function AwayTeamCell({ rowIdx, away, awayTeam, teamScores }) {
   )
   return (
     <td className={away} style={{ borderBottom: '2px solid black' }}>
-      <strong style={{ fontSize: '30px' }}>
-        {showLogo ? <img src={logoUrl} width={50} height={50} alt={away} /> : awayTeam[String(rowIdx)]}
+      <strong style={{ fontSize: '20px' }}>
+        {showLogo ? <img src={logoUrl} width={40} height={40} alt={away} /> : awayTeam[String(rowIdx)]}
       </strong>
     </td>
   )
@@ -247,23 +247,24 @@ export default function DisplayBox() {
               <a href={`/app/payment_status?boxid=${boxid}&priv=true`}>{private_game_payment_link}</a>
             </p>
           )}
+          <div style={{ overflowX: 'auto' }}>
           <table id="grid" className="box_table" align="center" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr>
                 <td className="BYG" colSpan={2} style={{ borderBottom: 'solid blue' }}>
-                  <strong style={{ fontSize: 30 }}>BYG</strong>
+                  <strong style={{ fontSize: 20 }}>BYG</strong>
                 </td>
                 {home !== 'TBD' ? (
                   <td className={home} colSpan={10} style={{ borderBottom: '2px solid black' }}>
-                    <strong style={{ fontSize: 30, letterSpacing: 5 }}>
-                      {ts[home]?.logo && <img src={ts[home].logo} width={50} height={50} alt={home} />}
+                    <strong style={{ fontSize: 20, letterSpacing: 3 }}>
+                      {ts[home]?.logo && <img src={ts[home].logo} width={40} height={40} alt={home} />}
                       {' '}{home.slice(0, 3)}{' '}
-                      {ts[home]?.logo && <img src={ts[home].logo} width={50} height={50} alt={home} />}
+                      {ts[home]?.logo && <img src={ts[home].logo} width={40} height={40} alt={home} />}
                     </strong>
                   </td>
                 ) : (
                   <td className={home} colSpan={10} style={{ borderBottom: '2px solid black' }}>
-                    <strong style={{ fontSize: 30, letterSpacing: 5 }}>{home.slice(0, 3)}</strong>
+                    <strong style={{ fontSize: 20, letterSpacing: 3 }}>{home.slice(0, 3)}</strong>
                   </td>
                 )}
               </tr>
@@ -271,7 +272,7 @@ export default function DisplayBox() {
                 <td className="BYG" colSpan={2} style={{ borderBottom: '1px solid black' }}>Box: {boxid}</td>
                 {Object.keys(x).map(n => (
                   <td key={n} className={home}>
-                    <strong style={{ fontSize: 30 }}>{x[n]}</strong>
+                    <strong style={{ fontSize: 20 }}>{x[n]}</strong>
                   </td>
                 ))}
               </tr>
@@ -281,7 +282,7 @@ export default function DisplayBox() {
                 <tr key={rowIdx}>
                   <AwayTeamCell rowIdx={rowIdx} away={away} awayTeam={away_team} teamScores={ts} />
                   <td className={away} style={{ borderBottom: '2px solid black' }}>
-                    <strong style={{ fontSize: 30 }}>{y[String(rowIdx)]}</strong>
+                    <strong style={{ fontSize: 20 }}>{y[String(rowIdx)]}</strong>
                   </td>
                   {rowCells.map((cell) => {
                     const cls = cellClass(cell, current_userid)
@@ -293,14 +294,14 @@ export default function DisplayBox() {
                         onClick={() => handleBoxClick(cell.box_num)}
                         style={{ cursor: 'pointer' }}
                       >
-                        <p className="corner" style={cls === 'box' ? { color: 'black' } : undefined}>
+                        <span className="corner" style={cls === 'box' ? { color: 'black' } : undefined}>
                           {cell.box_num + 1}
-                        </p>
+                        </span>
                         {cell.winner_type ? (
                           <span>{cell.winner_label}<br /><br /></span>
                         ) : hasImage ? (
                           <>
-                            <img src={`/static/${images[String(cell.userid)]}`} height={60} width={60} alt="" />
+                            <img src={`/static/${images[String(cell.userid)]}`} height={50} width={50} alt="" />
                             {cls === 'taken_box' && <span className="CellComment">{cell.name}</span>}
                           </>
                         ) : (
@@ -313,6 +314,7 @@ export default function DisplayBox() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         <ScoresTable scores={scores} home={home} away={away} ptype={ptype} />

@@ -106,6 +106,17 @@ main table.box_table {
 
 main table.box_table td {
     border: 1px solid #dee2e6;
+    box-sizing: border-box;
+}
+
+main table.box_table td:first-child {
+    width: 44px;
+    min-width: 44px;
+}
+
+main table.box_table td:nth-child(2) {
+    width: 44px;
+    min-width: 44px;
 }
 
 main td.revfinal {
@@ -154,8 +165,8 @@ main td.box {
     vertical-align: top;
     background-color: white;
     color: #374151;
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     padding: 0px;
     overflow: hidden;
 }
@@ -168,8 +179,8 @@ main td.box:hover {
 
 main td.user_box {
     vertical-align: top;
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     background-color: #dbeafe;
     color: #1e40af;
     font-weight: bold;
@@ -189,8 +200,8 @@ main td.winning_box {
     background-color: #dcfce7;
     color: #15803d;
     font-weight: bold;
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     padding: 0px;
     overflow: hidden;
 }
@@ -200,8 +211,8 @@ main td.my_winning_box {
     background-color: #16a34a;
     color: white;
     font-weight: bold;
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     padding: 0px;
     overflow: hidden;
 }
@@ -209,8 +220,8 @@ main td.my_winning_box {
 main td.taken_box {
     position: relative;
     background-color: #f1f5f9;
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     color: #475569;
     padding: 0px;
     vertical-align: top;
@@ -218,9 +229,11 @@ main td.taken_box {
 }
 
 .corner {
-    vertical-align: top;
+    display: block;
     text-align: left;
-    padding: 3px;
+    padding: 2px 3px;
+    font-size: 11px;
+    line-height: 1;
 }
 
 
