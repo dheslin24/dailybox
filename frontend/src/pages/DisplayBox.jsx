@@ -247,8 +247,13 @@ export default function DisplayBox() {
               <a href={`/app/payment_status?boxid=${boxid}&priv=true`}>{private_game_payment_link}</a>
             </p>
           )}
-          <div style={{ overflowX: 'auto' }}>
-          <table id="grid" className="box_table" align="center" style={{ tableLayout: 'fixed' }}>
+          <div style={{ overflowX: 'auto', width: '100%' }}>
+          <table id="grid" className="box_table" style={{ tableLayout: 'fixed', margin: '0 auto', width: `${88 + Object.keys(x).length * 80}px` }}>
+            <colgroup>
+              <col style={{ width: '44px' }} />
+              <col style={{ width: '44px' }} />
+              {Object.keys(x).map(n => <col key={n} style={{ width: '80px' }} />)}
+            </colgroup>
             <thead>
               <tr>
                 <td className="BYG" colSpan={2} style={{ borderBottom: 'solid blue' }}>
