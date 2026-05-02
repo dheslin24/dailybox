@@ -131,6 +131,11 @@ export default function DisplayBox() {
     return () => clearInterval(id)
   }, [load])
 
+  useEffect(() => {
+    document.getElementById('root').classList.add('wide')
+    return () => document.getElementById('root').classList.remove('wide')
+  }, [])
+
   const handleBoxClick = (boxNum) => {
     fetch('/api/select_box', {
       method: 'POST',
@@ -157,12 +162,10 @@ export default function DisplayBox() {
   const hasOT = homeQtr['5'] !== undefined || awayQtr['5'] !== undefined
   const hasScores = scores && scores.length > 0
 
-  const colClass = hasScores ? 'col-lg-8 col-md-12 col-xs-12' : 'col-md-12'
-
   return (
     <Layout>
       <div className="row">
-        <div className={colClass}>
+        <div className={hasScores ? 'col-lg-8 col-md-12' : 'col-md-12'}>
           <h2><p className="text-center">{box_name}</p></h2>
 
           {(boxid === '46' || boxid === '7') && (
@@ -237,11 +240,11 @@ export default function DisplayBox() {
           )}
         </div>
 
-        {hasScores && <div className="col-lg-4 col-md-12 col-xs-12"></div>}
+        <ScoresTable scores={scores} home={home} away={away} ptype={ptype} />
       </div>
 
       <div className="row">
-        <div className={colClass}>
+        <div className="col-md-12">
           {private_game_payment_link && (
             <p className="text-center">
               <a href={`/app/payment_status?boxid=${boxid}&priv=true`}>{private_game_payment_link}</a>
@@ -321,8 +324,6 @@ export default function DisplayBox() {
           </table>
           </div>
         </div>
-
-        <ScoresTable scores={scores} home={home} away={away} ptype={ptype} />
       </div>
     </Layout>
   )

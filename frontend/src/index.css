@@ -188,6 +188,11 @@ body {
   box-sizing: border-box;
 }
 
+#root.wide {
+  width: 100%;
+  border-inline: none;
+}
+
 h1,
 h2 {
   font-family: var(--heading);
