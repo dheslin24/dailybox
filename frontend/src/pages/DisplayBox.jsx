@@ -20,7 +20,7 @@ function AwayTeamCell({ rowIdx, away, awayTeam, teamScores }) {
     (away.length !== 3 && (rowIdx === 3 || rowIdx === 6))
   )
   return (
-    <td className={away} style={{ borderBottom: '2px solid black' }}>
+    <td className={away}>
       <strong style={{ fontSize: '20px' }}>
         {showLogo ? <img src={logoUrl} width={40} height={40} alt={away} /> : awayTeam[String(rowIdx)]}
       </strong>
@@ -288,7 +288,7 @@ export default function DisplayBox() {
               {grid.map((rowCells, rowIdx) => (
                 <tr key={rowIdx}>
                   <AwayTeamCell rowIdx={rowIdx} away={away} awayTeam={away_team} teamScores={ts} />
-                  <td className={away} style={{ borderBottom: '2px solid black' }}>
+                  <td className={away}>
                     <strong style={{ fontSize: 20 }}>{y[String(rowIdx)]}</strong>
                   </td>
                   {rowCells.map((cell) => {
