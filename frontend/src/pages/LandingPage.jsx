@@ -28,6 +28,11 @@ const CARDS = [
     img: '/static/homer_golf_sandwedge_3.gif',
   },
   {
+    label: 'NCAA Hoops Pools',
+    href: '/app/ncaa_hoops',
+    img: '/static/simpsons_globetrotters.webp',
+  },
+  {
     label: 'Register for Private Event',
     href: '/app/private_pswd',
     img: 'https://pbs.twimg.com/media/ECkwxxLX4AE_btl.jpg',

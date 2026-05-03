@@ -46,6 +46,7 @@ import HorseRacingPool from './pages/HorseRacingPool.jsx'
 import HorseRacingAdmin from './pages/HorseRacingAdmin.jsx'
 import GolfPool from './pages/GolfPool.jsx'
 import GolfAdmin from './pages/GolfAdmin.jsx'
+import NcaaHoops from './pages/NcaaHoops.jsx'
 
 function App() {
   return (
@@ -97,6 +98,7 @@ function App() {
         <Route path="/horse_racing_admin" element={<HorseRacingAdmin />} />
         <Route path="/golf_pool" element={<GolfPool />} />
         <Route path="/golf_admin" element={<GolfAdmin />} />
+        <Route path="/ncaa_hoops" element={<NcaaHoops />} />
       </Route>
     </Routes>
   )
