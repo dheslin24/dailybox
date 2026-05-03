@@ -62,9 +62,12 @@ export default function GolfAdmin() {
       ...f,
       espn_event_id: ev.espn_event_id,
       event_name: ev.name,
-      course: ev.venue,
+      course: '',
       event_date: ev.start_date,
     }))
+    fetch(`/api/golf_event_venue?event_id=${ev.espn_event_id}`)
+      .then(r => r.json())
+      .then(d => { if (d.venue) setForm(f => ({ ...f, course: d.venue })) })
   }
 
   const handleCreatePool = () => {

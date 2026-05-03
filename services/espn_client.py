@@ -18,14 +18,26 @@ def get_golf_tournaments():
         events = []
         for event in r.get('events', []):
             comps = event.get('competitions', [])
+
+            def _extract_venue(obj):
+                name = obj.get('fullName', '') or obj.get('name', '')
+                if name:
+                    return name
+                city  = obj.get('address', {}).get('city', '')
+                state = obj.get('address', {}).get('state', '')
+                return f"{city}, {state}".strip(', ')
+
             venue = ''
-            if comps:
-                v = comps[0].get('venue', {})
-                venue = v.get('fullName', '')
-                if not venue:
-                    city  = v.get('address', {}).get('city', '')
-                    state = v.get('address', {}).get('state', '')
-                    venue = f"{city}, {state}".strip(', ')
+            # top-level event.venue (common for golf scoreboard)
+            if not venue and event.get('venue'):
+                venue = _extract_venue(event['venue'])
+            # competitions[0].venue
+            if not venue and comps and comps[0].get('venue'):
+                venue = _extract_venue(comps[0]['venue'])
+            # top-level location string
+            if not venue:
+                venue = event.get('location', '')
+            logging.debug("golf event %s venue=%r", event.get('id'), venue)
             status_obj  = event.get('status', {}).get('type', {})
             status_name = status_obj.get('name', '')
             events.append({
@@ -45,6 +57,27 @@ def get_golf_tournaments():
     except Exception as e:
         logging.error("get_golf_tournaments error: %s", e)
         return []
+
+
+def get_golf_event_venue(espn_event_id):
+    """Fetch course name for a PGA event via ESPN core API."""
+    try:
+        url = (f"https://sports.core.api.espn.com/v2/sports/golf/leagues/pga"
+               f"/events/{espn_event_id}?lang=en&region=us")
+        r = requests.get(url, timeout=10).json()
+        courses = r.get('courses', [])
+        if courses:
+            c = courses[0]
+            name = c.get('name', '')
+            if name:
+                return name
+            city  = c.get('address', {}).get('city', '')
+            state = c.get('address', {}).get('state', '')
+            return f"{city}, {state}".strip(', ')
+        return ''
+    except Exception as e:
+        logging.error("get_golf_event_venue(%s) error: %s", espn_event_id, e)
+        return ''
 
 
 def get_golf_event_detail(espn_event_id):
