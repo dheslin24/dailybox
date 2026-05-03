@@ -25,7 +25,7 @@ const CARDS = [
   {
     label: 'Golf Pools',
     href: '/app/golf_pool',
-    img: '/static/homer_golf_sandwedge.gif',
+    img: '/static/homer_golf_sandwedge_3.gif',
   },
   {
     label: 'Register for Private Event',
