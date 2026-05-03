@@ -258,7 +258,7 @@ export default function DisplayBox() {
             </colgroup>
             <thead>
               <tr>
-                <td className="BYG" colSpan={2} style={{ borderBottom: 'solid blue' }}>
+                <td className="BYG" colSpan={2} style={{ borderBottom: '2px solid black' }}>
                   <strong style={{ fontSize: 20 }}>BYG</strong>
                 </td>
                 {home !== 'TBD' ? (
