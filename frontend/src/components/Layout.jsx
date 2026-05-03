@@ -45,7 +45,7 @@ export default function Layout({ children }) {
                 <ul className="nav navbar-nav navbar-right">
                   {session.is_admin === 1 && (
                     <li className={`dropdown${adminOpen ? ' open' : ''}`}>
-                      <a href="#" className="dropdown-toggle" onClick={e => { e.preventDefault(); setAdminOpen(o => !o) }}>
+                      <a href="#" className="dropdown-toggle" onClick={e => { e.preventDefault(); e.stopPropagation(); setAdminOpen(o => !o) }}>
                         Admin <span className="caret"></span>
                       </a>
                       <ul className="dropdown-menu">
