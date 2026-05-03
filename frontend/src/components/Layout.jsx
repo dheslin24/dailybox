@@ -1,7 +1,16 @@
+import { useState, useEffect } from 'react'
 import { useSession } from '../SessionContext'
 
 export default function Layout({ children }) {
   const session = useSession()
+  const [adminOpen, setAdminOpen] = useState(false)
+
+  useEffect(() => {
+    if (!adminOpen) return
+    const close = () => setAdminOpen(false)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [adminOpen])
 
   return (
     <div className="container">
@@ -35,12 +44,18 @@ export default function Layout({ children }) {
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
                   {session.is_admin === 1 && (
-                    <>
-                      <li><a href="/app/bygzomo">BYGZomo</a></li>
-                      <li><a href="/app/admin">Admin</a></li>
-                      <li><a href="/app/horse_racing_admin">HR Admin</a></li>
-                      <li><a href="/app/golf_admin">Golf Admin</a></li>
-                    </>
+                    <li className={`dropdown${adminOpen ? ' open' : ''}`}>
+                      <a href="#" className="dropdown-toggle" onClick={e => { e.preventDefault(); setAdminOpen(o => !o) }}>
+                        Admin <span className="caret"></span>
+                      </a>
+                      <ul className="dropdown-menu">
+                        <li><a href="/app/admin">Admin</a></li>
+                        <li><a href="/app/horse_racing_admin">HR Admin</a></li>
+                        <li><a href="/app/golf_admin">Golf Admin</a></li>
+                        <li role="separator" className="divider"></li>
+                        <li><a href="/app/bygzomo">BYGZomo</a></li>
+                      </ul>
+                    </li>
                   )}
                   <li><a href="/app/user_details">User {session.username}</a></li>
                   <li><a href="/logout">Log Out</a></li>
