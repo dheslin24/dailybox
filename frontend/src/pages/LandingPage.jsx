@@ -23,6 +23,11 @@ const CARDS = [
     img: '/static/simpsons_horse.gif',
   },
   {
+    label: 'Golf Pools',
+    href: '/app/golf_pool',
+    img: '/static/homer_golf.gif',
+  },
+  {
     label: 'Register for Private Event',
     href: '/app/private_pswd',
     img: 'https://pbs.twimg.com/media/ECkwxxLX4AE_btl.jpg',
@@ -32,11 +37,6 @@ const CARDS = [
     label: 'Access Existing Private Events',
     href: '/app/private_game_list',
     img: 'https://static.simpsonswiki.com/images/9/98/Flaming_Moe%27s_%28location%29.png',
-  },
-  {
-    label: 'Golf Pools',
-    href: '/app/golf_pool',
-    img: '/static/homer_golf.gif',
   },
 ]
 

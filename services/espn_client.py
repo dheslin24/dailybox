@@ -8,9 +8,13 @@ _GOLF_BASE = "https://site.api.espn.com/apis/site/v2/sports/golf/pga"
 
 
 def get_golf_tournaments():
-    """Fetch current/upcoming PGA Tour events from ESPN scoreboard."""
+    """Fetch the next 5 upcoming PGA Tour events from ESPN (6-month lookahead)."""
+    from datetime import date, timedelta
+    today = date.today()
+    end   = today + timedelta(days=180)
+    date_range = f"{today.strftime('%Y%m%d')}-{end.strftime('%Y%m%d')}"
     try:
-        r = requests.get(f"{_GOLF_BASE}/scoreboard", timeout=10).json()
+        r = requests.get(f"{_GOLF_BASE}/scoreboard?dates={date_range}&limit=20", timeout=10).json()
         events = []
         for event in r.get('events', []):
             comps = event.get('competitions', [])
@@ -19,20 +23,25 @@ def get_golf_tournaments():
                 v = comps[0].get('venue', {})
                 venue = v.get('fullName', '')
                 if not venue:
-                    city = v.get('address', {}).get('city', '')
+                    city  = v.get('address', {}).get('city', '')
                     state = v.get('address', {}).get('state', '')
                     venue = f"{city}, {state}".strip(', ')
-            status_obj = event.get('status', {}).get('type', {})
+            status_obj  = event.get('status', {}).get('type', {})
+            status_name = status_obj.get('name', '')
             events.append({
                 'espn_event_id': event['id'],
-                'name': event.get('name', ''),
-                'start_date': (event.get('date') or '')[:10],
-                'end_date': (event.get('endDate') or '')[:10],
-                'status_name': status_obj.get('name', ''),
+                'name':        event.get('name', ''),
+                'start_date':  (event.get('date')    or '')[:10],
+                'end_date':    (event.get('endDate') or '')[:10],
+                'status_name': status_name,
                 'status_desc': status_obj.get('description', 'Scheduled'),
-                'venue': venue,
+                'venue':       venue,
             })
-        return events
+
+        # Prefer upcoming/in-progress over completed; return at most 5
+        completed = {'STATUS_FINAL', 'STATUS_COMPLETE', 'STATUS_END_TOURNAMENT'}
+        upcoming  = [e for e in events if e['status_name'] not in completed]
+        return (upcoming if upcoming else events)[:5]
     except Exception as e:
         logging.error("get_golf_tournaments error: %s", e)
         return []

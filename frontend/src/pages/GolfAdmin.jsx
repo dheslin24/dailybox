@@ -199,99 +199,92 @@ export default function GolfAdmin() {
       {/* Create Pool */}
       <div className="panel panel-default">
         <div className="panel-heading"><strong>Create New Pool</strong></div>
-        <div className="panel-body">
-          <div className="row">
-            <div className="col-md-6">
-              <button className="btn btn-info btn-sm" onClick={handleLoadEspn} disabled={espnLoading}>
-                {espnLoading ? 'Loading…' : 'Load ESPN Events'}
-              </button>
-              {espnEvents.length > 0 && (
-                <table className="table table-condensed table-bordered" style={{ marginTop: 10 }}>
-                  <thead>
-                    <tr><th>Event</th><th>Dates</th><th>Venue</th><th>Status</th><th></th></tr>
-                  </thead>
-                  <tbody>
-                    {espnEvents.map(ev => (
-                      <tr key={ev.espn_event_id}
-                        style={form.espn_event_id === ev.espn_event_id ? { background: '#dff0d8' } : {}}>
-                        <td>{ev.name}</td>
-                        <td>{ev.start_date}{ev.end_date && ev.end_date !== ev.start_date ? ` – ${ev.end_date}` : ''}</td>
-                        <td>{ev.venue}</td>
-                        <td>{ev.status_desc}</td>
-                        <td>
-                          <button className="btn btn-xs btn-primary"
-                            onClick={() => handleSelectEspnEvent(ev)}>Select</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+        <div className="panel-body" style={{ maxWidth: 860 }}>
 
-            <div className="col-md-6">
-              <div className="form-group">
-                <label>ESPN Event ID</label>
-                <input className="form-control" value={form.espn_event_id}
-                  onChange={e => setForm(f => ({ ...f, espn_event_id: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>Event Name</label>
-                <input className="form-control" value={form.event_name}
-                  onChange={e => setForm(f => ({ ...f, event_name: e.target.value }))} />
-              </div>
-              <div className="row">
-                <div className="col-xs-6">
-                  <div className="form-group">
-                    <label>Course / Venue</label>
-                    <input className="form-control" value={form.course}
-                      onChange={e => setForm(f => ({ ...f, course: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="col-xs-6">
-                  <div className="form-group">
-                    <label>Start Date</label>
-                    <input className="form-control" type="date" value={form.event_date}
-                      onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} />
-                  </div>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Pool Name</label>
-                <input className="form-control" placeholder="e.g. Masters 2026 — Group A"
-                  value={form.pool_name}
-                  onChange={e => setForm(f => ({ ...f, pool_name: e.target.value }))} />
-              </div>
-              <div className="row">
-                <div className="col-xs-4">
-                  <div className="form-group">
-                    <label>Entry Fee</label>
-                    <input className="form-control" placeholder="$50" value={form.fee}
-                      onChange={e => setForm(f => ({ ...f, fee: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="col-xs-4">
-                  <div className="form-group">
-                    <label>Format</label>
-                    <select className="form-control" value={form.pool_format}
-                      onChange={e => setForm(f => ({ ...f, pool_format: e.target.value }))}>
-                      <option value="draft">Draft (snake, unique picks)</option>
-                      <option value="async">Async (free pick)</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="col-xs-4">
-                  <div className="form-group">
-                    <label>Picks / User</label>
-                    <input className="form-control" type="number" min="1" max="10"
-                      value={form.picks_per_user}
-                      onChange={e => setForm(f => ({ ...f, picks_per_user: e.target.value }))} />
-                  </div>
-                </div>
-              </div>
-              <button className="btn btn-success" onClick={handleCreatePool}>Create Pool</button>
-            </div>
-          </div>
+          {/* Step 1: pick a tournament */}
+          <h5 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 6, marginBottom: 12 }}>
+            Step 1 — Select Tournament
+          </h5>
+          <button className="btn btn-info btn-sm" onClick={handleLoadEspn} disabled={espnLoading}>
+            {espnLoading ? 'Loading…' : 'Load Upcoming ESPN Events'}
+          </button>
+          {espnEvents.length > 0 && (
+            <table className="table table-condensed table-bordered" style={{ marginTop: 12 }}>
+              <thead>
+                <tr><th>Event</th><th>Dates</th><th>Venue</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody>
+                {espnEvents.map(ev => (
+                  <tr key={ev.espn_event_id}
+                    style={form.espn_event_id === ev.espn_event_id ? { background: '#dff0d8' } : {}}>
+                    <td>{ev.name}</td>
+                    <td>{ev.start_date}{ev.end_date && ev.end_date !== ev.start_date ? ` – ${ev.end_date}` : ''}</td>
+                    <td>{ev.venue}</td>
+                    <td>{ev.status_desc}</td>
+                    <td>
+                      <button className="btn btn-xs btn-primary"
+                        onClick={() => handleSelectEspnEvent(ev)}>Select</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {/* Step 2: pool details */}
+          <h5 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 6, marginTop: 24, marginBottom: 12 }}>
+            Step 2 — Pool Details
+          </h5>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <tbody>
+              {[
+                { label: 'ESPN Event ID', field: 'espn_event_id', type: 'text', placeholder: 'auto-filled from selection' },
+                { label: 'Tournament Name', field: 'event_name', type: 'text', placeholder: 'e.g. The Masters' },
+                { label: 'Course / Venue', field: 'course', type: 'text', placeholder: 'e.g. Augusta National Golf Club' },
+                { label: 'Start Date', field: 'event_date', type: 'date', placeholder: '' },
+                { label: 'Pool Name', field: 'pool_name', type: 'text', placeholder: 'e.g. Masters 2026 — Group A' },
+                { label: 'Entry Fee', field: 'fee', type: 'text', placeholder: 'e.g. $50' },
+              ].map(({ label, field, type, placeholder }) => (
+                <tr key={field}>
+                  <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    {label}
+                  </td>
+                  <td style={{ padding: '4px 0' }}>
+                    <input className="form-control" type={type} placeholder={placeholder}
+                      value={form[field]}
+                      onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))} />
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                  Pool Format
+                </td>
+                <td style={{ padding: '4px 0' }}>
+                  <select className="form-control" value={form.pool_format}
+                    onChange={e => setForm(f => ({ ...f, pool_format: e.target.value }))}>
+                    <option value="draft">Draft — snake order, each golfer unique to one user</option>
+                    <option value="async">Async — users pick freely, duplicate golfers allowed</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                  Picks per User
+                </td>
+                <td style={{ padding: '4px 0' }}>
+                  <input className="form-control" type="number" min="1" max="10"
+                    style={{ width: 80 }}
+                    value={form.picks_per_user}
+                    onChange={e => setForm(f => ({ ...f, picks_per_user: e.target.value }))} />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button className="btn btn-success" style={{ marginTop: 16 }} onClick={handleCreatePool}>
+            Create Pool
+          </button>
         </div>
       </div>
 
