@@ -33,6 +33,11 @@ const CARDS = [
     href: '/app/private_game_list',
     img: 'https://static.simpsonswiki.com/images/9/98/Flaming_Moe%27s_%28location%29.png',
   },
+  {
+    label: 'Golf Pools',
+    href: '/app/golf_pool',
+    img: '/static/homer_golf.gif',
+  },
 ]
 
 export default function LandingPage() {

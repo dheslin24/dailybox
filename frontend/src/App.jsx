@@ -44,6 +44,8 @@ import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import HorseRacingPool from './pages/HorseRacingPool.jsx'
 import HorseRacingAdmin from './pages/HorseRacingAdmin.jsx'
+import GolfPool from './pages/GolfPool.jsx'
+import GolfAdmin from './pages/GolfAdmin.jsx'
 
 function App() {
   return (
@@ -93,6 +95,8 @@ function App() {
         <Route path="/display_box" element={<DisplayBox />} />
         <Route path="/horse_racing" element={<HorseRacingPool />} />
         <Route path="/horse_racing_admin" element={<HorseRacingAdmin />} />
+        <Route path="/golf_pool" element={<GolfPool />} />
+        <Route path="/golf_admin" element={<GolfAdmin />} />
       </Route>
     </Routes>
   )

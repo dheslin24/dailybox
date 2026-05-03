@@ -4,6 +4,102 @@ from datetime import datetime, timedelta, timezone
 from db_accessor.db_accessor import db2
 
 _BASE = "https://site.api.espn.com/apis/site/v2/sports/football"
+_GOLF_BASE = "https://site.api.espn.com/apis/site/v2/sports/golf/pga"
+
+
+def get_golf_tournaments():
+    """Fetch current/upcoming PGA Tour events from ESPN scoreboard."""
+    try:
+        r = requests.get(f"{_GOLF_BASE}/scoreboard", timeout=10).json()
+        events = []
+        for event in r.get('events', []):
+            comps = event.get('competitions', [])
+            venue = ''
+            if comps:
+                v = comps[0].get('venue', {})
+                venue = v.get('fullName', '')
+                if not venue:
+                    city = v.get('address', {}).get('city', '')
+                    state = v.get('address', {}).get('state', '')
+                    venue = f"{city}, {state}".strip(', ')
+            status_obj = event.get('status', {}).get('type', {})
+            events.append({
+                'espn_event_id': event['id'],
+                'name': event.get('name', ''),
+                'start_date': (event.get('date') or '')[:10],
+                'end_date': (event.get('endDate') or '')[:10],
+                'status_name': status_obj.get('name', ''),
+                'status_desc': status_obj.get('description', 'Scheduled'),
+                'venue': venue,
+            })
+        return events
+    except Exception as e:
+        logging.error("get_golf_tournaments error: %s", e)
+        return []
+
+
+def get_golf_event_detail(espn_event_id):
+    """Return (event_info dict, players list) for a PGA event."""
+    try:
+        r = requests.get(f"{_GOLF_BASE}/summary?event={espn_event_id}", timeout=10).json()
+
+        header = r.get('header', {})
+        comps = header.get('competitions', [{}])
+        comp_status = comps[0].get('status', {}) if comps else {}
+        event_info = {
+            'name': header.get('name', ''),
+            'status_name': comp_status.get('type', {}).get('name', ''),
+            'status_desc': comp_status.get('type', {}).get('description', ''),
+        }
+
+        players = []
+        for competitor in r.get('competitors', []):
+            status_obj = competitor.get('status', {})
+            status_name = status_obj.get('type', {}).get('name', 'STATUS_ACTIVE')
+            is_eliminated = status_name in (
+                'STATUS_CUT', 'STATUS_WITHDRAWN', 'STATUS_WD', 'STATUS_DQ', 'STATUS_MC'
+            )
+
+            pos_obj = status_obj.get('position', {})
+            display_pos = (pos_obj.get('displayName') or '-') if pos_obj else '-'
+
+            linescores = competitor.get('linescores', [])
+            rounds = {}
+            for i, ls in enumerate(linescores, 1):
+                rounds[str(i)] = ls.get('displayValue', '-')
+
+            score_obj = competitor.get('score', {})
+            total_display = (score_obj.get('displayValue') or 'E') if score_obj else 'E'
+            try:
+                total_value = int(score_obj.get('value', 0)) if score_obj else 0
+            except (ValueError, TypeError):
+                total_value = 0
+
+            total_strokes_obj = competitor.get('totalScore', {})
+            total_strokes = (total_strokes_obj.get('displayValue') or '-') if total_strokes_obj else '-'
+
+            athlete = competitor.get('athlete', {}) or {}
+
+            players.append({
+                'espn_id': competitor.get('id', ''),
+                'name': competitor.get('displayName', ''),
+                'short_name': competitor.get('shortName') or competitor.get('displayName', ''),
+                'status': status_name,
+                'is_eliminated': is_eliminated,
+                'sort_order': competitor.get('sortOrder', 9999),
+                'display_position': display_pos,
+                'total_display': total_display,
+                'total_value': total_value,
+                'total_strokes': total_strokes,
+                'rounds': rounds,
+                'world_rank': athlete.get('ranking'),
+            })
+
+        players.sort(key=lambda p: p['sort_order'])
+        return event_info, players
+    except Exception as e:
+        logging.error("get_golf_event_detail(%s) error: %s", espn_event_id, e)
+        return {}, []
 
 
 def _espn_url(league, endpoint, **params):
