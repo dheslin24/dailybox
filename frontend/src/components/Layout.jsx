@@ -44,6 +44,7 @@ export default function Layout({ children }) {
                     <ul className="dropdown-menu">
                       <li><a href="/app/custom_game_list">Super Bowl Boxes</a></li>
                       <li><a href="/app/pickem_game_list">Pickem Games</a></li>
+                      <li><a href="/app/survivor_pool">Survivor Pools</a></li>
                     </ul>
                   </li>
                   <li><a href="/app/my_games">My Games</a></li>
