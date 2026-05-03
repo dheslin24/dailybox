@@ -4,13 +4,14 @@ import { useSession } from '../SessionContext'
 export default function Layout({ children }) {
   const session = useSession()
   const [adminOpen, setAdminOpen] = useState(false)
+  const [footballOpen, setFootballOpen] = useState(false)
 
   useEffect(() => {
-    if (!adminOpen) return
-    const close = () => setAdminOpen(false)
+    if (!adminOpen && !footballOpen) return
+    const close = () => { setAdminOpen(false); setFootballOpen(false) }
     document.addEventListener('click', close)
     return () => document.removeEventListener('click', close)
-  }, [adminOpen])
+  }, [adminOpen, footballOpen])
 
   return (
     <div className="container">
@@ -36,7 +37,15 @@ export default function Layout({ children }) {
             {session?.logged_in ? (
               <>
                 <ul className="nav navbar-nav">
-                  <li><a href="/app/custom_game_list">Super Bowl Boxes</a></li>
+                  <li className={`dropdown${footballOpen ? ' open' : ''}`}>
+                    <a href="#" className="dropdown-toggle" onClick={e => { e.preventDefault(); e.stopPropagation(); setFootballOpen(o => !o) }}>
+                      Football Pools <span className="caret"></span>
+                    </a>
+                    <ul className="dropdown-menu">
+                      <li><a href="/app/custom_game_list">Super Bowl Boxes</a></li>
+                      <li><a href="/app/pickem_game_list">Pickem Games</a></li>
+                    </ul>
+                  </li>
                   <li><a href="/app/my_games">My Games</a></li>
                   <li><a href="/app/payment_status">Payment Status</a></li>
                   <li><a href="/app/horse_racing">Derby Pool</a></li>
