@@ -236,7 +236,7 @@ export default function DisplayBox() {
           {boxid === '4' ? (
             <img src="/static/cannellacrest.png" style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto' }} alt="" />
           ) : (
-            <img src="/static/will_just_one.gif" style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto' }} alt="" />
+            <img src="/static/denver-broncos.gif" style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto' }} alt="" />
           )}
         </div>
 
