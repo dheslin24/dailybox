@@ -32,7 +32,7 @@ function ScoresTable({ scores, home, away, ptype }) {
   if (!scores || scores.length === 0) return null
   const isMinute = ptype === 8
   return (
-    <div className="col-lg-4 col-md-6 col-xs-12">
+    <div className="col-md-12">
       <p className="text-center">Live IN-Game Updates (auto-refreshes every 30s)</p>
       {ptype === 3 && (
         <p className="text-center">Curious about how payouts work?? Click <a href={`/app/es_payout_details`}>here</a></p>
@@ -165,7 +165,7 @@ export default function DisplayBox() {
   return (
     <Layout>
       <div className="row">
-        <div className={hasScores ? 'col-lg-8 col-md-12' : 'col-md-12'}>
+        <div className="col-md-12">
           <h2><p className="text-center">{box_name}</p></h2>
 
           {(boxid === '46' || boxid === '7') && (
@@ -240,7 +240,6 @@ export default function DisplayBox() {
           )}
         </div>
 
-        <ScoresTable scores={scores} home={home} away={away} ptype={ptype} />
       </div>
 
       <div className="row">
@@ -324,6 +323,8 @@ export default function DisplayBox() {
           </table>
           </div>
         </div>
+
+        <ScoresTable scores={scores} home={home} away={away} ptype={ptype} />
       </div>
     </Layout>
   )
