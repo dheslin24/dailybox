@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
-const RANGES = [[1, 6], [7, 10], [11, 12], [13, 13]]
-
 export default function PickemGameList() {
-  const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [picks, setPicks] = useState({})
-  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     fetch('/api/pickem_game_list')
@@ -38,101 +33,107 @@ export default function PickemGameList() {
     })
       .then(res => res.json())
       .then(d => {
-        if (d.success) {
-          setSubmitted(true)
-          window.location.href = '/app/pickem_all_picks'
-        }
+        if (d.success) window.location.href = '/app/pickem_all_picks'
       })
   }
 
   if (!data) return <Layout><p>Loading...</p></Layout>
 
   const { games } = data
+  const gameIds = Object.keys(games).map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b)
 
-  const renderRows = (start, end) => {
-    const rows = []
-    for (let i = start; i <= end; i++) {
-      const g = games[String(i)]
-      if (!g) continue
-      const locked = g.locked
-      const tdClass = locked ? 'locked_ptd' : 'ptd'
-      const teamClass = locked ? 'locked_team' : 'team'
-      const isSuperbowl = i === 13
-      const spread = isSuperbowl ? games['13']?.spread : g.spread
+  const rows = []
+  for (const i of gameIds) {
+    const g = games[String(i)]
+    if (!g) continue
+    const locked = g.locked
+    const tdClass = locked ? 'locked_ptd' : 'ptd'
+    const teamClass = locked ? 'locked_team' : 'team'
 
+    rows.push(
+      <tr key={i}>
+        <td className={tdClass} style={{ textAlign: 'center' }}>{i}</td>
+        <td
+          className={teamClass}
+          onClick={() => handleTeamClick(i, g.fav, locked)}
+          style={{ textAlign: 'center', cursor: locked ? 'default' : 'pointer' }}
+        >
+          {g.fav}
+        </td>
+        <td className={tdClass} style={{ textAlign: 'center' }}>{g.spread}</td>
+        <td
+          className={teamClass}
+          onClick={() => handleTeamClick(i, g.dog, locked)}
+          style={{ textAlign: 'center', cursor: locked ? 'default' : 'pointer' }}
+        >
+          {g.dog}
+        </td>
+        <td className="pick" style={{ textAlign: 'center' }}>
+          <input className="pick" type="text" readOnly value={picks[String(i)] || ''} />
+        </td>
+      </tr>
+    )
+
+    if (i === 13 && g.spread !== 0) {
       rows.push(
-        <tr key={i}>
-          <td className={tdClass}>{i}</td>
-          <td className={teamClass} onClick={() => handleTeamClick(i, g.fav, locked)} style={{ cursor: 'pointer' }}>{g.fav}</td>
-          <td className={tdClass}>{spread}</td>
-          <td className={teamClass} onClick={() => handleTeamClick(i, g.dog, locked)} style={{ cursor: 'pointer' }}>{g.dog}</td>
-          <td className="pick">
-            <input className="pick" type="text" readOnly value={picks[String(i)] || ''} style={{ width: '80px' }} />
+        <tr key="tb">
+          <td className={tdClass} colSpan={4} style={{ textAlign: 'right' }}>
+            Enter Superbowl Total Points Tie Breaker Here:
+          </td>
+          <td className="pick" style={{ textAlign: 'center' }}>
+            <input
+              className="pick"
+              type="text"
+              value={picks['tb'] || ''}
+              onChange={e => setPicks(prev => ({ ...prev, tb: e.target.value }))}
+              readOnly={!!locked}
+              style={{ backgroundColor: locked ? '#ccc' : 'white' }}
+            />
           </td>
         </tr>
       )
-
-      if (i === 13 && g.spread !== 0) {
-        rows.push(
-          <tr key="tb">
-            <td className={tdClass} colSpan={4} style={{ textAlign: 'right' }}>
-              Enter Superbowl Total Points Tie Breaker Here:
-            </td>
-            <td className="pick">
-              <input
-                className="pick"
-                type="text"
-                value={picks['tb'] || ''}
-                onChange={e => setPicks(prev => ({ ...prev, tb: e.target.value }))}
-                readOnly={!!locked}
-                style={{ backgroundColor: 'white', width: '80px' }}
-              />
-            </td>
-          </tr>
-        )
-      }
     }
-    return rows
   }
-
-  const isFirstRoundLocked = games['1'] && games['1'].locked && games['1'].fav === 'TBD'
 
   return (
     <Layout>
-      <h1>
-        <p>Playoff Pickem Pool</p>
-      </h1>
-      Pick all 13 playoff games against the spread.<br />
-      Best record wins. Click on team in table to select.<br />
-      Final spreads will use Friday's NY Post.
-      <br /><br />
-      <a target="_blank" rel="noopener noreferrer" href="https://nypost.com/odds/">Link to NY POST Odds</a>
+      <h1>Playoff Pickem Pool</h1>
+      <p>
+        Pick all 13 playoff games against the spread. Best record wins.<br />
+        Click on a team name to select your pick.<br />
+        Final spreads will use Friday's NY Post.
+      </p>
+      <p>
+        <a target="_blank" rel="noopener noreferrer" href="https://nypost.com/odds/">
+          Link to NY Post Odds
+        </a>
+      </p>
 
-      <h4>
-        <form onSubmit={handleSubmit}>
-          {RANGES.map(([start, end]) => (
-            <table key={start} align="center">
-              {start === 1 && (
-                <thead>
-                  <tr>
-                    <th>Game ID</th>
-                    <th>Fav</th>
-                    <th>Spread</th>
-                    <th>Dog</th>
-                    <th style={{ borderLeftWidth: 'thick' }}>Pick</th>
-                  </tr>
-                </thead>
-              )}
-              <tbody>
-                {renderRows(start, end)}
-              </tbody>
-            </table>
-          ))}
+      <form onSubmit={handleSubmit}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="table table-bordered table-condensed" style={{ width: 'auto', margin: '0 auto' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'center' }}>Game</th>
+                <th style={{ textAlign: 'center' }}>Favorite</th>
+                <th style={{ textAlign: 'center' }}>Spread</th>
+                <th style={{ textAlign: 'center' }}>Underdog</th>
+                <th style={{ textAlign: 'center', borderLeftWidth: 'thick' }}>Pick</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
           <input className="pick" type="submit" value="Submit Picks" />
-        </form>
-      </h4>
+        </div>
+      </form>
 
-      <img src="https://www.wmse.org/wp-content/uploads/2017/12/ralph.gif" alt="" />
+      <div style={{ textAlign: 'center', marginTop: 24 }}>
+        <img src="https://www.wmse.org/wp-content/uploads/2017/12/ralph.gif" alt="" />
+      </div>
     </Layout>
   )
 }
