@@ -75,8 +75,13 @@ export default function PickemGameList() {
         >
           {g.dog}
         </td>
-        <td className="pick" style={{ textAlign: 'center' }}>
-          <input className="pick" type="text" readOnly value={picks[String(i)] || ''} />
+        <td style={{ textAlign: 'center', borderLeftWidth: 'thick', fontWeight: 600 }}>
+          <input
+            type="text"
+            readOnly
+            value={picks[String(i)] || ''}
+            style={{ width: 60, textAlign: 'center', fontSize: 16, border: 0, backgroundColor: 'transparent' }}
+          />
         </td>
       </tr>
     )
@@ -87,14 +92,13 @@ export default function PickemGameList() {
           <td colSpan={4} style={{ textAlign: 'right', backgroundColor: cellBg(locked) }}>
             Enter Superbowl Total Points Tie Breaker Here:
           </td>
-          <td className="pick" style={{ textAlign: 'center' }}>
+          <td style={{ textAlign: 'center', borderLeftWidth: 'thick', fontWeight: 600 }}>
             <input
-              className="pick"
               type="text"
               value={picks['tb'] || ''}
               onChange={e => setPicks(prev => ({ ...prev, tb: e.target.value }))}
               readOnly={!!locked}
-              style={{ backgroundColor: locked ? '#ccc' : 'white' }}
+              style={{ width: 60, textAlign: 'center', fontSize: 16, border: 0, backgroundColor: locked ? '#f3f4f6' : 'transparent' }}
             />
           </td>
         </tr>
