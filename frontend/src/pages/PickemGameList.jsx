@@ -42,29 +42,36 @@ export default function PickemGameList() {
   const { games } = data
   const gameIds = Object.keys(games).map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b)
 
+  const cellBg = (locked) => locked ? '#f3f4f6' : undefined
+  const teamStyle = (locked) => ({
+    textAlign: 'center',
+    backgroundColor: cellBg(locked),
+    cursor: locked ? 'default' : 'pointer',
+  })
+  const plainStyle = (locked) => ({
+    textAlign: 'center',
+    backgroundColor: cellBg(locked),
+  })
+
   const rows = []
   for (const i of gameIds) {
     const g = games[String(i)]
     if (!g) continue
     const locked = g.locked
-    const tdClass = locked ? 'locked_ptd' : 'ptd'
-    const teamClass = locked ? 'locked_team' : 'team'
 
     rows.push(
       <tr key={i}>
-        <td className={tdClass} style={{ textAlign: 'center' }}>{i}</td>
+        <td style={plainStyle(locked)}>{i}</td>
         <td
-          className={teamClass}
+          style={teamStyle(locked)}
           onClick={() => handleTeamClick(i, g.fav, locked)}
-          style={{ textAlign: 'center', cursor: locked ? 'default' : 'pointer' }}
         >
           {g.fav}
         </td>
-        <td className={tdClass} style={{ textAlign: 'center' }}>{g.spread}</td>
+        <td style={plainStyle(locked)}>{g.spread}</td>
         <td
-          className={teamClass}
+          style={teamStyle(locked)}
           onClick={() => handleTeamClick(i, g.dog, locked)}
-          style={{ textAlign: 'center', cursor: locked ? 'default' : 'pointer' }}
         >
           {g.dog}
         </td>
@@ -77,7 +84,7 @@ export default function PickemGameList() {
     if (i === 13 && g.spread !== 0) {
       rows.push(
         <tr key="tb">
-          <td className={tdClass} colSpan={4} style={{ textAlign: 'right' }}>
+          <td colSpan={4} style={{ textAlign: 'right', backgroundColor: cellBg(locked) }}>
             Enter Superbowl Total Points Tie Breaker Here:
           </td>
           <td className="pick" style={{ textAlign: 'center' }}>
@@ -111,7 +118,7 @@ export default function PickemGameList() {
 
       <form onSubmit={handleSubmit}>
         <div style={{ overflowX: 'auto' }}>
-          <table className="table table-bordered table-condensed" style={{ width: 'auto', margin: '0 auto' }}>
+          <table className="table table-bordered table-condensed table-striped table-hover" style={{ width: 'auto', margin: '0 auto' }}>
             <thead>
               <tr>
                 <th style={{ textAlign: 'center' }}>Game</th>
