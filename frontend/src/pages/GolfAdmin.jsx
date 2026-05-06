@@ -368,79 +368,9 @@ export default function GolfAdmin() {
                 ))}
               </div>
 
-              {/* Participants & Draft Order */}
-              <div className="col-md-5">
-                <h4>
-                  {pool.pool_format === 'draft' ? 'Draft Order' : 'Participants'}
-                  {pool.pool_format === 'draft' && (
-                    <button className="btn btn-xs btn-warning" style={{ marginLeft: 8 }}
-                      onClick={handleRandomize}>Randomize</button>
-                  )}
-                </h4>
-
-                {pool.pool_format === 'async' ? (
-                  <>
-                    <p className="text-muted" style={{ fontSize: 12 }}>Check all users participating in this pool.</p>
-                    {users.map(u => {
-                      const checked = draftSlots.some(uid => uid === String(u.userid))
-                      return (
-                        <div key={u.userid} style={{ marginBottom: 4 }}>
-                          <label style={{ fontWeight: 'normal', cursor: 'pointer' }}>
-                            <input
-                              type="checkbox"
-                              style={{ marginRight: 6 }}
-                              checked={checked}
-                              onChange={e => {
-                                if (e.target.checked) {
-                                  const updated = [...draftSlots]
-                                  const idx = updated.findIndex(s => !s)
-                                  if (idx >= 0) updated[idx] = String(u.userid)
-                                  else updated.push(String(u.userid))
-                                  setDraftSlots(updated)
-                                } else {
-                                  setDraftSlots(draftSlots.map(uid => uid === String(u.userid) ? '' : uid))
-                                }
-                              }}
-                            />
-                            {u.username}
-                          </label>
-                        </div>
-                      )
-                    })}
-                  </>
-                ) : (
-                  <>
-                    <p className="text-muted" style={{ fontSize: 12 }}>Assign users in snake draft order. Add one at a time.</p>
-                    {draftSlots.slice(0, draftSlots.findLastIndex(s => s !== '') + 2).map((uid, i) => (
-                      <div key={i} className="row" style={{ marginBottom: 4 }}>
-                        <div className="col-xs-2 text-right" style={{ paddingTop: 6, fontSize: 12 }}>{i + 1}.</div>
-                        <div className="col-xs-10">
-                          <select className="form-control input-sm" value={uid}
-                            onChange={e => {
-                              const updated = [...draftSlots]
-                              updated[i] = e.target.value
-                              setDraftSlots(updated)
-                            }}>
-                            <option value="">— select user —</option>
-                            {users.map(u => (
-                              <option key={u.userid} value={String(u.userid)}>{u.username}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}
-                  onClick={handleSaveDraftOrder}>
-                  Save {pool.pool_format === 'draft' ? 'Draft Order' : 'Participants'}
-                </button>
-              </div>
-
               {/* Admin Pick Override */}
               {pool.status === 'open' && (
-                <div className="col-md-4">
+                <div className="col-md-5">
                   <h4>Admin Pick Override</h4>
                   <div className="form-group">
                     <label>User</label>
@@ -493,6 +423,99 @@ export default function GolfAdmin() {
                   </button>
                 </div>
               )}
+            </div>
+
+            {/* Participants */}
+            <div style={{ marginTop: 20 }}>
+              <h4>
+                {pool.pool_format === 'draft' ? 'Draft Order' : 'Participants'}
+                {pool.pool_format === 'draft' && (
+                  <button className="btn btn-xs btn-warning" style={{ marginLeft: 8 }}
+                    onClick={handleRandomize}>Randomize</button>
+                )}
+              </h4>
+              <p className="text-muted" style={{ fontSize: 12 }}>
+                {pool.pool_format === 'draft'
+                  ? 'Enter each user\'s pick number (1, 2, 3…). Leave blank to exclude. Click a row to highlight.'
+                  : 'Check each user participating in this pool. Click a row to toggle.'
+                }
+              </p>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table table-condensed table-bordered table-hover" style={{ marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 80, textAlign: 'center' }}>
+                        {pool.pool_format === 'draft' ? 'Pick #' : 'In Pool'}
+                      </th>
+                      <th>Username</th>
+                      <th>First</th>
+                      <th>Last</th>
+                      <th>Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u => {
+                      const uid = String(u.userid)
+                      if (pool.pool_format === 'async') {
+                        const checked = draftSlots.some(s => s === uid)
+                        const toggle = () => {
+                          if (checked) {
+                            setDraftSlots(draftSlots.map(s => s === uid ? '' : s))
+                          } else {
+                            const updated = [...draftSlots]
+                            const idx = updated.findIndex(s => !s)
+                            if (idx >= 0) updated[idx] = uid
+                            else updated.push(uid)
+                            setDraftSlots(updated)
+                          }
+                        }
+                        return (
+                          <tr key={uid} style={{ cursor: 'pointer', ...(checked ? { background: '#dff0d8' } : {}) }}
+                            onClick={toggle}>
+                            <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                              <input type="checkbox" checked={checked} onChange={toggle} />
+                            </td>
+                            <td>{u.username}</td>
+                            <td>{u.first_name}</td>
+                            <td>{u.last_name}</td>
+                            <td>{u.email}</td>
+                          </tr>
+                        )
+                      } else {
+                        const slotIdx = draftSlots.findIndex(s => s === uid)
+                        const pickNum = slotIdx >= 0 ? slotIdx + 1 : ''
+                        return (
+                          <tr key={uid} style={pickNum ? { background: '#dff0d8' } : {}}>
+                            <td style={{ textAlign: 'center' }}>
+                              <input
+                                type="number" min="1" max="20"
+                                className="form-control input-sm"
+                                style={{ width: 60, margin: '0 auto' }}
+                                value={pickNum}
+                                onChange={e => {
+                                  const n = parseInt(e.target.value)
+                                  const updated = [...draftSlots]
+                                  const ex = updated.findIndex(s => s === uid)
+                                  if (ex >= 0) updated[ex] = ''
+                                  if (!isNaN(n) && n >= 1 && n <= 20) updated[n - 1] = uid
+                                  setDraftSlots(updated)
+                                }}
+                              />
+                            </td>
+                            <td>{u.username}</td>
+                            <td>{u.first_name}</td>
+                            <td>{u.last_name}</td>
+                            <td>{u.email}</td>
+                          </tr>
+                        )
+                      }
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <button className="btn btn-primary btn-sm" onClick={handleSaveDraftOrder}>
+                Save {pool.pool_format === 'draft' ? 'Draft Order' : 'Participants'}
+              </button>
             </div>
 
             {/* Draft Board / Payments */}

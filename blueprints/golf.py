@@ -106,11 +106,11 @@ def api_golf_tee_times():
 @bp.route('/api/golf_users', methods=['GET'])
 @api_admin_required
 def api_golf_users():
-    rows = db2("""SELECT userid, username, first_name, last_name
+    rows = db2("""SELECT userid, username, first_name, last_name, email
                   FROM users WHERE active = 1 AND alias_of_userid IS NULL
                   ORDER BY username""")
     return jsonify({'users': [{'userid': r[0], 'username': r[1],
-                               'first_name': r[2], 'last_name': r[3]} for r in rows]})
+                               'first_name': r[2], 'last_name': r[3], 'email': r[4] or ''} for r in rows]})
 
 
 @bp.route('/api/golf_create_pool', methods=['POST'])
