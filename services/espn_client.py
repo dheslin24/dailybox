@@ -81,60 +81,77 @@ def get_golf_event_venue(espn_event_id):
 
 
 def get_golf_event_detail(espn_event_id):
-    """Return (event_info dict, players list) for a PGA event."""
+    """Return (event_info dict, players list) for a PGA event.
+    Uses scoreboard?id= which works pre-tournament and live."""
     try:
-        r = requests.get(f"{_GOLF_BASE}/summary?event={espn_event_id}", timeout=10).json()
+        r = requests.get(f"{_GOLF_BASE}/scoreboard?id={espn_event_id}", timeout=10).json()
 
-        header = r.get('header', {})
-        comps = header.get('competitions', [{}])
-        comp_status = comps[0].get('status', {}) if comps else {}
+        target = next(
+            (e for e in r.get('events', []) if str(e.get('id')) == str(espn_event_id)),
+            None
+        )
+        if not target:
+            return {}, []
+
+        status_obj = target.get('status', {}).get('type', {})
         event_info = {
-            'name': header.get('name', ''),
-            'status_name': comp_status.get('type', {}).get('name', ''),
-            'status_desc': comp_status.get('type', {}).get('description', ''),
+            'name': target.get('name', ''),
+            'status_name': status_obj.get('name', ''),
+            'status_desc': status_obj.get('description', ''),
         }
 
+        comps = target.get('competitions', [])
+        if not comps:
+            return event_info, []
+
         players = []
-        for competitor in r.get('competitors', []):
-            status_obj = competitor.get('status', {})
-            status_name = status_obj.get('type', {}).get('name', 'STATUS_ACTIVE')
+        for competitor in comps[0].get('competitors', []):
+            athlete = competitor.get('athlete', {}) or {}
+
+            # Status — present during/after event, absent pre-tournament
+            c_status = competitor.get('status', {}) or {}
+            c_status_type = c_status.get('type', {}) or {}
+            status_name = c_status_type.get('name', 'STATUS_ACTIVE')
             is_eliminated = status_name in (
                 'STATUS_CUT', 'STATUS_WITHDRAWN', 'STATUS_WD', 'STATUS_DQ', 'STATUS_MC'
             )
+            pos_obj = c_status.get('position', {}) or {}
+            display_pos = pos_obj.get('displayName') or str(competitor.get('order', '-'))
 
-            pos_obj = status_obj.get('position', {})
-            display_pos = (pos_obj.get('displayName') or '-') if pos_obj else '-'
-
-            linescores = competitor.get('linescores', [])
+            # Round scores — pre-tournament linescores have no displayValue
             rounds = {}
-            for i, ls in enumerate(linescores, 1):
-                rounds[str(i)] = ls.get('displayValue', '-')
+            for ls in competitor.get('linescores', []):
+                period = str(ls.get('period', ''))
+                val = ls.get('displayValue', '')
+                if period and val:
+                    rounds[period] = val
 
-            score_obj = competitor.get('score', {})
-            total_display = (score_obj.get('displayValue') or 'E') if score_obj else 'E'
+            # Score: 'E' pre-tournament, signed int string or int during event
+            raw = competitor.get('score', 'E')
             try:
-                total_value = int(score_obj.get('value', 0)) if score_obj else 0
+                if raw in ('E', None, ''):
+                    total_value, total_display = 0, 'E'
+                else:
+                    total_value = int(raw)
+                    total_display = ('E' if total_value == 0
+                                     else (f'+{total_value}' if total_value > 0
+                                           else str(total_value)))
             except (ValueError, TypeError):
-                total_value = 0
-
-            total_strokes_obj = competitor.get('totalScore', {})
-            total_strokes = (total_strokes_obj.get('displayValue') or '-') if total_strokes_obj else '-'
-
-            athlete = competitor.get('athlete', {}) or {}
+                total_value, total_display = 0, 'E'
 
             players.append({
                 'espn_id': competitor.get('id', ''),
-                'name': competitor.get('displayName', ''),
-                'short_name': competitor.get('shortName') or competitor.get('displayName', ''),
+                'name': athlete.get('displayName') or athlete.get('fullName', ''),
+                'short_name': athlete.get('shortName') or athlete.get('displayName', ''),
                 'status': status_name,
                 'is_eliminated': is_eliminated,
-                'sort_order': competitor.get('sortOrder', 9999),
+                'sort_order': competitor.get('order', 9999),
                 'display_position': display_pos,
                 'total_display': total_display,
                 'total_value': total_value,
-                'total_strokes': total_strokes,
+                'total_strokes': '-',
                 'rounds': rounds,
-                'world_rank': athlete.get('ranking'),
+                'world_rank': None,
             })
 
         players.sort(key=lambda p: p['sort_order'])
