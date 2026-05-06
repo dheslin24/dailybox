@@ -354,32 +354,61 @@ export default function GolfAdmin() {
                       onClick={handleRandomize}>Randomize</button>
                   )}
                 </h4>
-                <p className="text-muted" style={{ fontSize: 12 }}>
-                  {pool.pool_format === 'draft'
-                    ? 'Assign users to pick slots. Snake order auto-computed from this base order.'
-                    : 'Assign participating users (order not meaningful for async format).'}
-                </p>
-                {draftSlots.slice(0, 20).map((uid, i) => (
-                  <div key={i} className="row" style={{ marginBottom: 4 }}>
-                    <div className="col-xs-2 text-right" style={{ paddingTop: 6, fontSize: 12 }}>
-                      {i + 1}.
-                    </div>
-                    <div className="col-xs-10">
-                      <select className="form-control input-sm"
-                        value={uid}
-                        onChange={e => {
-                          const updated = [...draftSlots]
-                          updated[i] = e.target.value
-                          setDraftSlots(updated)
-                        }}>
-                        <option value="">— empty —</option>
-                        {users.map(u => (
-                          <option key={u.userid} value={String(u.userid)}>{u.username}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                ))}
+
+                {pool.pool_format === 'async' ? (
+                  <>
+                    <p className="text-muted" style={{ fontSize: 12 }}>Check all users participating in this pool.</p>
+                    {users.map(u => {
+                      const checked = draftSlots.some(uid => uid === String(u.userid))
+                      return (
+                        <div key={u.userid} style={{ marginBottom: 4 }}>
+                          <label style={{ fontWeight: 'normal', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              style={{ marginRight: 6 }}
+                              checked={checked}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  const updated = [...draftSlots]
+                                  const idx = updated.findIndex(s => !s)
+                                  if (idx >= 0) updated[idx] = String(u.userid)
+                                  else updated.push(String(u.userid))
+                                  setDraftSlots(updated)
+                                } else {
+                                  setDraftSlots(draftSlots.map(uid => uid === String(u.userid) ? '' : uid))
+                                }
+                              }}
+                            />
+                            {u.username}
+                          </label>
+                        </div>
+                      )
+                    })}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-muted" style={{ fontSize: 12 }}>Assign users in snake draft order. Add one at a time.</p>
+                    {draftSlots.slice(0, draftSlots.findLastIndex(s => s !== '') + 2).map((uid, i) => (
+                      <div key={i} className="row" style={{ marginBottom: 4 }}>
+                        <div className="col-xs-2 text-right" style={{ paddingTop: 6, fontSize: 12 }}>{i + 1}.</div>
+                        <div className="col-xs-10">
+                          <select className="form-control input-sm" value={uid}
+                            onChange={e => {
+                              const updated = [...draftSlots]
+                              updated[i] = e.target.value
+                              setDraftSlots(updated)
+                            }}>
+                            <option value="">— select user —</option>
+                            {users.map(u => (
+                              <option key={u.userid} value={String(u.userid)}>{u.username}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
                 <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}
                   onClick={handleSaveDraftOrder}>
                   Save {pool.pool_format === 'draft' ? 'Draft Order' : 'Participants'}
