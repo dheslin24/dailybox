@@ -227,7 +227,7 @@ export default function GolfPool() {
             <div style={{ maxHeight: 420, overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: 4 }}>
               <table className="table table-condensed table-bordered" style={{ marginBottom: 0 }}>
                 <thead>
-                  <tr><th>Pos</th><th>Player</th><th>Rank</th><th>Status</th></tr>
+                  <tr><th>Rank</th><th>Player</th><th>Status</th></tr>
                 </thead>
                 <tbody>
                   {filteredField.map(player => {
@@ -249,12 +249,11 @@ export default function GolfPool() {
                               !(isTaken && pool.pool_format === 'draft'))
                             handlePick(player)
                         }}>
-                        <td>{player.display_position}</td>
+                        <td>{player.world_rank ? `#${player.world_rank}` : '—'}</td>
                         <td>
                           {player.name}
                           {label && <span style={{ marginLeft: 6 }}>{label}</span>}
                         </td>
-                        <td>{player.world_rank ? `#${player.world_rank}` : '—'}</td>
                         <td>
                           {isTaken && !isMine && pool.pool_format === 'draft'
                             ? picks.find(p => p.player_espn_id === player.espn_id)?.username || '—'
