@@ -126,12 +126,13 @@ def api_golf_create_pool():
     else:
         db2("INSERT INTO golf_events (name, espn_event_id, course, event_date, status) VALUES (%s,%s,%s,%s,'setup')",
             (event_name, espn_event_id, course, event_date))
-        event_id = db2("SELECT LAST_INSERT_ID()")[0][0]
+        event_id = db2("SELECT event_id FROM golf_events WHERE espn_event_id = %s", (espn_event_id,))[0][0]
 
     db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type)
            VALUES (%s,%s,%s,'setup',%s,%s,%s)""",
         (event_id, pool_name, fee, pool_format, picks_per_user, draft_type))
-    pool_id = db2("SELECT LAST_INSERT_ID()")[0][0]
+    pool_id = db2("SELECT pool_id FROM golf_pools WHERE event_id=%s AND name=%s ORDER BY pool_id DESC LIMIT 1",
+                  (event_id, pool_name))[0][0]
 
     logging.info("Created golf pool %s (%s) for event %s", pool_id, pool_name, event_id)
     return jsonify({'success': True, 'pool_id': pool_id, 'event_id': event_id})

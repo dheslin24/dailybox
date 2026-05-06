@@ -199,6 +199,29 @@ export default function GolfAdmin() {
         </div>
       </div>
 
+      {/* Pool Selector */}
+      {pools.length > 0 && (
+        <div className="panel panel-info">
+          <div className="panel-heading"><strong>Manage Existing Pool</strong></div>
+          <div className="panel-body">
+            <div className="row">
+              <div className="col-md-6">
+                <select className="form-control"
+                  value={selectedPoolId || ''}
+                  onChange={e => setSelectedPoolId(e.target.value ? Number(e.target.value) : null)}>
+                  <option value="">— select a pool —</option>
+                  {pools.map(p => (
+                    <option key={p.pool_id} value={p.pool_id}>
+                      {p.name} ({p.event_name}) — {p.status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create Pool */}
       <div className="panel panel-default">
         <div className="panel-heading"><strong>Create New Pool</strong></div>
