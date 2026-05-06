@@ -1,6 +1,7 @@
 import logging
+import re
 import requests
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from db_accessor.db_accessor import db2
 
 _BASE = "https://site.api.espn.com/apis/site/v2/sports/football"
@@ -80,6 +81,33 @@ def get_golf_event_venue(espn_event_id):
         return ''
 
 
+def get_golf_world_rankings():
+    """Return {espn_athlete_id_str: world_rank_int} from ESPN's OWGR data.
+    Tries the most recent weekly ranking date (searches back up to 10 days)."""
+    today = date.today()
+    for delta in range(10):
+        d = today - timedelta(days=delta)
+        url = (f"https://sports.core.api.espn.com/v2/sports/golf/leagues/all"
+               f"/seasons/{d.year}/rankings/1/dates/{d.strftime('%Y%m%d')}"
+               f"?lang=en&region=us&limit=300")
+        try:
+            ranks = requests.get(url, timeout=10).json().get('ranks', [])
+            if not ranks:
+                continue
+            rank_map = {}
+            for item in ranks:
+                ref = item.get('athlete', {}).get('$ref', '')
+                m = re.search(r'/athletes/(\d+)', ref)
+                if m:
+                    rank_map[m.group(1)] = item.get('current')
+            logging.info("Loaded %d world golf rankings for %s", len(rank_map), d)
+            return rank_map
+        except Exception as e:
+            logging.debug("golf rankings %s: %s", d, e)
+    logging.warning("Could not load golf world rankings")
+    return {}
+
+
 def get_golf_event_detail(espn_event_id):
     """Return (event_info dict, players list) for a PGA event.
     Uses scoreboard?id= which works pre-tournament and live."""
@@ -154,7 +182,23 @@ def get_golf_event_detail(espn_event_id):
                 'world_rank': None,
             })
 
-        players.sort(key=lambda p: p['sort_order'])
+        # Annotate with world rankings
+        rankings = get_golf_world_rankings()
+        for p in players:
+            p['world_rank'] = rankings.get(str(p['espn_id']))
+
+        # Pre-tournament: sort by world rank (ranked first, then alpha by name)
+        # During event: sort by leaderboard position (sort_order)
+        event_status = event_info.get('status_name', '')
+        if event_status in ('STATUS_SCHEDULED', ''):
+            players.sort(key=lambda p: (
+                p['world_rank'] is None,
+                p['world_rank'] or 0,
+                p['name'],
+            ))
+        else:
+            players.sort(key=lambda p: p['sort_order'])
+
         return event_info, players
     except Exception as e:
         logging.error("get_golf_event_detail(%s) error: %s", espn_event_id, e)
