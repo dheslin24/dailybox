@@ -384,50 +384,80 @@ export default function GolfPool() {
       )}
 
       {/* ── ACTIVE / COMPLETE: ESPN leaderboard ───────────────────────────── */}
-      {(pool.status === 'active' || pool.status === 'complete') && espn_field.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <h3 className="text-center">Tournament Leaderboard</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table table-condensed table-bordered table-striped">
-              <thead>
-                <tr>
-                  <th>Pos</th>
-                  <th>Player</th>
-                  <th>Total</th>
-                  <th>Strokes</th>
-                  {maxRounds > 0 && Array.from({ length: maxRounds }, (_, i) => (
-                    <th key={i}>R{i + 1}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {espn_field.map(player => (
-                  <tr key={player.espn_id}
-                    style={player.is_eliminated ? { background: '#f1f5f9', color: '#9ca3af' } : {}}>
-                    <td>{player.display_position}</td>
-                    <td>
-                      {player.name}
-                      {pickedIds.has(player.espn_id) && (
-                        <span className="label label-default" style={{ marginLeft: 6, fontSize: 10 }}>
-                          {picks.find(p => p.player_espn_id === player.espn_id)?.username}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      {player.is_eliminated
-                        ? <span className="label label-warning">CUT/WD</span>
-                        : <ScoreBadge val={player.total_value} display={player.total_display} />
-                      }
-                    </td>
-                    <td>{player.total_strokes}</td>
-                    {maxRounds > 0 && <RoundCells rounds={player.rounds} numRounds={maxRounds} />}
+      {(pool.status === 'active' || pool.status === 'complete') && espn_field.length > 0 && (() => {
+        // Build espn_id → [usernames] map (all pickers, not just one)
+        const pickerMap = {}
+        picks.forEach(p => {
+          if (!pickerMap[p.player_espn_id]) pickerMap[p.player_espn_id] = []
+          pickerMap[p.player_espn_id].push(p.username)
+        })
+        const hasStatus = espn_field.some(p => p.thru != null || p.tee_time != null)
+        return (
+          <div style={{ marginBottom: 20 }}>
+            <h3 className="text-center">Tournament Leaderboard</h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table table-condensed table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Score</th>
+                    <th>Strokes</th>
+                    {hasStatus && <th>Status</th>}
+                    {maxRounds > 0 && Array.from({ length: maxRounds }, (_, i) => (
+                      <th key={i}>R{i + 1}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {espn_field.map(player => {
+                    const pickers = pickerMap[player.espn_id] || []
+                    let pickerLabel = null
+                    if (pickers.length === 1) {
+                      pickerLabel = <span className="label label-default" style={{ marginLeft: 6, fontSize: 10 }}>{pickers[0]}</span>
+                    } else if (pickers.length <= 3) {
+                      pickerLabel = pickers.map(u => (
+                        <span key={u} className="label label-default" style={{ marginLeft: 4, fontSize: 10 }}>{u}</span>
+                      ))
+                    } else if (pickers.length > 3) {
+                      pickerLabel = <span className="label label-default" style={{ marginLeft: 6, fontSize: 10 }}>many</span>
+                    }
+
+                    let statusCell = null
+                    if (hasStatus) {
+                      if (player.thru > 0) {
+                        statusCell = <td>Thru {player.thru}</td>
+                      } else if (player.tee_time) {
+                        statusCell = <td style={{ whiteSpace: 'nowrap' }}>{player.tee_time}</td>
+                      } else {
+                        statusCell = <td>—</td>
+                      }
+                    }
+
+                    return (
+                      <tr key={player.espn_id}
+                        style={player.is_eliminated ? { background: '#f1f5f9', color: '#9ca3af' } : {}}>
+                        <td>
+                          {player.name}
+                          {pickerLabel}
+                        </td>
+                        <td>
+                          {player.is_eliminated
+                            ? <span className="label label-warning">CUT/WD</span>
+                            : <ScoreBadge val={player.total_value} display={player.total_display} />
+                          }
+                        </td>
+                        <td>{player.total_strokes}</td>
+                        {statusCell}
+                        {maxRounds > 0 && <RoundCells rounds={player.rounds} numRounds={maxRounds} />}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* ── Tiebreaker selector ────────────────────────────────────────────── */}
       {current_user_picks.length > 0 && pool.status !== 'complete' && (

@@ -180,6 +180,8 @@ def get_golf_event_detail(espn_event_id):
                 'total_strokes': '-',
                 'rounds': rounds,
                 'world_rank': None,
+                'tee_time': None,
+                'thru': None,
             })
 
         # Annotate with world rankings
@@ -187,9 +189,43 @@ def get_golf_event_detail(espn_event_id):
         for p in players:
             p['world_rank'] = rankings.get(str(p['espn_id']))
 
+        # Fetch per-player tee time / thru from core API status (batched with threads)
+        event_status = event_info.get('status_name', '')
+        try:
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            _core = ("https://sports.core.api.espn.com/v2/sports/golf/leagues/pga"
+                     f"/events/{espn_event_id}/competitions/{espn_event_id}/competitors")
+
+            def _fetch_status(player_id):
+                url = f"{_core}/{player_id}/status?lang=en&region=us"
+                try:
+                    s = requests.get(url, timeout=6).json()
+                    raw_tt = s.get('teeTime') or s.get('displayValue', '')
+                    tee_time = None
+                    if raw_tt:
+                        try:
+                            from datetime import timezone
+                            dt = datetime.fromisoformat(raw_tt.replace('Z', '+00:00'))
+                            tee_time = dt.astimezone(timezone(timedelta(hours=-4))).strftime('%-I:%M %p')
+                        except Exception:
+                            tee_time = raw_tt
+                    return player_id, tee_time, s.get('thru')
+                except Exception:
+                    return player_id, None, None
+
+            id_map = {p['espn_id']: p for p in players}
+            with ThreadPoolExecutor(max_workers=20) as ex:
+                futures = {ex.submit(_fetch_status, pid): pid for pid in id_map}
+                for f in as_completed(futures):
+                    pid, tee_time, thru = f.result()
+                    if pid in id_map:
+                        id_map[pid]['tee_time'] = tee_time
+                        id_map[pid]['thru'] = thru
+        except Exception as e:
+            logging.warning("Tee time fetch error: %s", e)
+
         # Pre-tournament: sort by world rank (ranked first, then alpha by name)
         # During event: sort by leaderboard position (sort_order)
-        event_status = event_info.get('status_name', '')
         if event_status in ('STATUS_SCHEDULED', ''):
             players.sort(key=lambda p: (
                 p['world_rank'] is None,
