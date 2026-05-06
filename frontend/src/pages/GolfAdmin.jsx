@@ -19,6 +19,8 @@ export default function GolfAdmin() {
   const [draftSlots, setDraftSlots]   = useState(Array(20).fill(''))
   const [adminPick, setAdminPick]     = useState({ user_id: '', espn_id: '', name: '' })
   const [msg, setMsg]                 = useState('')
+  const [userFilter, setUserFilter]   = useState('')
+  const [userSort, setUserSort]       = useState({ col: 'username', dir: 'asc' })
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000) }
 
@@ -440,79 +442,113 @@ export default function GolfAdmin() {
                   : 'Check each user participating in this pool. Click a row to toggle.'
                 }
               </p>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table table-condensed table-bordered table-hover" style={{ marginBottom: 8 }}>
-                  <thead>
-                    <tr>
-                      <th style={{ width: 80, textAlign: 'center' }}>
-                        {pool.pool_format === 'draft' ? 'Pick #' : 'In Pool'}
-                      </th>
-                      <th>Username</th>
-                      <th>First</th>
-                      <th>Last</th>
-                      <th>Email</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(u => {
-                      const uid = String(u.userid)
-                      if (pool.pool_format === 'async') {
-                        const checked = draftSlots.some(s => s === uid)
-                        const toggle = () => {
-                          if (checked) {
-                            setDraftSlots(draftSlots.map(s => s === uid ? '' : s))
+              <input
+                className="form-control input-sm"
+                style={{ maxWidth: 300, marginBottom: 8 }}
+                placeholder="Filter by name or email…"
+                value={userFilter}
+                onChange={e => setUserFilter(e.target.value)}
+              />
+              {(() => {
+                const q = userFilter.toLowerCase()
+                const cols = ['username', 'first_name', 'last_name', 'email']
+                const filtered = q
+                  ? users.filter(u => cols.some(c => (u[c] || '').toLowerCase().includes(q)))
+                  : users
+                const sorted = [...filtered].sort((a, b) => {
+                  const av = (a[userSort.col] || '').toLowerCase()
+                  const bv = (b[userSort.col] || '').toLowerCase()
+                  return userSort.dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
+                })
+                const sortIcon = (col) => {
+                  if (userSort.col !== col) return ' ↕'
+                  return userSort.dir === 'asc' ? ' ↑' : ' ↓'
+                }
+                const handleSortClick = (col) => {
+                  setUserSort(s => s.col === col
+                    ? { col, dir: s.dir === 'asc' ? 'desc' : 'asc' }
+                    : { col, dir: 'asc' }
+                  )
+                }
+                const thStyle = { cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }
+                return (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="table table-condensed table-bordered table-hover" style={{ marginBottom: 8 }}>
+                      <thead>
+                        <tr>
+                          <th style={{ width: 80, textAlign: 'center' }}>
+                            {pool.pool_format === 'draft' ? 'Pick #' : 'In Pool'}
+                          </th>
+                          {[['username','Username'],['first_name','First'],['last_name','Last'],['email','Email']].map(([col, label]) => (
+                            <th key={col} style={thStyle} onClick={() => handleSortClick(col)}>
+                              {label}{sortIcon(col)}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sorted.map(u => {
+                          const uid = String(u.userid)
+                          if (pool.pool_format === 'async') {
+                            const checked = draftSlots.some(s => s === uid)
+                            const toggle = () => {
+                              if (checked) {
+                                setDraftSlots(draftSlots.map(s => s === uid ? '' : s))
+                              } else {
+                                const updated = [...draftSlots]
+                                const idx = updated.findIndex(s => !s)
+                                if (idx >= 0) updated[idx] = uid
+                                else updated.push(uid)
+                                setDraftSlots(updated)
+                              }
+                            }
+                            return (
+                              <tr key={uid} style={{ cursor: 'pointer', ...(checked ? { background: '#dff0d8' } : {}) }}
+                                onClick={toggle}>
+                                <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                                  <input type="checkbox" checked={checked} onChange={toggle} />
+                                </td>
+                                <td>{u.username}</td>
+                                <td>{u.first_name}</td>
+                                <td>{u.last_name}</td>
+                                <td>{u.email}</td>
+                              </tr>
+                            )
                           } else {
-                            const updated = [...draftSlots]
-                            const idx = updated.findIndex(s => !s)
-                            if (idx >= 0) updated[idx] = uid
-                            else updated.push(uid)
-                            setDraftSlots(updated)
+                            const slotIdx = draftSlots.findIndex(s => s === uid)
+                            const pickNum = slotIdx >= 0 ? slotIdx + 1 : ''
+                            return (
+                              <tr key={uid} style={pickNum ? { background: '#dff0d8' } : {}}>
+                                <td style={{ textAlign: 'center' }}>
+                                  <input
+                                    type="number" min="1" max="20"
+                                    className="form-control input-sm"
+                                    style={{ width: 60, margin: '0 auto' }}
+                                    value={pickNum}
+                                    onChange={e => {
+                                      const n = parseInt(e.target.value)
+                                      const updated = [...draftSlots]
+                                      const ex = updated.findIndex(s => s === uid)
+                                      if (ex >= 0) updated[ex] = ''
+                                      if (!isNaN(n) && n >= 1 && n <= 20) updated[n - 1] = uid
+                                      setDraftSlots(updated)
+                                    }}
+                                  />
+                                </td>
+                                <td>{u.username}</td>
+                                <td>{u.first_name}</td>
+                                <td>{u.last_name}</td>
+                                <td>{u.email}</td>
+                              </tr>
+                            )
                           }
-                        }
-                        return (
-                          <tr key={uid} style={{ cursor: 'pointer', ...(checked ? { background: '#dff0d8' } : {}) }}
-                            onClick={toggle}>
-                            <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                              <input type="checkbox" checked={checked} onChange={toggle} />
-                            </td>
-                            <td>{u.username}</td>
-                            <td>{u.first_name}</td>
-                            <td>{u.last_name}</td>
-                            <td>{u.email}</td>
-                          </tr>
-                        )
-                      } else {
-                        const slotIdx = draftSlots.findIndex(s => s === uid)
-                        const pickNum = slotIdx >= 0 ? slotIdx + 1 : ''
-                        return (
-                          <tr key={uid} style={pickNum ? { background: '#dff0d8' } : {}}>
-                            <td style={{ textAlign: 'center' }}>
-                              <input
-                                type="number" min="1" max="20"
-                                className="form-control input-sm"
-                                style={{ width: 60, margin: '0 auto' }}
-                                value={pickNum}
-                                onChange={e => {
-                                  const n = parseInt(e.target.value)
-                                  const updated = [...draftSlots]
-                                  const ex = updated.findIndex(s => s === uid)
-                                  if (ex >= 0) updated[ex] = ''
-                                  if (!isNaN(n) && n >= 1 && n <= 20) updated[n - 1] = uid
-                                  setDraftSlots(updated)
-                                }}
-                              />
-                            </td>
-                            <td>{u.username}</td>
-                            <td>{u.first_name}</td>
-                            <td>{u.last_name}</td>
-                            <td>{u.email}</td>
-                          </tr>
-                        )
-                      }
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              })()}
+
               <button className="btn btn-primary btn-sm" onClick={handleSaveDraftOrder}>
                 Save {pool.pool_format === 'draft' ? 'Draft Order' : 'Participants'}
               </button>
