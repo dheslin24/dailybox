@@ -74,6 +74,19 @@ export default function GolfPool() {
       })
   }
 
+  const handleRemovePick = (pick_id) => {
+    fetch('/api/golf_remove_pick', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_id: selectedPoolId, pick_id }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flashPick(d.error); return }
+        load()
+      })
+  }
+
   const handleSetTiebreaker = (pick_id) => {
     fetch('/api/golf_set_tiebreaker', {
       method: 'POST',
@@ -264,9 +277,16 @@ export default function GolfPool() {
                 <div key={p.pick_id} style={{
                   padding: '8px 12px', marginBottom: 6, borderRadius: 4,
                   background: '#dbeafe', border: '1px solid #93c5fd',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
-                  <strong>{i + 1}. {p.player_name}</strong>
-                  {p.is_tiebreaker && <span className="label label-info" style={{ marginLeft: 6 }}>TB</span>}
+                  <span>
+                    <strong>{i + 1}. {p.player_name}</strong>
+                    {p.is_tiebreaker && <span className="label label-info" style={{ marginLeft: 6 }}>TB</span>}
+                  </span>
+                  <button className="btn btn-xs btn-danger" title="Remove pick"
+                    onClick={() => handleRemovePick(p.pick_id)}>
+                    ✕
+                  </button>
                 </div>
               ))
             }

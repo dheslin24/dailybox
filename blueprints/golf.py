@@ -500,6 +500,38 @@ def api_golf_pick():
     return jsonify({'success': True})
 
 
+@bp.route('/api/golf_remove_pick', methods=['POST'])
+@login_required
+def api_golf_remove_pick():
+    user_id = session.get('userid')
+    data    = request.get_json()
+    pool_id = data.get('pool_id')
+    pick_id = data.get('pick_id')
+
+    if not pool_id or not pick_id:
+        return jsonify({'error': 'pool_id and pick_id required'}), 400
+
+    pool_row = db2("SELECT status FROM golf_pools WHERE pool_id=%s", (pool_id,))
+    if not pool_row or pool_row[0][0] != 'open':
+        return jsonify({'error': 'Pool is not open'}), 400
+
+    pick_row = db2("SELECT pick_id FROM golf_picks WHERE pick_id=%s AND pool_id=%s AND user_id=%s",
+                   (pick_id, pool_id, user_id))
+    if not pick_row:
+        return jsonify({'error': 'Pick not found'}), 404
+
+    db2("DELETE FROM golf_picks WHERE pick_id=%s", (pick_id,))
+
+    # Re-sequence remaining picks for this user so draft_positions are gapless
+    remaining = db2("SELECT pick_id FROM golf_picks WHERE pool_id=%s AND user_id=%s ORDER BY draft_position",
+                    (pool_id, user_id))
+    for new_pos, (pid,) in enumerate(remaining, 1):
+        db2("UPDATE golf_picks SET draft_position=%s WHERE pick_id=%s", (new_pos, pid))
+
+    logging.info("Golf remove pick: pool %s user %s pick %s", pool_id, user_id, pick_id)
+    return jsonify({'success': True})
+
+
 @bp.route('/api/golf_set_tiebreaker', methods=['POST'])
 @login_required
 def api_golf_set_tiebreaker():
