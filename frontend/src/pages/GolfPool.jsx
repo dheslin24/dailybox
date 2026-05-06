@@ -24,6 +24,7 @@ export default function GolfPool() {
   const [filter, setFilter]         = useState('')
   const [pickMsg, setPickMsg]       = useState('')
   const [tbMsg, setTbMsg]           = useState('')
+  const [teeTimes, setTeeTimes]     = useState({})
 
   const flashPick = (m) => { setPickMsg(m); setTimeout(() => setPickMsg(''), 4000) }
   const flashTb   = (m) => { setTbMsg(m);   setTimeout(() => setTbMsg(''), 4000) }
@@ -54,6 +55,22 @@ export default function GolfPool() {
     const id = setInterval(load, 15000)
     return () => clearInterval(id)
   }, [load, data])
+
+  // Fetch tee times separately (slow call) so the main page loads fast
+  useEffect(() => {
+    if (!selectedPoolId || !data) return
+    const status = data.pool?.status
+    if (status !== 'open' && status !== 'active') return
+    const fetchTT = () => {
+      fetch(`/api/golf_tee_times?pool_id=${selectedPoolId}`)
+        .then(r => r.json())
+        .then(d => { if (d.tee_times) setTeeTimes(d.tee_times) })
+        .catch(() => {})
+    }
+    fetchTT()
+    const id = setInterval(fetchTT, 60000)
+    return () => clearInterval(id)
+  }, [selectedPoolId, data?.pool?.status])
 
   const handlePick = (player) => {
     if (!data?.is_on_clock && data?.pool?.pool_format === 'draft') return
@@ -391,7 +408,7 @@ export default function GolfPool() {
           if (!pickerMap[p.player_espn_id]) pickerMap[p.player_espn_id] = []
           pickerMap[p.player_espn_id].push(p.username)
         })
-        const hasStatus = espn_field.some(p => p.thru != null || p.tee_time != null)
+        const hasStatus = Object.keys(teeTimes).length > 0
         return (
           <div style={{ marginBottom: 20 }}>
             <h3 className="text-center">Tournament Leaderboard</h3>
@@ -422,12 +439,13 @@ export default function GolfPool() {
                       pickerLabel = <span className="label label-default" style={{ marginLeft: 6, fontSize: 10 }}>many</span>
                     }
 
+                    const tt = teeTimes[String(player.espn_id)] || {}
                     let statusCell = null
                     if (hasStatus) {
-                      if (player.thru > 0) {
-                        statusCell = <td>Thru {player.thru}</td>
-                      } else if (player.tee_time) {
-                        statusCell = <td style={{ whiteSpace: 'nowrap' }}>{player.tee_time}</td>
+                      if (tt.thru > 0) {
+                        statusCell = <td>Thru {tt.thru}</td>
+                      } else if (tt.tee_time) {
+                        statusCell = <td style={{ whiteSpace: 'nowrap' }}>{tt.tee_time}</td>
                       } else {
                         statusCell = <td>—</td>
                       }

@@ -1,8 +1,21 @@
 import logging
 import re
+import time
 import requests
 from datetime import datetime, timedelta, timezone, date
 from db_accessor.db_accessor import db2
+
+# Simple in-memory TTL cache: key → (value, expires_at)
+_cache: dict = {}
+
+def _cache_get(key):
+    entry = _cache.get(key)
+    if entry and entry[1] > time.time():
+        return entry[0]
+    return None
+
+def _cache_set(key, value, ttl):
+    _cache[key] = (value, time.time() + ttl)
 
 _BASE = "https://site.api.espn.com/apis/site/v2/sports/football"
 _GOLF_BASE = "https://site.api.espn.com/apis/site/v2/sports/golf/pga"
@@ -84,6 +97,9 @@ def get_golf_event_venue(espn_event_id):
 def get_golf_world_rankings():
     """Return {espn_athlete_id_str: world_rank_int} from ESPN's OWGR data.
     Tries the most recent weekly ranking date (searches back up to 10 days)."""
+    cached = _cache_get('golf_world_rankings')
+    if cached is not None:
+        return cached
     today = date.today()
     for delta in range(10):
         d = today - timedelta(days=delta)
@@ -101,6 +117,7 @@ def get_golf_world_rankings():
                 if m:
                     rank_map[m.group(1)] = item.get('current')
             logging.info("Loaded %d world golf rankings for %s", len(rank_map), d)
+            _cache_set('golf_world_rankings', rank_map, 86400)  # 24h
             return rank_map
         except Exception as e:
             logging.debug("golf rankings %s: %s", d, e)
@@ -110,7 +127,11 @@ def get_golf_world_rankings():
 
 def get_golf_event_detail(espn_event_id):
     """Return (event_info dict, players list) for a PGA event.
-    Uses scoreboard?id= which works pre-tournament and live."""
+    Uses scoreboard?id= which works pre-tournament and live. Cached 60s."""
+    cache_key = f'golf_event_detail_{espn_event_id}'
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
     try:
         r = requests.get(f"{_GOLF_BASE}/scoreboard?id={espn_event_id}", timeout=10).json()
 
@@ -189,43 +210,9 @@ def get_golf_event_detail(espn_event_id):
         for p in players:
             p['world_rank'] = rankings.get(str(p['espn_id']))
 
-        # Fetch per-player tee time / thru from core API status (batched with threads)
-        event_status = event_info.get('status_name', '')
-        try:
-            from concurrent.futures import ThreadPoolExecutor, as_completed
-            _core = ("https://sports.core.api.espn.com/v2/sports/golf/leagues/pga"
-                     f"/events/{espn_event_id}/competitions/{espn_event_id}/competitors")
-
-            def _fetch_status(player_id):
-                url = f"{_core}/{player_id}/status?lang=en&region=us"
-                try:
-                    s = requests.get(url, timeout=6).json()
-                    raw_tt = s.get('teeTime') or s.get('displayValue', '')
-                    tee_time = None
-                    if raw_tt:
-                        try:
-                            from datetime import timezone
-                            dt = datetime.fromisoformat(raw_tt.replace('Z', '+00:00'))
-                            tee_time = dt.astimezone(timezone(timedelta(hours=-4))).strftime('%-I:%M %p')
-                        except Exception:
-                            tee_time = raw_tt
-                    return player_id, tee_time, s.get('thru')
-                except Exception:
-                    return player_id, None, None
-
-            id_map = {p['espn_id']: p for p in players}
-            with ThreadPoolExecutor(max_workers=20) as ex:
-                futures = {ex.submit(_fetch_status, pid): pid for pid in id_map}
-                for f in as_completed(futures):
-                    pid, tee_time, thru = f.result()
-                    if pid in id_map:
-                        id_map[pid]['tee_time'] = tee_time
-                        id_map[pid]['thru'] = thru
-        except Exception as e:
-            logging.warning("Tee time fetch error: %s", e)
-
         # Pre-tournament: sort by world rank (ranked first, then alpha by name)
         # During event: sort by leaderboard position (sort_order)
+        event_status = event_info.get('status_name', '')
         if event_status in ('STATUS_SCHEDULED', ''):
             players.sort(key=lambda p: (
                 p['world_rank'] is None,
@@ -235,10 +222,58 @@ def get_golf_event_detail(espn_event_id):
         else:
             players.sort(key=lambda p: p['sort_order'])
 
-        return event_info, players
+        result = (event_info, players)
+        _cache_set(cache_key, result, 60)  # 60s
+        return result
     except Exception as e:
         logging.error("get_golf_event_detail(%s) error: %s", espn_event_id, e)
         return {}, []
+
+
+def get_golf_tee_times(espn_event_id):
+    """Return {player_espn_id: {tee_time, thru}} for all competitors.
+    Makes one HTTP call per player in parallel. Cached 60s."""
+    cache_key = f'golf_tee_times_{espn_event_id}'
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    _core = ("https://sports.core.api.espn.com/v2/sports/golf/leagues/pga"
+             f"/events/{espn_event_id}/competitions/{espn_event_id}/competitors")
+
+    # Get the current field to know which player IDs to fetch
+    _, players = get_golf_event_detail(espn_event_id)
+    player_ids = [p['espn_id'] for p in players if p['espn_id']]
+
+    def _fetch_status(player_id):
+        url = f"{_core}/{player_id}/status?lang=en&region=us"
+        try:
+            s = requests.get(url, timeout=6).json()
+            raw_tt = s.get('teeTime') or s.get('displayValue', '')
+            tee_time = None
+            if raw_tt:
+                try:
+                    dt = datetime.fromisoformat(raw_tt.replace('Z', '+00:00'))
+                    tee_time = dt.astimezone(timezone(timedelta(hours=-4))).strftime('%-I:%M %p')
+                except Exception:
+                    tee_time = raw_tt
+            return player_id, tee_time, s.get('thru')
+        except Exception:
+            return player_id, None, None
+
+    result = {}
+    try:
+        with ThreadPoolExecutor(max_workers=20) as ex:
+            futures = {ex.submit(_fetch_status, pid): pid for pid in player_ids}
+            for f in as_completed(futures):
+                pid, tee_time, thru = f.result()
+                result[str(pid)] = {'tee_time': tee_time, 'thru': thru}
+    except Exception as e:
+        logging.warning("get_golf_tee_times(%s) error: %s", espn_event_id, e)
+
+    _cache_set(cache_key, result, 60)  # 60s
+    return result
 
 
 def _espn_url(league, endpoint, **params):

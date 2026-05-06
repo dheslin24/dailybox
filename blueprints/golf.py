@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 from db_accessor.db_accessor import db2
 from utils import login_required, api_admin_required
-from services.espn_client import get_golf_tournaments, get_golf_event_detail, get_golf_event_venue
+from services.espn_client import get_golf_tournaments, get_golf_event_detail, get_golf_event_venue, get_golf_tee_times
 import logging
 import random
 
@@ -87,6 +87,20 @@ def api_golf_event_venue():
         return jsonify({'error': 'event_id required'}), 400
     venue = get_golf_event_venue(event_id)
     return jsonify({'venue': venue})
+
+
+@bp.route('/api/golf_tee_times', methods=['GET'])
+@login_required
+def api_golf_tee_times():
+    pool_id = request.args.get('pool_id', type=int)
+    if not pool_id:
+        return jsonify({'error': 'pool_id required'}), 400
+    row = db2("SELECT e.espn_event_id FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id WHERE p.pool_id = %s", (pool_id,))
+    if not row:
+        return jsonify({'error': 'Pool not found'}), 404
+    espn_event_id = row[0][0]
+    tee_times = get_golf_tee_times(espn_event_id)
+    return jsonify({'tee_times': tee_times})
 
 
 @bp.route('/api/golf_users', methods=['GET'])
