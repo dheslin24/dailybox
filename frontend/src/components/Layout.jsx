@@ -45,6 +45,9 @@ export default function Layout({ children }) {
                       <li><a href="/app/custom_game_list">Super Bowl Boxes</a></li>
                       <li><a href="/app/pickem_game_list">Pickem Games</a></li>
                       <li><a href="/app/survivor_pool">Survivor Pools</a></li>
+                      <li role="separator" className="divider"></li>
+                      <li><a href="/app/payment_status">SB Boxes Payment Status</a></li>
+                      <li><a href="/app/pickem_payment_status">Pickem Payment Status</a></li>
                     </ul>
                   </li>
                   <li><a href="/app/my_games">My Games</a></li>
