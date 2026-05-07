@@ -18,7 +18,7 @@ const CARDS = [
     fit: 'contain',
   },
   {
-    label: 'Kentucky Derby Pool',
+    label: 'Triple Crown Horse Racing',
     href: '/app/horse_racing',
     img: '/static/simpsons_horse.gif',
   },
@@ -28,7 +28,7 @@ const CARDS = [
     img: '/static/homer_golf.gif',
   },
   {
-    label: 'NCAA Hoops Pools',
+    label: 'NCAA Hoops',
     href: '/app/ncaa_hoops',
     img: '/static/simpsons_globetrotters.webp',
   },
