@@ -49,7 +49,7 @@ export default function Layout({ children }) {
                   </li>
                   <li><a href="/app/my_games">My Games</a></li>
                   <li><a href="/app/payment_status">Payment Status</a></li>
-                  <li><a href="/app/horse_racing">Derby Pool</a></li>
+                  <li><a href="/app/horse_racing">Triple Crown</a></li>
                   <li><a href="/app/golf_pool">Golf Pool</a></li>
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
