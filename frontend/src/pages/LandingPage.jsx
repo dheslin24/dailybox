@@ -25,7 +25,7 @@ const CARDS = [
   {
     label: 'Golf Pools',
     href: '/app/golf_pool',
-    img: '/static/homer_golf_sandwedge_3.gif',
+    img: '/static/homer_golf.gif',
   },
   {
     label: 'NCAA Hoops Pools',
