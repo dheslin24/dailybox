@@ -124,7 +124,7 @@ export default function GolfPool() {
       <Layout>
         <h2>Golf Pools</h2>
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <img src="/static/homer_golf_sandwedge_3.gif" alt="" />
+          <img src="/static/homer_golf_sandwedge_3.gif" alt="" style={{ width: '50%' }} />
         </div>
         {pools === null && <p>Loading…</p>}
         {pools !== null && pools.length === 0 && <p>No golf pools available.</p>}
