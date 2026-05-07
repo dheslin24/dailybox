@@ -105,6 +105,10 @@ export default function HorseRacingPool() {
         <span style={{ marginLeft: 12, fontWeight: 'bold' }}>{STATUS_LABEL[race.status] || race.status}</span>
       </div>
 
+      <div style={{ textAlign: 'center', marginBottom: 16 }}>
+        <img src="/static/kentucky-derby-simpsons.gif" alt="" style={{ width: '50%' }} />
+      </div>
+
       {/* Winner banner */}
       {winner && (
         <div style={{ background: '#ffd700', border: '2px solid #b8860b', borderRadius: 8, padding: '12px 20px', marginBottom: 20, textAlign: 'center' }}>
