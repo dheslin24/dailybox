@@ -5,6 +5,7 @@ import { useSession } from '../SessionContext'
 const EMPTY_FORM = {
   espn_event_id: '', event_name: '', course: '', event_date: '',
   pool_name: '', fee: '', pool_format: 'draft', draft_type: 'manual', picks_per_user: 4,
+  tiebreaker_type: 'player',
 }
 
 const STATUS_FLOW = ['setup', 'open', 'active', 'complete']
@@ -19,7 +20,8 @@ export default function GolfAdmin() {
   const [form, setForm]               = useState(EMPTY_FORM)
   const [draftSlots, setDraftSlots]   = useState(Array(20).fill(''))
   const [adminPick, setAdminPick]     = useState({ user_id: '', espn_id: '', name: '' })
-  const [adminTbUser, setAdminTbUser] = useState('')
+  const [adminTbUser, setAdminTbUser]       = useState('')
+  const [adminTbWinScore, setAdminTbWinScore] = useState('')
   const [msg, setMsg]                 = useState('')
   const [userFilter, setUserFilter]   = useState('')
   const [userSort, setUserSort]       = useState({ col: 'username', dir: 'asc' })
@@ -209,6 +211,21 @@ export default function GolfAdmin() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pool_id: selectedPoolId, user_id: parseInt(adminTbUser), pick_id }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flash(d.error); return }
+        flash('Tiebreaker set')
+        loadPoolDetail(selectedPoolId)
+      })
+  }
+
+  const handleAdminSetWinningScoreTb = () => {
+    if (!adminTbUser || adminTbWinScore === '') return
+    fetch('/api/golf_admin_set_winning_score_tb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_id: selectedPoolId, user_id: parseInt(adminTbUser), score: parseInt(adminTbWinScore) }),
     })
       .then(r => r.json())
       .then(d => {
@@ -416,6 +433,18 @@ export default function GolfAdmin() {
                     onChange={e => setForm(f => ({ ...f, picks_per_user: e.target.value }))} />
                 </td>
               </tr>
+              <tr>
+                <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                  Tiebreaker Type
+                </td>
+                <td style={{ padding: '4px 0' }}>
+                  <select className="form-control" value={form.tiebreaker_type}
+                    onChange={e => setForm(f => ({ ...f, tiebreaker_type: e.target.value }))}>
+                    <option value="player">Individual player score</option>
+                    <option value="winning_score">Tournament winning score prediction</option>
+                  </select>
+                </td>
+              </tr>
             </tbody>
           </table>
 
@@ -549,14 +578,14 @@ export default function GolfAdmin() {
                     <label>User</label>
                     <select className="form-control input-sm"
                       value={adminTbUser}
-                      onChange={e => setAdminTbUser(e.target.value)}>
+                      onChange={e => { setAdminTbUser(e.target.value); setAdminTbWinScore('') }}>
                       <option value="">— select user —</option>
                       {(poolDetail?.participants || []).map(p => (
                         <option key={p.user_id} value={p.user_id}>{p.username}</option>
                       ))}
                     </select>
                   </div>
-                  {adminTbUser && (() => {
+                  {adminTbUser && pool.tiebreaker_type === 'player' && (() => {
                     const userPicks = (poolDetail?.picks || [])
                       .filter(p => p.user_id === parseInt(adminTbUser))
                       .sort((a, b) => a.draft_position - b.draft_position)
@@ -570,6 +599,27 @@ export default function GolfAdmin() {
                         </button>
                       </div>
                     ))
+                  })()}
+                  {adminTbUser && pool.tiebreaker_type === 'winning_score' && (() => {
+                    const participant = (poolDetail?.participants || []).find(p => p.user_id === parseInt(adminTbUser))
+                    const current = participant?.tiebreaker_prediction
+                    return (
+                      <div>
+                        {current !== null && current !== undefined && (
+                          <p className="text-muted" style={{ fontSize: 12, marginBottom: 6 }}>
+                            Current: {current >= 0 ? `+${current}` : current}
+                          </p>
+                        )}
+                        <div className="input-group input-group-sm">
+                          <input type="number" className="form-control" placeholder="Score vs par (e.g. -12)"
+                            value={adminTbWinScore}
+                            onChange={e => setAdminTbWinScore(e.target.value)} />
+                          <span className="input-group-btn">
+                            <button className="btn btn-info" onClick={handleAdminSetWinningScoreTb}>Set</button>
+                          </span>
+                        </div>
+                      </div>
+                    )
                   })()}
                 </div>
               )}

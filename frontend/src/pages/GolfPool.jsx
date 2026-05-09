@@ -28,6 +28,7 @@ export default function GolfPool() {
   const [lbPickedOnly, setLbPickedOnly] = useState(false)
   const [joinCode, setJoinCode]         = useState('')
   const [joinMsg, setJoinMsg]           = useState('')
+  const [winScoreInput, setWinScoreInput] = useState('')
 
   const flashPick = (m) => { setPickMsg(m); setTimeout(() => setPickMsg(''), 4000) }
   const flashTb   = (m) => { setTbMsg(m);   setTimeout(() => setTbMsg(''), 4000) }
@@ -137,6 +138,20 @@ export default function GolfPool() {
       })
   }
 
+  const handleSetWinningScoreTb = (score) => {
+    fetch('/api/golf_set_winning_score_tb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_id: selectedPoolId, score }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flashTb(d.error); return }
+        flashTb('Prediction saved!')
+        load()
+      })
+  }
+
   // ── Pool list selector ────────────────────────────────────────────────────
   if (!selectedPoolId) {
     return (
@@ -186,7 +201,8 @@ export default function GolfPool() {
   if (!data) return <Layout><p>Loading…</p></Layout>
 
   const { pool, event, participants, picks, current_user_picks,
-          snake_sequence, on_clock, is_on_clock, espn_field, standings, is_admin } = data
+          snake_sequence, on_clock, is_on_clock, espn_field, standings, is_admin,
+          winning_score_leader, current_user_id } = data
 
   const pickedIds      = new Set(picks.map(p => p.player_espn_id))
   const myPickedIds    = new Set(current_user_picks.map(p => p.player_espn_id))
@@ -390,6 +406,14 @@ export default function GolfPool() {
       {(pool.status === 'active' || pool.status === 'complete') && standings.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <h3 className="text-center">Pool Standings</h3>
+          {pool.tiebreaker_type === 'winning_score' && (
+            <p className="text-center text-muted" style={{ fontSize: 13, marginTop: -8 }}>
+              Tiebreaker: closest prediction to tournament winning score
+              {winning_score_leader !== null && winning_score_leader !== undefined
+                ? ` — current leader: ${winning_score_leader >= 0 ? `+${winning_score_leader}` : winning_score_leader}`
+                : ''}
+            </p>
+          )}
           <div style={{ overflowX: 'auto' }}>
             <table className="table table-bordered table-striped">
               <thead>
@@ -400,12 +424,14 @@ export default function GolfPool() {
                     <th key={i}>Pick {i + 1}</th>
                   ))}
                   <th>Total</th>
+                  {pool.tiebreaker_type === 'winning_score' && <th>TB Pred</th>}
                   <th>Paid</th>
                 </tr>
               </thead>
               <tbody>
                 {standings.map((s, idx) => {
                   const sortedPicks = [...s.picks].sort((a, b) => a.draft_position - b.draft_position)
+                  const fmtScore = (v) => v === null || v === undefined ? '—' : v === 0 ? 'E' : v > 0 ? `+${v}` : String(v)
                   return (
                     <tr key={s.user_id} style={s.is_eliminated ? { background: '#f1f5f9', color: '#94a3b8' } : {}}>
                       <td>{s.is_eliminated ? '—' : idx + 1}</td>
@@ -426,7 +452,9 @@ export default function GolfPool() {
                                 ? <span className="label label-warning" style={{ marginLeft: 4, fontSize: 10 }}>CUT</span>
                                 : <span style={{ marginLeft: 4 }}><ScoreBadge val={pick.total_value} display={pick.total_display} /></span>
                               }
-                              {pick.is_tiebreaker && <span className="label label-info" style={{ marginLeft: 4, fontSize: 10 }}>TB</span>}
+                              {pool.tiebreaker_type === 'player' && pick.is_tiebreaker && (
+                                <span className="label label-info" style={{ marginLeft: 4, fontSize: 10 }}>TB</span>
+                              )}
                             </div>
                           </td>
                         )
@@ -438,6 +466,13 @@ export default function GolfPool() {
                               display={s.total_value === 0 ? 'E' : (s.total_value > 0 ? `+${s.total_value}` : String(s.total_value))} />
                         }
                       </td>
+                      {pool.tiebreaker_type === 'winning_score' && (
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {s.tiebreaker_prediction !== null && s.tiebreaker_prediction !== undefined
+                            ? fmtScore(s.tiebreaker_prediction)
+                            : <span className="text-muted">—</span>}
+                        </td>
+                      )}
                       <td>{s.paid ? <span style={{ color: '#15803d' }}>$</span> : ''}</td>
                     </tr>
                   )
@@ -534,7 +569,7 @@ export default function GolfPool() {
       })()}
 
       {/* ── Tiebreaker selector ────────────────────────────────────────────── */}
-      {current_user_picks.length > 0 && pool.status === 'open' && (
+      {pool.status === 'open' && pool.tiebreaker_type === 'player' && current_user_picks.length > 0 && (
         <div className="panel panel-default" style={{ maxWidth: 500, margin: '0 auto 20px' }}>
           <div className="panel-heading"><strong>Your Tiebreaker Pick</strong></div>
           <div className="panel-body">
@@ -555,6 +590,41 @@ export default function GolfPool() {
           </div>
         </div>
       )}
+      {pool.status === 'open' && pool.tiebreaker_type === 'winning_score' && (() => {
+        const myParticipant = participants.find(p => p.user_id === current_user_id)
+        if (!myParticipant) return null
+        const myPred = myParticipant.tiebreaker_prediction
+        return (
+          <div className="panel panel-default" style={{ maxWidth: 500, margin: '0 auto 20px' }}>
+            <div className="panel-heading"><strong>Your Tiebreaker Prediction</strong></div>
+            <div className="panel-body">
+              <p className="text-muted" style={{ fontSize: 13 }}>
+                Predict the winning score relative to par (e.g. -12). If tied on total score,
+                the player closest to the actual winning score wins the tiebreaker.
+              </p>
+              {myPred !== null && myPred !== undefined && (
+                <p style={{ marginBottom: 8 }}>
+                  Current prediction: <strong>{myPred >= 0 ? `+${myPred}` : myPred}</strong>
+                </p>
+              )}
+              {tbMsg && <div className="alert alert-info">{tbMsg}</div>}
+              <div className="input-group" style={{ maxWidth: 260 }}>
+                <input type="number" className="form-control" placeholder="Score vs par (e.g. -12)"
+                  value={winScoreInput}
+                  onChange={e => setWinScoreInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && winScoreInput !== '' && handleSetWinningScoreTb(parseInt(winScoreInput))} />
+                <span className="input-group-btn">
+                  <button className="btn btn-info"
+                    disabled={winScoreInput === ''}
+                    onClick={() => handleSetWinningScoreTb(parseInt(winScoreInput))}>
+                    Save
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </Layout>
   )
 }

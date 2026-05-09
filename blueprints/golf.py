@@ -93,6 +93,14 @@ def api_golf_init_db():
         db2("ALTER TABLE golf_pools ADD COLUMN invite_code VARCHAR(8) DEFAULT NULL")
     except Exception:
         pass
+    try:
+        db2("ALTER TABLE golf_pools ADD COLUMN tiebreaker_type VARCHAR(20) NOT NULL DEFAULT 'player'")
+    except Exception:
+        pass
+    try:
+        db2("ALTER TABLE golf_draft_order ADD COLUMN tiebreaker_prediction INT DEFAULT NULL")
+    except Exception:
+        pass
     # Backfill invite codes for pools that don't have one
     pools_without_code = db2("SELECT pool_id FROM golf_pools WHERE invite_code IS NULL OR invite_code = ''")
     for (pid,) in (pools_without_code or []):
@@ -170,7 +178,10 @@ def api_golf_create_pool():
     fee           = data.get('fee', '').strip()
     pool_format   = data.get('pool_format', 'draft')
     draft_type    = data.get('draft_type', 'manual')
-    picks_per_user = int(data.get('picks_per_user', 4))
+    picks_per_user  = int(data.get('picks_per_user', 4))
+    tiebreaker_type = data.get('tiebreaker_type', 'player')
+    if tiebreaker_type not in ('player', 'winning_score'):
+        tiebreaker_type = 'player'
 
     if not espn_event_id or not event_name or not pool_name:
         return jsonify({'error': 'espn_event_id, event_name, and pool_name required'}), 400
@@ -188,9 +199,9 @@ def api_golf_create_pool():
         event_id = db2("SELECT event_id FROM golf_events WHERE espn_event_id = %s", (espn_event_id,))[0][0]
 
     invite_code = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6))
-    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by, invite_code)
-           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s,%s)""",
-        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by, invite_code))
+    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type)
+           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s,%s,%s)""",
+        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type))
     pool_id = db2("SELECT pool_id FROM golf_pools WHERE event_id=%s AND name=%s ORDER BY pool_id DESC LIMIT 1",
                   (event_id, pool_name))[0][0]
 
@@ -206,7 +217,8 @@ def api_golf_create_pool():
 def api_golf_admin_pools():
     base = """SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
                      p.picks_per_user, p.draft_type,
-                     e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code
+                     e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code,
+                     p.tiebreaker_type
               FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id"""
     if session.get('is_admin') == 1:
         rows = db2(base + " ORDER BY p.pool_id DESC")
@@ -217,7 +229,7 @@ def api_golf_admin_pools():
          'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6],
          'event_id': r[7], 'event_name': r[8], 'espn_event_id': r[9],
          'course': r[10] or '', 'event_date': str(r[11]) if r[11] else '',
-         'invite_code': r[12] or ''}
+         'invite_code': r[12] or '', 'tiebreaker_type': r[13] or 'player'}
         for r in rows]})
 
 
@@ -384,7 +396,8 @@ def api_golf_pool():
 
     pool_row = db2("""SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
                              p.picks_per_user, p.draft_type,
-                             e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code
+                             e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code,
+                             p.tiebreaker_type
                       FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id
                       WHERE p.pool_id = %s""", (pool_id,))
     if not pool_row:
@@ -393,7 +406,7 @@ def api_golf_pool():
     r = pool_row[0]
     pool  = {'pool_id': r[0], 'name': r[1], 'fee': r[2], 'status': r[3],
              'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6],
-             'invite_code': r[12] or ''}
+             'invite_code': r[12] or '', 'tiebreaker_type': r[13] or 'player'}
     event = {'event_id': r[7], 'name': r[8], 'espn_event_id': r[9],
              'course': r[10] or '', 'event_date': str(r[11]) if r[11] else ''}
 
@@ -404,10 +417,11 @@ def api_golf_pool():
         return jsonify({'error': 'You are not in this pool'}), 403
 
     # Participants (base draft order)
-    p_rows = db2("""SELECT d.pick_order, d.user_id, u.username, d.paid
+    p_rows = db2("""SELECT d.pick_order, d.user_id, u.username, d.paid, d.tiebreaker_prediction
                     FROM golf_draft_order d JOIN users u ON u.userid = d.user_id
                     WHERE d.pool_id = %s ORDER BY d.pick_order""", (pool_id,))
-    participants = [{'pick_order': r[0], 'user_id': r[1], 'username': r[2], 'paid': bool(r[3])}
+    participants = [{'pick_order': r[0], 'user_id': r[1], 'username': r[2], 'paid': bool(r[3]),
+                     'tiebreaker_prediction': r[4]}
                     for r in p_rows]
 
     # All picks
@@ -459,10 +473,21 @@ def api_golf_pool():
         espn_field        = players
         espn_scores_by_id = {p['espn_id']: p for p in players}
 
+    winning_score_leader = None
+
     if pool['status'] in ('active', 'complete') and participants:
         picks_by_user = {}
         for p in picks:
             picks_by_user.setdefault(p['user_id'], []).append(p)
+
+        # For winning_score pools: find actual tournament leader
+        if pool['tiebreaker_type'] == 'winning_score' and espn_field:
+            valid_scores = [p['total_value'] for p in espn_field
+                            if not p.get('is_eliminated') and p.get('total_value') is not None]
+            if valid_scores:
+                winning_score_leader = min(valid_scores)
+
+        pred_by_user = {p['user_id']: p['tiebreaker_prediction'] for p in participants}
 
         for participant in participants:
             uid        = participant['user_id']
@@ -478,7 +503,7 @@ def api_golf_pool():
                     is_eliminated = True
                 tv = espn.get('total_value') or 0
                 total_value += tv
-                if pick['is_tiebreaker']:
+                if pool['tiebreaker_type'] == 'player' and pick['is_tiebreaker']:
                     tiebreaker_value = tv
                 detailed_picks.append({
                     **pick,
@@ -490,37 +515,45 @@ def api_golf_pool():
                     'rounds':           espn.get('rounds', {}),
                 })
 
+            if pool['tiebreaker_type'] == 'winning_score':
+                pred = pred_by_user.get(uid)
+                if pred is not None and winning_score_leader is not None:
+                    tiebreaker_value = abs(pred - winning_score_leader)
+
             standings.append({
-                'user_id':          uid,
-                'username':         participant['username'],
-                'paid':             participant['paid'],
-                'is_eliminated':    is_eliminated,
-                'total_value':      total_value,
-                'tiebreaker_value': tiebreaker_value,
-                'picks':            detailed_picks,
+                'user_id':               uid,
+                'username':              participant['username'],
+                'paid':                  participant['paid'],
+                'is_eliminated':         is_eliminated,
+                'total_value':           total_value,
+                'tiebreaker_value':      tiebreaker_value,
+                'tiebreaker_prediction': pred_by_user.get(uid),
+                'picks':                 detailed_picks,
             })
 
         active    = [s for s in standings if not s['is_eliminated']]
         eliminated = [s for s in standings if s['is_eliminated']]
         active.sort(key=lambda s: (
             s['total_value'],
-            0 if s['tiebreaker_value'] is not None else 1,   # has tiebreaker ranks ahead of no tiebreaker
+            0 if s['tiebreaker_value'] is not None else 1,
             s['tiebreaker_value'] if s['tiebreaker_value'] is not None else 0,
         ))
         standings = active + eliminated
 
     return jsonify({
-        'pool':              pool,
-        'event':             event,
-        'participants':      participants,
-        'picks':             picks,
-        'current_user_picks': current_user_picks,
-        'snake_sequence':    snake_sequence,
-        'on_clock':          on_clock,
-        'is_on_clock':       is_on_clock,
-        'espn_field':        espn_field,
-        'standings':         standings,
-        'is_admin':          is_admin,
+        'pool':                pool,
+        'event':               event,
+        'participants':        participants,
+        'picks':               picks,
+        'current_user_picks':  current_user_picks,
+        'current_user_id':     user_id,
+        'snake_sequence':      snake_sequence,
+        'on_clock':            on_clock,
+        'is_on_clock':         is_on_clock,
+        'espn_field':          espn_field,
+        'standings':           standings,
+        'is_admin':            is_admin,
+        'winning_score_leader': winning_score_leader,
     })
 
 
@@ -728,3 +761,58 @@ def api_golf_join_pool():
         (pool_id, user_id, next_order))
     logging.info("User %s joined pool %s via invite code", user_id, pool_id)
     return jsonify({'success': True, 'pool_id': pool_id, 'pool_name': pool_name})
+
+
+# ── WINNING SCORE TIEBREAKER ──────────────────────────────────────────────────
+
+@bp.route('/api/golf_set_winning_score_tb', methods=['POST'])
+@login_required
+def api_golf_set_winning_score_tb():
+    data    = request.get_json()
+    pool_id = data.get('pool_id')
+    score   = data.get('score')
+    user_id = session.get('userid')
+
+    if pool_id is None or score is None:
+        return jsonify({'error': 'pool_id and score required'}), 400
+    try:
+        score = int(score)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'score must be an integer'}), 400
+
+    pool_row = db2("SELECT status, tiebreaker_type FROM golf_pools WHERE pool_id=%s", (pool_id,))
+    if not pool_row:
+        return jsonify({'error': 'Pool not found'}), 404
+    if pool_row[0][1] != 'winning_score':
+        return jsonify({'error': 'Pool does not use winning score tiebreaker'}), 400
+    if pool_row[0][0] != 'open':
+        return jsonify({'error': 'Tiebreaker can only be set while pool is open'}), 400
+
+    if not db2("SELECT 1 FROM golf_draft_order WHERE pool_id=%s AND user_id=%s", (pool_id, user_id)):
+        return jsonify({'error': 'You are not in this pool'}), 403
+
+    db2("UPDATE golf_draft_order SET tiebreaker_prediction=%s WHERE pool_id=%s AND user_id=%s",
+        (score, pool_id, user_id))
+    return jsonify({'success': True})
+
+
+@bp.route('/api/golf_admin_set_winning_score_tb', methods=['POST'])
+@golf_admin_required
+def api_golf_admin_set_winning_score_tb():
+    data    = request.get_json()
+    pool_id = data.get('pool_id')
+    user_id = data.get('user_id')
+    score   = data.get('score')
+
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
+    if pool_id is None or user_id is None or score is None:
+        return jsonify({'error': 'pool_id, user_id, and score required'}), 400
+    try:
+        score = int(score)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'score must be an integer'}), 400
+
+    db2("UPDATE golf_draft_order SET tiebreaker_prediction=%s WHERE pool_id=%s AND user_id=%s",
+        (score, pool_id, user_id))
+    return jsonify({'success': True})
