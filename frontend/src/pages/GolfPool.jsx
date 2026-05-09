@@ -25,6 +25,7 @@ export default function GolfPool() {
   const [pickMsg, setPickMsg]       = useState('')
   const [tbMsg, setTbMsg]           = useState('')
   const [teeTimes, setTeeTimes]     = useState({})
+  const [lbPickedOnly, setLbPickedOnly] = useState(false)
 
   const flashPick = (m) => { setPickMsg(m); setTimeout(() => setPickMsg(''), 4000) }
   const flashTb   = (m) => { setTbMsg(m);   setTimeout(() => setTbMsg(''), 4000) }
@@ -412,16 +413,25 @@ export default function GolfPool() {
           pickerMap[p.player_espn_id].push(p.username)
         })
         const hasStatus = Object.keys(teeTimes).length > 0
+        const lbField = lbPickedOnly
+          ? espn_field.filter(p => pickerMap[p.espn_id])
+          : espn_field
         return (
           <div style={{ marginBottom: 20 }}>
-            <h3 className="text-center">Tournament Leaderboard</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 8 }}>
+              <h3 style={{ margin: 0 }}>Tournament Leaderboard</h3>
+              <button
+                className={`btn btn-xs ${lbPickedOnly ? 'btn-primary' : 'btn-default'}`}
+                onClick={() => setLbPickedOnly(v => !v)}>
+                {lbPickedOnly ? 'Picked players only' : 'All players'}
+              </button>
+            </div>
             <div style={{ overflowX: 'auto' }}>
               <table className="table table-condensed table-bordered table-striped">
                 <thead>
                   <tr>
                     <th>Player</th>
                     <th>Score</th>
-                    <th>Strokes</th>
                     {hasStatus && <th>Status</th>}
                     {maxRounds > 0 && Array.from({ length: maxRounds }, (_, i) => (
                       <th key={i}>R{i + 1}</th>
@@ -429,7 +439,7 @@ export default function GolfPool() {
                   </tr>
                 </thead>
                 <tbody>
-                  {espn_field.map(player => {
+                  {lbField.map(player => {
                     const pickers = pickerMap[player.espn_id] || []
                     let pickerLabel = null
                     if (pickers.length === 1) {
@@ -467,7 +477,6 @@ export default function GolfPool() {
                             : <ScoreBadge val={player.total_value} display={player.total_display} />
                           }
                         </td>
-                        <td>{player.total_strokes}</td>
                         {statusCell}
                         {maxRounds > 0 && <RoundCells rounds={player.rounds} numRounds={maxRounds} />}
                       </tr>
