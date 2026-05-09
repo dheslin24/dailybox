@@ -232,6 +232,12 @@ export default function GolfPool() {
       )}
 
       {/* ── OPEN: field picker ─────────────────────────────────────────────── */}
+      {pool.status === 'open' && espn_field.length === 0 && (
+        <div className="alert alert-info text-center">
+          Tournament field is not yet available. Please check back closer to tournament start time.
+        </div>
+      )}
+
       {pool.status === 'open' && espn_field.length > 0 && (
         <div className="row" style={{ marginBottom: 20 }}>
           <div className="col-md-8">
