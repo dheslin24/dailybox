@@ -37,6 +37,21 @@ def api_admin_required(f):
     return decorated_function
 
 
+def golf_admin_required(f):
+    """Passes for super admins (is_admin=1) or users with a golf pool grant."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('is_admin') == 1:
+            return f(*args, **kwargs)
+        uid = session.get('userid')
+        if uid:
+            from db_accessor.db_accessor import db2
+            if db2("SELECT 1 FROM golf_pool_grants WHERE user_id=%s", (uid,)):
+                return f(*args, **kwargs)
+        return jsonify({'error': 'forbidden'}), 403
+    return decorated_function
+
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

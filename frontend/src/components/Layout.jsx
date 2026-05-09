@@ -56,17 +56,17 @@ export default function Layout({ children }) {
                   <li><a href="/app/golf_pool">Golf Pool</a></li>
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
-                  {session.is_admin === 1 && (
+                  {(session.is_admin === 1 || session.has_golf_grant) && (
                     <li className={`dropdown${adminOpen ? ' open' : ''}`}>
                       <a href="#" className="dropdown-toggle" onClick={e => { e.preventDefault(); e.stopPropagation(); setAdminOpen(o => !o) }}>
                         Admin <span className="caret"></span>
                       </a>
                       <ul className="dropdown-menu">
-                        <li><a href="/app/admin">Admin</a></li>
-                        <li><a href="/app/horse_racing_admin">HR Admin</a></li>
+                        {session.is_admin === 1 && <li><a href="/app/admin">Admin</a></li>}
+                        {session.is_admin === 1 && <li><a href="/app/horse_racing_admin">HR Admin</a></li>}
                         <li><a href="/app/golf_admin">Golf Admin</a></li>
-                        <li role="separator" className="divider"></li>
-                        <li><a href="/app/bygzomo">BYGZomo</a></li>
+                        {session.is_admin === 1 && <li role="separator" className="divider"></li>}
+                        {session.is_admin === 1 && <li><a href="/app/bygzomo">BYGZomo</a></li>}
                       </ul>
                     </li>
                   )}

@@ -128,11 +128,16 @@ def api_register():
 def api_me():
     if session.get('userid') is None:
         return jsonify({'logged_in': False}), 200
+    grant_row = db2("SELECT pools_allowed, pools_used FROM golf_pool_grants WHERE user_id=%s",
+                    (session['userid'],))
+    golf_grant = {'pools_allowed': grant_row[0][0], 'pools_used': grant_row[0][1]} if grant_row else None
     return jsonify({
         'logged_in': True,
         'userid': session['userid'],
         'username': session['username'],
         'is_admin': session.get('is_admin', 0),
+        'has_golf_grant': bool(grant_row),
+        'golf_grant': golf_grant,
     })
 
 @bp.route("/api/user_details", methods=["GET"])

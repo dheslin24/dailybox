@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from db_accessor.db_accessor import db2
-from utils import login_required, api_admin_required
+from utils import login_required, api_admin_required, golf_admin_required
 from services.espn_client import get_golf_tournaments, get_golf_event_detail, get_golf_event_venue, get_golf_tee_times
 import logging
 import random
@@ -21,6 +21,16 @@ def _compute_snake_sequence(base_order, picks_per_user):
         else:                                  # odd rounds: reverse
             sequence.append(base_order[n - 1 - pos_in_round])
     return sequence
+
+
+def _can_manage_pool(pool_id):
+    """True if current user is a super admin or created this pool via a grant."""
+    if session.get('is_admin') == 1:
+        return True
+    uid = session.get('userid')
+    if not uid:
+        return False
+    return bool(db2("SELECT 1 FROM golf_pools WHERE pool_id=%s AND created_by=%s", (pool_id, uid)))
 
 
 # ── DB INIT ───────────────────────────────────────────────────────────────────
@@ -66,6 +76,19 @@ def api_golf_init_db():
             pick_type       VARCHAR(20)  DEFAULT 'primary',
             UNIQUE KEY uq_pool_user_player (pool_id, user_id, player_espn_id)
         )""")
+    db2("""CREATE TABLE IF NOT EXISTS golf_pool_grants (
+            grant_id      INT AUTO_INCREMENT PRIMARY KEY,
+            user_id       INT NOT NULL,
+            granted_by    INT NOT NULL,
+            pools_allowed INT NOT NULL DEFAULT 1,
+            pools_used    INT NOT NULL DEFAULT 0,
+            created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_user (user_id)
+        )""")
+    try:
+        db2("ALTER TABLE golf_pools ADD COLUMN created_by INT DEFAULT NULL")
+    except Exception:
+        pass  # column already exists
     logging.info("golf_ tables initialised")
     return jsonify({'success': True})
 
@@ -73,14 +96,14 @@ def api_golf_init_db():
 # ── ADMIN ENDPOINTS ───────────────────────────────────────────────────────────
 
 @bp.route('/api/golf_espn_events', methods=['GET'])
-@api_admin_required
+@golf_admin_required
 def api_golf_espn_events():
     events = get_golf_tournaments()
     return jsonify({'events': events})
 
 
 @bp.route('/api/golf_event_venue', methods=['GET'])
-@api_admin_required
+@golf_admin_required
 def api_golf_event_venue():
     event_id = request.args.get('event_id', '')
     if not event_id:
@@ -104,7 +127,7 @@ def api_golf_tee_times():
 
 
 @bp.route('/api/golf_users', methods=['GET'])
-@api_admin_required
+@golf_admin_required
 def api_golf_users():
     rows = db2("""SELECT userid, username, first_name, last_name, email
                   FROM users WHERE active = 1 AND alias_of_userid IS NULL
@@ -114,8 +137,21 @@ def api_golf_users():
 
 
 @bp.route('/api/golf_create_pool', methods=['POST'])
-@api_admin_required
+@golf_admin_required
 def api_golf_create_pool():
+    uid        = session.get('userid')
+    is_super   = session.get('is_admin') == 1
+    created_by = None
+
+    if not is_super:
+        grant = db2("SELECT pools_allowed, pools_used FROM golf_pool_grants WHERE user_id=%s", (uid,))
+        if not grant:
+            return jsonify({'error': 'forbidden'}), 403
+        allowed, used = grant[0]
+        if used >= allowed:
+            return jsonify({'error': f'Pool quota reached ({used}/{allowed})'}), 403
+        created_by = uid
+
     data = request.get_json()
     espn_event_id = str(data.get('espn_event_id', '')).strip()
     event_name    = data.get('event_name', '').strip()
@@ -142,25 +178,30 @@ def api_golf_create_pool():
             (event_name, espn_event_id, course, event_date))
         event_id = db2("SELECT event_id FROM golf_events WHERE espn_event_id = %s", (espn_event_id,))[0][0]
 
-    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type)
-           VALUES (%s,%s,%s,'setup',%s,%s,%s)""",
-        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type))
+    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by)
+           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s)""",
+        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by))
     pool_id = db2("SELECT pool_id FROM golf_pools WHERE event_id=%s AND name=%s ORDER BY pool_id DESC LIMIT 1",
                   (event_id, pool_name))[0][0]
 
-    logging.info("Created golf pool %s (%s) for event %s", pool_id, pool_name, event_id)
+    if not is_super:
+        db2("UPDATE golf_pool_grants SET pools_used = pools_used + 1 WHERE user_id=%s", (uid,))
+
+    logging.info("Created golf pool %s (%s) for event %s by user %s", pool_id, pool_name, event_id, uid)
     return jsonify({'success': True, 'pool_id': pool_id, 'event_id': event_id})
 
 
 @bp.route('/api/golf_admin_pools', methods=['GET'])
-@api_admin_required
+@golf_admin_required
 def api_golf_admin_pools():
-    rows = db2("""SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
-                         p.picks_per_user, p.draft_type,
-                         e.event_id, e.name, e.espn_event_id, e.course, e.event_date
-                  FROM golf_pools p
-                  JOIN golf_events e ON e.event_id = p.event_id
-                  ORDER BY p.pool_id DESC""")
+    base = """SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
+                     p.picks_per_user, p.draft_type,
+                     e.event_id, e.name, e.espn_event_id, e.course, e.event_date
+              FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id"""
+    if session.get('is_admin') == 1:
+        rows = db2(base + " ORDER BY p.pool_id DESC")
+    else:
+        rows = db2(base + " WHERE p.created_by=%s ORDER BY p.pool_id DESC", (session.get('userid'),))
     return jsonify({'pools': [
         {'pool_id': r[0], 'name': r[1], 'fee': r[2], 'status': r[3],
          'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6],
@@ -170,13 +211,15 @@ def api_golf_admin_pools():
 
 
 @bp.route('/api/golf_set_draft_order', methods=['POST'])
-@api_admin_required
+@golf_admin_required
 def api_golf_set_draft_order():
     data = request.get_json()
     pool_id = data.get('pool_id')
     order   = data.get('order', [])  # [{user_id, pick_order}]
     if not pool_id or not order:
         return jsonify({'error': 'pool_id and order required'}), 400
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
     db2("DELETE FROM golf_draft_order WHERE pool_id = %s", (pool_id,))
     for slot in order:
         db2("INSERT INTO golf_draft_order (pool_id, user_id, pick_order) VALUES (%s,%s,%s)",
@@ -185,13 +228,15 @@ def api_golf_set_draft_order():
 
 
 @bp.route('/api/golf_randomize_draft', methods=['POST'])
-@api_admin_required
+@golf_admin_required
 def api_golf_randomize_draft():
     data = request.get_json()
     pool_id  = data.get('pool_id')
     user_ids = data.get('user_ids', [])
     if not pool_id or not user_ids:
         return jsonify({'error': 'pool_id and user_ids required'}), 400
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
     shuffled = list(user_ids)
     random.shuffle(shuffled)
     db2("DELETE FROM golf_draft_order WHERE pool_id = %s", (pool_id,))
@@ -206,19 +251,21 @@ def api_golf_randomize_draft():
 
 
 @bp.route('/api/golf_set_pool_status', methods=['POST'])
-@api_admin_required
+@golf_admin_required
 def api_golf_set_pool_status():
     data   = request.get_json()
     pool_id = data.get('pool_id')
     status  = data.get('status')
     if status not in ('setup', 'open', 'active', 'complete'):
         return jsonify({'error': 'invalid status'}), 400
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
     db2("UPDATE golf_pools SET status = %s WHERE pool_id = %s", (status, pool_id))
     return jsonify({'success': True})
 
 
 @bp.route('/api/golf_set_paid', methods=['POST'])
-@api_admin_required
+@golf_admin_required
 def api_golf_set_paid():
     data    = request.get_json()
     pool_id = data.get('pool_id')
@@ -226,13 +273,15 @@ def api_golf_set_paid():
     paid    = data.get('paid')
     if pool_id is None or user_id is None or paid is None:
         return jsonify({'error': 'pool_id, user_id, and paid required'}), 400
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
     db2("UPDATE golf_draft_order SET paid = %s WHERE pool_id = %s AND user_id = %s",
         (1 if paid else 0, pool_id, user_id))
     return jsonify({'success': True})
 
 
 @bp.route('/api/golf_admin_pick', methods=['POST'])
-@api_admin_required
+@golf_admin_required
 def api_golf_admin_pick():
     data           = request.get_json()
     pool_id        = data.get('pool_id')
@@ -242,6 +291,8 @@ def api_golf_admin_pick():
 
     if not pool_id or not user_id or not player_espn_id or not player_name:
         return jsonify({'error': 'pool_id, user_id, player_espn_id, player_name required'}), 400
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
 
     pool_row = db2("SELECT status, pool_format, picks_per_user FROM golf_pools WHERE pool_id = %s", (pool_id,))
     if not pool_row:
@@ -572,7 +623,7 @@ def api_golf_set_tiebreaker():
 
 
 @bp.route('/api/golf_admin_set_tiebreaker', methods=['POST'])
-@api_admin_required
+@golf_admin_required
 def api_golf_admin_set_tiebreaker():
     data    = request.get_json()
     pool_id = data.get('pool_id')
@@ -581,6 +632,8 @@ def api_golf_admin_set_tiebreaker():
 
     if not pool_id or not user_id or not pick_id:
         return jsonify({'error': 'pool_id, user_id and pick_id required'}), 400
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
 
     pick_row = db2("SELECT pick_id FROM golf_picks WHERE pick_id=%s AND pool_id=%s AND user_id=%s",
                    (pick_id, pool_id, user_id))
@@ -593,4 +646,41 @@ def api_golf_admin_set_tiebreaker():
 
     db2("UPDATE golf_picks SET is_tiebreaker=0 WHERE pool_id=%s AND user_id=%s", (pool_id, user_id))
     db2("UPDATE golf_picks SET is_tiebreaker=1 WHERE pick_id=%s", (pick_id,))
+    return jsonify({'success': True})
+
+
+# ── POOL ADMIN GRANT MANAGEMENT ───────────────────────────────────────────────
+
+@bp.route('/api/golf_pool_grants', methods=['GET'])
+@api_admin_required
+def api_golf_pool_grants():
+    rows = db2("""SELECT g.grant_id, g.user_id, u.username, g.pools_allowed, g.pools_used,
+                         gb.username, g.created_at
+                  FROM golf_pool_grants g
+                  JOIN users u  ON u.userid  = g.user_id
+                  JOIN users gb ON gb.userid = g.granted_by
+                  ORDER BY g.created_at DESC""")
+    return jsonify({'grants': [
+        {'grant_id': r[0], 'user_id': r[1], 'username': r[2],
+         'pools_allowed': r[3], 'pools_used': r[4],
+         'granted_by': r[5], 'created_at': str(r[6])}
+        for r in rows]})
+
+
+@bp.route('/api/golf_grant_pool_admin', methods=['POST'])
+@api_admin_required
+def api_golf_grant_pool_admin():
+    data          = request.get_json()
+    user_id       = data.get('user_id')
+    pools_allowed = int(data.get('pools_allowed', 1))
+    if not user_id:
+        return jsonify({'error': 'user_id required'}), 400
+    existing = db2("SELECT grant_id FROM golf_pool_grants WHERE user_id=%s", (user_id,))
+    if existing:
+        db2("UPDATE golf_pool_grants SET pools_allowed=%s, granted_by=%s WHERE user_id=%s",
+            (pools_allowed, session.get('userid'), user_id))
+    else:
+        db2("INSERT INTO golf_pool_grants (user_id, granted_by, pools_allowed, pools_used) VALUES (%s,%s,%s,0)",
+            (user_id, session.get('userid'), pools_allowed))
+    logging.info("Golf pool grant: user %s granted %s pools by %s", user_id, pools_allowed, session.get('userid'))
     return jsonify({'success': True})

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import Layout from '../components/Layout'
+import { useSession } from '../SessionContext'
 
 const EMPTY_FORM = {
   espn_event_id: '', event_name: '', course: '', event_date: '',
@@ -22,8 +23,20 @@ export default function GolfAdmin() {
   const [msg, setMsg]                 = useState('')
   const [userFilter, setUserFilter]   = useState('')
   const [userSort, setUserSort]       = useState({ col: 'username', dir: 'asc' })
+  const [grants, setGrants]           = useState([])
+  const [grantForm, setGrantForm]     = useState({ user_id: '', pools_allowed: 1 })
+
+  const session = useSession()
+  const isSuperAdmin = session?.is_admin === 1
+  const isPoolAdmin  = !isSuperAdmin && session?.has_golf_grant
+  const golfGrant    = session?.golf_grant   // { pools_allowed, pools_used }
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000) }
+
+  const loadGrants = () => {
+    if (!isSuperAdmin) return
+    fetch('/api/golf_pool_grants').then(r => r.json()).then(d => setGrants(d.grants || []))
+  }
 
   const loadUsers = () =>
     fetch('/api/golf_users').then(r => r.json()).then(d => setUsers(d.users || []))
@@ -46,7 +59,8 @@ export default function GolfAdmin() {
   useEffect(() => {
     loadUsers()
     loadPools()
-  }, [])
+    loadGrants()
+  }, [isSuperAdmin])
 
   useEffect(() => {
     if (selectedPoolId) loadPoolDetail(selectedPoolId)
@@ -95,6 +109,22 @@ export default function GolfAdmin() {
     fetch('/api/golf_init_db', { method: 'POST' })
       .then(r => r.json())
       .then(d => flash(d.error || 'DB tables initialised'))
+  }
+
+  const handleGrantPoolAdmin = () => {
+    if (!grantForm.user_id) return flash('Select a user')
+    fetch('/api/golf_grant_pool_admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: parseInt(grantForm.user_id), pools_allowed: parseInt(grantForm.pools_allowed) }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flash(d.error); return }
+        flash('Grant saved')
+        setGrantForm({ user_id: '', pools_allowed: 1 })
+        loadGrants()
+      })
   }
 
   const handleSaveDraftOrder = () => {
@@ -207,14 +237,16 @@ export default function GolfAdmin() {
 
       {msg && <div className="alert alert-info">{msg}</div>}
 
-      {/* Init DB */}
-      <div className="row" style={{ marginBottom: 20 }}>
-        <div className="col-md-12">
-          <button className="btn btn-default btn-sm" onClick={handleInitDb}>
-            Initialize DB Tables
-          </button>
+      {/* Init DB — super admin only */}
+      {isSuperAdmin && (
+        <div className="row" style={{ marginBottom: 20 }}>
+          <div className="col-md-12">
+            <button className="btn btn-default btn-sm" onClick={handleInitDb}>
+              Initialize DB Tables
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Pool Selector */}
       {pools.length > 0 && (
@@ -241,7 +273,19 @@ export default function GolfAdmin() {
 
       {/* Create Pool */}
       <div className="panel panel-default">
-        <div className="panel-heading"><strong>Create New Pool</strong></div>
+        <div className="panel-heading">
+          <strong>Create New Pool</strong>
+          {isPoolAdmin && golfGrant && (
+            <span style={{ marginLeft: 12, fontSize: 13 }}>
+              {golfGrant.pools_allowed - golfGrant.pools_used > 0
+                ? <span className="label label-success">
+                    {golfGrant.pools_allowed - golfGrant.pools_used} of {golfGrant.pools_allowed} remaining
+                  </span>
+                : <span className="label label-danger">No pools remaining</span>
+              }
+            </span>
+          )}
+        </div>
         <div className="panel-body" style={{ maxWidth: 860 }}>
 
           {/* Step 1: pick a tournament */}
@@ -325,11 +369,62 @@ export default function GolfAdmin() {
             </tbody>
           </table>
 
-          <button className="btn btn-success" style={{ marginTop: 16 }} onClick={handleCreatePool}>
+          <button className="btn btn-success" style={{ marginTop: 16 }} onClick={handleCreatePool}
+            disabled={isPoolAdmin && golfGrant && golfGrant.pools_used >= golfGrant.pools_allowed}>
             Create Pool
           </button>
         </div>
       </div>
+
+      {/* Grant Pool Admin Access — super admin only */}
+      {isSuperAdmin && (
+        <div className="panel panel-warning">
+          <div className="panel-heading"><strong>Grant Golf Pool Admin Access</strong></div>
+          <div className="panel-body">
+            <div className="row">
+              <div className="col-md-8">
+                <div className="form-inline" style={{ marginBottom: 12 }}>
+                  <select className="form-control input-sm" style={{ marginRight: 8, minWidth: 200 }}
+                    value={grantForm.user_id}
+                    onChange={e => setGrantForm(f => ({ ...f, user_id: e.target.value }))}>
+                    <option value="">— select user —</option>
+                    {users.map(u => (
+                      <option key={u.userid} value={u.userid}>{u.username} — {u.first_name} {u.last_name}</option>
+                    ))}
+                  </select>
+                  <label style={{ marginRight: 6 }}>Pools allowed:</label>
+                  <input type="number" min="1" max="20" className="form-control input-sm"
+                    style={{ width: 70, marginRight: 8 }}
+                    value={grantForm.pools_allowed}
+                    onChange={e => setGrantForm(f => ({ ...f, pools_allowed: e.target.value }))} />
+                  <button className="btn btn-warning btn-sm" onClick={handleGrantPoolAdmin}>
+                    Save Grant
+                  </button>
+                </div>
+                {grants.length > 0 && (
+                  <table className="table table-condensed table-bordered" style={{ marginBottom: 0 }}>
+                    <thead>
+                      <tr><th>User</th><th>Pools Allowed</th><th>Used</th><th>Granted By</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                      {grants.map(g => (
+                        <tr key={g.grant_id}
+                          style={g.pools_used >= g.pools_allowed ? { color: '#9ca3af' } : {}}>
+                          <td><strong>{g.username}</strong></td>
+                          <td>{g.pools_allowed}</td>
+                          <td>{g.pools_used}</td>
+                          <td>{g.granted_by}</td>
+                          <td style={{ fontSize: 11 }}>{g.created_at?.slice(0, 10)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pool List */}
       {pools.length > 0 && (
