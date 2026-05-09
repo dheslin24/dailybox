@@ -385,39 +385,6 @@ export default function GolfAdmin() {
                 ))}
               </div>
 
-              {/* Admin Tiebreaker Override */}
-              {pool.status !== 'complete' && (poolDetail?.participants || []).length > 0 && (
-                <div className="col-md-4">
-                  <h4>Set Tiebreaker</h4>
-                  <div className="form-group">
-                    <label>User</label>
-                    <select className="form-control input-sm"
-                      value={adminTbUser}
-                      onChange={e => setAdminTbUser(e.target.value)}>
-                      <option value="">— select user —</option>
-                      {(poolDetail?.participants || []).map(p => (
-                        <option key={p.user_id} value={p.user_id}>{p.username}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {adminTbUser && (() => {
-                    const userPicks = (poolDetail?.picks || [])
-                      .filter(p => p.user_id === parseInt(adminTbUser))
-                      .sort((a, b) => a.draft_position - b.draft_position)
-                    if (!userPicks.length) return <p className="text-muted" style={{ fontSize: 12 }}>No picks yet.</p>
-                    return userPicks.map(pick => (
-                      <div key={pick.pick_id} style={{ marginBottom: 4 }}>
-                        <button
-                          className={`btn btn-sm ${pick.is_tiebreaker ? 'btn-info' : 'btn-default'}`}
-                          onClick={() => handleAdminSetTiebreaker(pick.pick_id)}>
-                          {pick.player_name}{pick.is_tiebreaker ? ' ★' : ''}
-                        </button>
-                      </div>
-                    ))
-                  })()}
-                </div>
-              )}
-
               {/* Admin Pick Override */}
               {pool.status === 'open' && (
                 <div className="col-md-5">
@@ -471,6 +438,39 @@ export default function GolfAdmin() {
                   <button className="btn btn-warning btn-sm" onClick={handleAdminPick}>
                     Set Pick
                   </button>
+                </div>
+              )}
+
+              {/* Admin Tiebreaker Override */}
+              {pool.status !== 'complete' && (poolDetail?.participants || []).length > 0 && (
+                <div className="col-md-4">
+                  <h4>Set Tiebreaker</h4>
+                  <div className="form-group">
+                    <label>User</label>
+                    <select className="form-control input-sm"
+                      value={adminTbUser}
+                      onChange={e => setAdminTbUser(e.target.value)}>
+                      <option value="">— select user —</option>
+                      {(poolDetail?.participants || []).map(p => (
+                        <option key={p.user_id} value={p.user_id}>{p.username}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {adminTbUser && (() => {
+                    const userPicks = (poolDetail?.picks || [])
+                      .filter(p => p.user_id === parseInt(adminTbUser))
+                      .sort((a, b) => a.draft_position - b.draft_position)
+                    if (!userPicks.length) return <p className="text-muted" style={{ fontSize: 12 }}>No picks yet.</p>
+                    return userPicks.map(pick => (
+                      <div key={pick.pick_id} style={{ marginBottom: 4 }}>
+                        <button
+                          className={`btn btn-sm ${pick.is_tiebreaker ? 'btn-info' : 'btn-default'}`}
+                          onClick={() => handleAdminSetTiebreaker(pick.pick_id)}>
+                          {pick.player_name}{pick.is_tiebreaker ? ' ★' : ''}
+                        </button>
+                      </div>
+                    ))
+                  })()}
                 </div>
               )}
             </div>
