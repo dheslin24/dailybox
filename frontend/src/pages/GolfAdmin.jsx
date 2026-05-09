@@ -881,62 +881,53 @@ export default function GolfAdmin() {
 
                 {/* Tier form */}
                 {tierForm && (
-                  <div style={{ background: '#f9f9f9', border: '1px solid #ddd', borderRadius: 4, padding: 14, marginBottom: 14 }}>
+                  <div style={{ background: '#f9f9f9', border: '1px solid #ddd', borderRadius: 4, padding: 14, marginBottom: 14, maxWidth: 340 }}>
                     <h5 style={{ marginTop: 0 }}>{tierForm.tier_id ? 'Edit Tier' : 'New Tier'}</h5>
-                    <div className="row">
-                      <div className="col-sm-4">
-                        <div className="form-group form-group-sm">
-                          <label>Name</label>
-                          <input className="form-control" placeholder="e.g. Top 10"
-                            value={tierForm.name}
-                            onChange={e => setTierForm(f => ({ ...f, name: e.target.value }))} />
+
+                    <div className="form-group form-group-sm">
+                      <label>Name</label>
+                      <input className="form-control" placeholder="e.g. Top 10"
+                        value={tierForm.name}
+                        onChange={e => setTierForm(f => ({ ...f, name: e.target.value }))} />
+                    </div>
+
+                    <div className="form-group form-group-sm">
+                      <label>Type</label>
+                      <select className="form-control" value={tierForm.tier_type}
+                        onChange={e => setTierForm(f => ({ ...f, tier_type: e.target.value }))}>
+                        <option value="ranking">World Ranking</option>
+                        <option value="manual">Manual</option>
+                      </select>
+                    </div>
+
+                    {tierForm.tier_type === 'ranking' && (
+                      <div className="form-group form-group-sm">
+                        <label>Rank Range</label>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input className="form-control" type="number" min="1" placeholder="Min"
+                            value={tierForm.rank_min}
+                            onChange={e => setTierForm(f => ({ ...f, rank_min: e.target.value }))} />
+                          <span className="text-muted">–</span>
+                          <input className="form-control" type="number" min="1" placeholder="Max (blank = ∞)"
+                            value={tierForm.rank_max}
+                            onChange={e => setTierForm(f => ({ ...f, rank_max: e.target.value }))} />
                         </div>
                       </div>
-                      <div className="col-sm-2">
-                        <div className="form-group form-group-sm">
-                          <label>Type</label>
-                          <select className="form-control" value={tierForm.tier_type}
-                            onChange={e => setTierForm(f => ({ ...f, tier_type: e.target.value }))}>
-                            <option value="ranking">World Ranking</option>
-                            <option value="manual">Manual</option>
-                          </select>
-                        </div>
-                      </div>
-                      {tierForm.tier_type === 'ranking' && (<>
-                        <div className="col-sm-2">
-                          <div className="form-group form-group-sm">
-                            <label>Rank Min</label>
-                            <input className="form-control" type="number" min="1" placeholder="1"
-                              value={tierForm.rank_min}
-                              onChange={e => setTierForm(f => ({ ...f, rank_min: e.target.value }))} />
-                          </div>
-                        </div>
-                        <div className="col-sm-2">
-                          <div className="form-group form-group-sm">
-                            <label>Rank Max</label>
-                            <input className="form-control" type="number" min="1" placeholder="blank = no limit"
-                              value={tierForm.rank_max}
-                              onChange={e => setTierForm(f => ({ ...f, rank_max: e.target.value }))} />
-                          </div>
-                        </div>
-                      </>)}
-                      <div className="col-sm-1">
-                        <div className="form-group form-group-sm">
-                          <label>Min</label>
-                          <input className="form-control" type="number" min="0" placeholder="0"
-                            value={tierForm.min_picks}
-                            onChange={e => setTierForm(f => ({ ...f, min_picks: e.target.value }))} />
-                        </div>
-                      </div>
-                      <div className="col-sm-1">
-                        <div className="form-group form-group-sm">
-                          <label>Max</label>
-                          <input className="form-control" type="number" min="1" placeholder="∞"
-                            value={tierForm.max_picks}
-                            onChange={e => setTierForm(f => ({ ...f, max_picks: e.target.value }))} />
-                        </div>
+                    )}
+
+                    <div className="form-group form-group-sm">
+                      <label>Players Required</label>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input className="form-control" type="number" min="0" placeholder="Min (0)"
+                          value={tierForm.min_picks}
+                          onChange={e => setTierForm(f => ({ ...f, min_picks: e.target.value }))} />
+                        <span className="text-muted">–</span>
+                        <input className="form-control" type="number" min="1" placeholder="Max (blank = ∞)"
+                          value={tierForm.max_picks}
+                          onChange={e => setTierForm(f => ({ ...f, max_picks: e.target.value }))} />
                       </div>
                     </div>
+
                     <button className="btn btn-sm btn-success" onClick={handleSaveTier}>Save</button>
                     <button className="btn btn-sm btn-default" style={{ marginLeft: 6 }}
                       onClick={() => setTierForm(null)}>Cancel</button>
