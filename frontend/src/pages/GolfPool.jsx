@@ -26,9 +26,27 @@ export default function GolfPool() {
   const [tbMsg, setTbMsg]           = useState('')
   const [teeTimes, setTeeTimes]     = useState({})
   const [lbPickedOnly, setLbPickedOnly] = useState(false)
+  const [joinCode, setJoinCode]         = useState('')
+  const [joinMsg, setJoinMsg]           = useState('')
 
   const flashPick = (m) => { setPickMsg(m); setTimeout(() => setPickMsg(''), 4000) }
   const flashTb   = (m) => { setTbMsg(m);   setTimeout(() => setTbMsg(''), 4000) }
+
+  const handleJoinPool = () => {
+    if (!joinCode.trim()) return
+    fetch('/api/golf_join_pool', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invite_code: joinCode.trim() }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { setJoinMsg(d.error); return }
+        setJoinMsg(`Joined "${d.pool_name}"!`)
+        setSelectedPoolId(d.pool_id)
+        fetch('/api/golf_pools').then(r => r.json()).then(d2 => setPools(d2.pools || []))
+      })
+  }
 
   useEffect(() => {
     fetch('/api/golf_pools')
@@ -128,7 +146,27 @@ export default function GolfPool() {
           <img src="/static/homer_golf_sandwedge_3.gif" alt="" style={{ width: '50%' }} />
         </div>
         {pools === null && <p>Loading…</p>}
-        {pools !== null && pools.length === 0 && <p>No golf pools available.</p>}
+        {pools !== null && pools.length === 0 && (
+          <div style={{ maxWidth: 400, margin: '0 auto' }}>
+            <p>You are not in any golf pools yet. Enter an invite code to join one:</p>
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Invite code"
+                value={joinCode}
+                onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === 'Enter' && handleJoinPool()}
+                maxLength={8}
+                style={{ letterSpacing: 2, textTransform: 'uppercase' }}
+              />
+              <span className="input-group-btn">
+                <button className="btn btn-primary" onClick={handleJoinPool}>Join</button>
+              </span>
+            </div>
+            {joinMsg && <p style={{ marginTop: 8 }}>{joinMsg}</p>}
+          </div>
+        )}
         {pools && pools.length > 1 && (
           <div className="list-group" style={{ maxWidth: 600, margin: '0 auto' }}>
             {pools.map(p => (

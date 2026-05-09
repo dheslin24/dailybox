@@ -88,7 +88,16 @@ def api_golf_init_db():
     try:
         db2("ALTER TABLE golf_pools ADD COLUMN created_by INT DEFAULT NULL")
     except Exception:
-        pass  # column already exists
+        pass
+    try:
+        db2("ALTER TABLE golf_pools ADD COLUMN invite_code VARCHAR(8) DEFAULT NULL")
+    except Exception:
+        pass
+    # Backfill invite codes for pools that don't have one
+    pools_without_code = db2("SELECT pool_id FROM golf_pools WHERE invite_code IS NULL OR invite_code = ''")
+    for (pid,) in (pools_without_code or []):
+        code = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6))
+        db2("UPDATE golf_pools SET invite_code=%s WHERE pool_id=%s", (code, pid))
     logging.info("golf_ tables initialised")
     return jsonify({'success': True})
 
@@ -178,9 +187,10 @@ def api_golf_create_pool():
             (event_name, espn_event_id, course, event_date))
         event_id = db2("SELECT event_id FROM golf_events WHERE espn_event_id = %s", (espn_event_id,))[0][0]
 
-    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by)
-           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s)""",
-        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by))
+    invite_code = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6))
+    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by, invite_code)
+           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s,%s)""",
+        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by, invite_code))
     pool_id = db2("SELECT pool_id FROM golf_pools WHERE event_id=%s AND name=%s ORDER BY pool_id DESC LIMIT 1",
                   (event_id, pool_name))[0][0]
 
@@ -196,7 +206,7 @@ def api_golf_create_pool():
 def api_golf_admin_pools():
     base = """SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
                      p.picks_per_user, p.draft_type,
-                     e.event_id, e.name, e.espn_event_id, e.course, e.event_date
+                     e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code
               FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id"""
     if session.get('is_admin') == 1:
         rows = db2(base + " ORDER BY p.pool_id DESC")
@@ -206,7 +216,8 @@ def api_golf_admin_pools():
         {'pool_id': r[0], 'name': r[1], 'fee': r[2], 'status': r[3],
          'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6],
          'event_id': r[7], 'event_name': r[8], 'espn_event_id': r[9],
-         'course': r[10] or '', 'event_date': str(r[11]) if r[11] else ''}
+         'course': r[10] or '', 'event_date': str(r[11]) if r[11] else '',
+         'invite_code': r[12] or ''}
         for r in rows]})
 
 
@@ -373,7 +384,7 @@ def api_golf_pool():
 
     pool_row = db2("""SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
                              p.picks_per_user, p.draft_type,
-                             e.event_id, e.name, e.espn_event_id, e.course, e.event_date
+                             e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code
                       FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id
                       WHERE p.pool_id = %s""", (pool_id,))
     if not pool_row:
@@ -381,7 +392,8 @@ def api_golf_pool():
 
     r = pool_row[0]
     pool  = {'pool_id': r[0], 'name': r[1], 'fee': r[2], 'status': r[3],
-             'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6]}
+             'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6],
+             'invite_code': r[12] or ''}
     event = {'event_id': r[7], 'name': r[8], 'espn_event_id': r[9],
              'course': r[10] or '', 'event_date': str(r[11]) if r[11] else ''}
 
@@ -684,3 +696,35 @@ def api_golf_grant_pool_admin():
             (user_id, session.get('userid'), pools_allowed))
     logging.info("Golf pool grant: user %s granted %s pools by %s", user_id, pools_allowed, session.get('userid'))
     return jsonify({'success': True})
+
+
+# ── INVITE CODE JOIN ──────────────────────────────────────────────────────────
+
+@bp.route('/api/golf_join_pool', methods=['POST'])
+@login_required
+def api_golf_join_pool():
+    data        = request.get_json()
+    invite_code = (data.get('invite_code') or '').strip().upper()
+    user_id     = session.get('userid')
+
+    if not invite_code:
+        return jsonify({'error': 'invite_code required'}), 400
+
+    pool_row = db2("SELECT pool_id, name, status FROM golf_pools WHERE invite_code = %s", (invite_code,))
+    if not pool_row:
+        return jsonify({'error': 'Invalid invite code'}), 404
+
+    pool_id, pool_name, status = pool_row[0]
+    if status == 'complete':
+        return jsonify({'error': 'This pool is already complete'}), 400
+
+    already = db2("SELECT 1 FROM golf_draft_order WHERE pool_id=%s AND user_id=%s", (pool_id, user_id))
+    if already:
+        return jsonify({'error': 'You are already in this pool', 'pool_id': pool_id}), 400
+
+    max_order = db2("SELECT COALESCE(MAX(pick_order), 0) FROM golf_draft_order WHERE pool_id=%s", (pool_id,))
+    next_order = max_order[0][0] + 1
+    db2("INSERT INTO golf_draft_order (pool_id, user_id, pick_order) VALUES (%s,%s,%s)",
+        (pool_id, user_id, next_order))
+    logging.info("User %s joined pool %s via invite code", user_id, pool_id)
+    return jsonify({'success': True, 'pool_id': pool_id, 'pool_name': pool_name})

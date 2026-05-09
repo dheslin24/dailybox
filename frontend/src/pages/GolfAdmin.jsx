@@ -463,6 +463,11 @@ export default function GolfAdmin() {
             <span style={{ marginLeft: 10, fontSize: 12 }}>
               {pool.pool_format} · {pool.picks_per_user} picks/user · fee: {poolDetail.pool.fee || 'none'}
             </span>
+            {pool.invite_code && (
+              <span style={{ marginLeft: 16, fontSize: 13 }}>
+                Invite code: <strong style={{ letterSpacing: 2 }}>{pool.invite_code}</strong>
+              </span>
+            )}
           </div>
           <div className="panel-body">
             <div className="row">
