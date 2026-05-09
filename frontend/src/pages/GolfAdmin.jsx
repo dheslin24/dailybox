@@ -386,7 +386,7 @@ export default function GolfAdmin() {
               </div>
 
               {/* Admin Pick Override */}
-              {pool.status === 'open' && (
+              {pool.status !== 'complete' && (poolDetail?.participants || []).length > 0 && (
                 <div className="col-md-5">
                   <h4>Admin Pick Override</h4>
                   <div className="form-group">
