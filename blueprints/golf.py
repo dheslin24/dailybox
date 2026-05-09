@@ -441,7 +441,8 @@ def api_golf_pool():
         eliminated = [s for s in standings if s['is_eliminated']]
         active.sort(key=lambda s: (
             s['total_value'],
-            s['tiebreaker_value'] if s['tiebreaker_value'] is not None else 0
+            0 if s['tiebreaker_value'] is not None else 1,   # has tiebreaker ranks ahead of no tiebreaker
+            s['tiebreaker_value'] if s['tiebreaker_value'] is not None else 0,
         ))
         standings = active + eliminated
 
@@ -559,6 +560,31 @@ def api_golf_set_tiebreaker():
 
     pick_row = db2("SELECT user_id FROM golf_picks WHERE pick_id=%s AND pool_id=%s", (pick_id, pool_id))
     if not pick_row or pick_row[0][0] != user_id:
+        return jsonify({'error': 'Pick not found'}), 404
+
+    pool_row = db2("SELECT status FROM golf_pools WHERE pool_id=%s", (pool_id,))
+    if not pool_row or pool_row[0][0] == 'complete':
+        return jsonify({'error': 'Cannot change tiebreaker after pool is complete'}), 400
+
+    db2("UPDATE golf_picks SET is_tiebreaker=0 WHERE pool_id=%s AND user_id=%s", (pool_id, user_id))
+    db2("UPDATE golf_picks SET is_tiebreaker=1 WHERE pick_id=%s", (pick_id,))
+    return jsonify({'success': True})
+
+
+@bp.route('/api/golf_admin_set_tiebreaker', methods=['POST'])
+@api_admin_required
+def api_golf_admin_set_tiebreaker():
+    data    = request.get_json()
+    pool_id = data.get('pool_id')
+    user_id = data.get('user_id')
+    pick_id = data.get('pick_id')
+
+    if not pool_id or not user_id or not pick_id:
+        return jsonify({'error': 'pool_id, user_id and pick_id required'}), 400
+
+    pick_row = db2("SELECT pick_id FROM golf_picks WHERE pick_id=%s AND pool_id=%s AND user_id=%s",
+                   (pick_id, pool_id, user_id))
+    if not pick_row:
         return jsonify({'error': 'Pick not found'}), 404
 
     pool_row = db2("SELECT status FROM golf_pools WHERE pool_id=%s", (pool_id,))

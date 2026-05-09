@@ -18,6 +18,7 @@ export default function GolfAdmin() {
   const [form, setForm]               = useState(EMPTY_FORM)
   const [draftSlots, setDraftSlots]   = useState(Array(20).fill(''))
   const [adminPick, setAdminPick]     = useState({ user_id: '', espn_id: '', name: '' })
+  const [adminTbUser, setAdminTbUser] = useState('')
   const [msg, setMsg]                 = useState('')
   const [userFilter, setUserFilter]   = useState('')
   const [userSort, setUserSort]       = useState({ col: 'username', dir: 'asc' })
@@ -169,6 +170,20 @@ export default function GolfAdmin() {
         if (d.error) { flash(d.error); return }
         flash('Pick set')
         setAdminPick({ user_id: '', espn_id: '', name: '' })
+        loadPoolDetail(selectedPoolId)
+      })
+  }
+
+  const handleAdminSetTiebreaker = (pick_id) => {
+    fetch('/api/golf_admin_set_tiebreaker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_id: selectedPoolId, user_id: parseInt(adminTbUser), pick_id }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flash(d.error); return }
+        flash('Tiebreaker set')
         loadPoolDetail(selectedPoolId)
       })
   }
@@ -369,6 +384,39 @@ export default function GolfAdmin() {
                   </button>
                 ))}
               </div>
+
+              {/* Admin Tiebreaker Override */}
+              {pool.status !== 'complete' && (poolDetail?.participants || []).length > 0 && (
+                <div className="col-md-4">
+                  <h4>Set Tiebreaker</h4>
+                  <div className="form-group">
+                    <label>User</label>
+                    <select className="form-control input-sm"
+                      value={adminTbUser}
+                      onChange={e => setAdminTbUser(e.target.value)}>
+                      <option value="">— select user —</option>
+                      {(poolDetail?.participants || []).map(p => (
+                        <option key={p.user_id} value={p.user_id}>{p.username}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {adminTbUser && (() => {
+                    const userPicks = (poolDetail?.picks || [])
+                      .filter(p => p.user_id === parseInt(adminTbUser))
+                      .sort((a, b) => a.draft_position - b.draft_position)
+                    if (!userPicks.length) return <p className="text-muted" style={{ fontSize: 12 }}>No picks yet.</p>
+                    return userPicks.map(pick => (
+                      <div key={pick.pick_id} style={{ marginBottom: 4 }}>
+                        <button
+                          className={`btn btn-sm ${pick.is_tiebreaker ? 'btn-info' : 'btn-default'}`}
+                          onClick={() => handleAdminSetTiebreaker(pick.pick_id)}>
+                          {pick.player_name}{pick.is_tiebreaker ? ' ★' : ''}
+                        </button>
+                      </div>
+                    ))
+                  })()}
+                </div>
+              )}
 
               {/* Admin Pick Override */}
               {pool.status === 'open' && (

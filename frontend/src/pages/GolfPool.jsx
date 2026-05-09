@@ -490,7 +490,7 @@ export default function GolfPool() {
       })()}
 
       {/* ── Tiebreaker selector ────────────────────────────────────────────── */}
-      {current_user_picks.length > 0 && pool.status !== 'complete' && (
+      {current_user_picks.length > 0 && pool.status === 'open' && (
         <div className="panel panel-default" style={{ maxWidth: 500, margin: '0 auto 20px' }}>
           <div className="panel-heading"><strong>Your Tiebreaker Pick</strong></div>
           <div className="panel-body">
