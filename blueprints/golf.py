@@ -385,7 +385,7 @@ def api_golf_pool():
     event = {'event_id': r[7], 'name': r[8], 'espn_event_id': r[9],
              'course': r[10] or '', 'event_date': str(r[11]) if r[11] else ''}
 
-    in_pool = is_admin or bool(db2(
+    in_pool = _can_manage_pool(pool_id) or bool(db2(
         "SELECT 1 FROM golf_draft_order WHERE pool_id=%s AND user_id=%s", (pool_id, user_id)
     ))
     if not in_pool:

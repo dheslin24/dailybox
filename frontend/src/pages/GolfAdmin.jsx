@@ -248,6 +248,56 @@ export default function GolfAdmin() {
         </div>
       )}
 
+      {/* Grant Pool Admin Access — super admin only */}
+      {isSuperAdmin && (
+        <div className="panel panel-warning">
+          <div className="panel-heading"><strong>Grant Golf Pool Admin Access</strong></div>
+          <div className="panel-body">
+            <div className="row">
+              <div className="col-md-8">
+                <div className="form-inline" style={{ marginBottom: 12 }}>
+                  <select className="form-control input-sm" style={{ marginRight: 8, minWidth: 200 }}
+                    value={grantForm.user_id}
+                    onChange={e => setGrantForm(f => ({ ...f, user_id: e.target.value }))}>
+                    <option value="">— select user —</option>
+                    {users.map(u => (
+                      <option key={u.userid} value={u.userid}>{u.username} — {u.first_name} {u.last_name}</option>
+                    ))}
+                  </select>
+                  <label style={{ marginRight: 6 }}>Pools allowed:</label>
+                  <input type="number" min="1" max="20" className="form-control input-sm"
+                    style={{ width: 70, marginRight: 8 }}
+                    value={grantForm.pools_allowed}
+                    onChange={e => setGrantForm(f => ({ ...f, pools_allowed: e.target.value }))} />
+                  <button className="btn btn-warning btn-sm" onClick={handleGrantPoolAdmin}>
+                    Save Grant
+                  </button>
+                </div>
+                {grants.length > 0 && (
+                  <table className="table table-condensed table-bordered" style={{ marginBottom: 0 }}>
+                    <thead>
+                      <tr><th>User</th><th>Pools Allowed</th><th>Used</th><th>Granted By</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                      {grants.map(g => (
+                        <tr key={g.grant_id}
+                          style={g.pools_used >= g.pools_allowed ? { color: '#9ca3af' } : {}}>
+                          <td><strong>{g.username}</strong></td>
+                          <td>{g.pools_allowed}</td>
+                          <td>{g.pools_used}</td>
+                          <td>{g.granted_by}</td>
+                          <td style={{ fontSize: 11 }}>{g.created_at?.slice(0, 10)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pool Selector */}
       {pools.length > 0 && (
         <div className="panel panel-info">
@@ -375,56 +425,6 @@ export default function GolfAdmin() {
           </button>
         </div>
       </div>
-
-      {/* Grant Pool Admin Access — super admin only */}
-      {isSuperAdmin && (
-        <div className="panel panel-warning">
-          <div className="panel-heading"><strong>Grant Golf Pool Admin Access</strong></div>
-          <div className="panel-body">
-            <div className="row">
-              <div className="col-md-8">
-                <div className="form-inline" style={{ marginBottom: 12 }}>
-                  <select className="form-control input-sm" style={{ marginRight: 8, minWidth: 200 }}
-                    value={grantForm.user_id}
-                    onChange={e => setGrantForm(f => ({ ...f, user_id: e.target.value }))}>
-                    <option value="">— select user —</option>
-                    {users.map(u => (
-                      <option key={u.userid} value={u.userid}>{u.username} — {u.first_name} {u.last_name}</option>
-                    ))}
-                  </select>
-                  <label style={{ marginRight: 6 }}>Pools allowed:</label>
-                  <input type="number" min="1" max="20" className="form-control input-sm"
-                    style={{ width: 70, marginRight: 8 }}
-                    value={grantForm.pools_allowed}
-                    onChange={e => setGrantForm(f => ({ ...f, pools_allowed: e.target.value }))} />
-                  <button className="btn btn-warning btn-sm" onClick={handleGrantPoolAdmin}>
-                    Save Grant
-                  </button>
-                </div>
-                {grants.length > 0 && (
-                  <table className="table table-condensed table-bordered" style={{ marginBottom: 0 }}>
-                    <thead>
-                      <tr><th>User</th><th>Pools Allowed</th><th>Used</th><th>Granted By</th><th>Date</th></tr>
-                    </thead>
-                    <tbody>
-                      {grants.map(g => (
-                        <tr key={g.grant_id}
-                          style={g.pools_used >= g.pools_allowed ? { color: '#9ca3af' } : {}}>
-                          <td><strong>{g.username}</strong></td>
-                          <td>{g.pools_allowed}</td>
-                          <td>{g.pools_used}</td>
-                          <td>{g.granted_by}</td>
-                          <td style={{ fontSize: 11 }}>{g.created_at?.slice(0, 10)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Pool List */}
       {pools.length > 0 && (
