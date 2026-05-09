@@ -20,8 +20,12 @@ export default function GolfAdmin() {
   const [form, setForm]               = useState(EMPTY_FORM)
   const [draftSlots, setDraftSlots]   = useState(Array(20).fill(''))
   const [adminPick, setAdminPick]     = useState({ user_id: '', espn_id: '', name: '' })
-  const [adminTbUser, setAdminTbUser]       = useState('')
-  const [adminTbWinScore, setAdminTbWinScore] = useState('')
+  const [adminTbUser, setAdminTbUser]             = useState('')
+  const [adminTbWinScore, setAdminTbWinScore]     = useState('')
+  const [tierForm, setTierForm]                   = useState(null)
+  const [expandedManualTier, setExpandedManualTier] = useState(null)
+  const [manualSelections, setManualSelections]   = useState(new Set())
+  const [tierPlayerFilter, setTierPlayerFilter]   = useState('')
   const [msg, setMsg]                 = useState('')
   const [userFilter, setUserFilter]   = useState('')
   const [userSort, setUserSort]       = useState({ col: 'username', dir: 'asc' })
@@ -233,6 +237,72 @@ export default function GolfAdmin() {
         flash('Tiebreaker set')
         loadPoolDetail(selectedPoolId)
       })
+  }
+
+  const EMPTY_TIER_FORM = { tier_id: null, name: '', tier_type: 'ranking', rank_min: '', rank_max: '', min_picks: 0, max_picks: '' }
+
+  const handleSaveTier = () => {
+    if (!tierForm || !tierForm.name.trim()) return
+    const url = tierForm.tier_id ? '/api/golf_update_tier' : '/api/golf_create_tier'
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...tierForm, pool_id: selectedPoolId }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flash(d.error); return }
+        setTierForm(null)
+        loadPoolDetail(selectedPoolId)
+      })
+  }
+
+  const handleDeleteTier = (tier_id) => {
+    fetch('/api/golf_delete_tier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier_id, pool_id: selectedPoolId }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flash(d.error); return }
+        if (expandedManualTier === tier_id) setExpandedManualTier(null)
+        loadPoolDetail(selectedPoolId)
+      })
+  }
+
+  const openManualAssign = (tier_id) => {
+    const existing = poolDetail?.tier_players?.[String(tier_id)] || []
+    setManualSelections(new Set(existing))
+    setExpandedManualTier(tier_id)
+    setTierPlayerFilter('')
+  }
+
+  const handleSaveTierPlayers = () => {
+    const field = poolDetail?.espn_field || []
+    const players = field
+      .filter(p => manualSelections.has(String(p.espn_id)))
+      .map(p => ({ espn_id: p.espn_id, name: p.name }))
+    fetch('/api/golf_save_tier_players', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier_id: expandedManualTier, pool_id: selectedPoolId, players }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flash(d.error); return }
+        setExpandedManualTier(null)
+        loadPoolDetail(selectedPoolId)
+      })
+  }
+
+  const toggleManualPlayer = (espn_id) => {
+    setManualSelections(prev => {
+      const next = new Set(prev)
+      if (next.has(String(espn_id))) next.delete(String(espn_id))
+      else next.add(String(espn_id))
+      return next
+    })
   }
 
   const handleSetPaid = (user_id, paid) => {
@@ -791,6 +861,165 @@ export default function GolfAdmin() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* ── Tier Configuration (async pools only) ───────────────────── */}
+            {pool.pool_format === 'async' && (
+              <div style={{ marginTop: 28 }}>
+                <h4>
+                  Tier Configuration
+                  <button className="btn btn-xs btn-success" style={{ marginLeft: 10 }}
+                    onClick={() => { setTierForm({ ...EMPTY_TIER_FORM }); setExpandedManualTier(null) }}>
+                    + Add Tier
+                  </button>
+                </h4>
+                <p className="text-muted" style={{ fontSize: 12, marginTop: -6 }}>
+                  Tiers restrict how many picks a user can make from each group.
+                  Players not in any tier are freely pickable with no constraint.
+                </p>
+
+                {/* Tier form */}
+                {tierForm && (
+                  <div style={{ background: '#f9f9f9', border: '1px solid #ddd', borderRadius: 4, padding: 14, marginBottom: 14 }}>
+                    <h5 style={{ marginTop: 0 }}>{tierForm.tier_id ? 'Edit Tier' : 'New Tier'}</h5>
+                    <div className="row">
+                      <div className="col-sm-4">
+                        <div className="form-group form-group-sm">
+                          <label>Name</label>
+                          <input className="form-control" placeholder="e.g. Top 10"
+                            value={tierForm.name}
+                            onChange={e => setTierForm(f => ({ ...f, name: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="col-sm-2">
+                        <div className="form-group form-group-sm">
+                          <label>Type</label>
+                          <select className="form-control" value={tierForm.tier_type}
+                            onChange={e => setTierForm(f => ({ ...f, tier_type: e.target.value }))}>
+                            <option value="ranking">World Ranking</option>
+                            <option value="manual">Manual</option>
+                          </select>
+                        </div>
+                      </div>
+                      {tierForm.tier_type === 'ranking' && (<>
+                        <div className="col-sm-2">
+                          <div className="form-group form-group-sm">
+                            <label>Rank Min</label>
+                            <input className="form-control" type="number" min="1" placeholder="1"
+                              value={tierForm.rank_min}
+                              onChange={e => setTierForm(f => ({ ...f, rank_min: e.target.value }))} />
+                          </div>
+                        </div>
+                        <div className="col-sm-2">
+                          <div className="form-group form-group-sm">
+                            <label>Rank Max</label>
+                            <input className="form-control" type="number" min="1" placeholder="blank = no limit"
+                              value={tierForm.rank_max}
+                              onChange={e => setTierForm(f => ({ ...f, rank_max: e.target.value }))} />
+                          </div>
+                        </div>
+                      </>)}
+                      <div className="col-sm-1">
+                        <div className="form-group form-group-sm">
+                          <label>Min</label>
+                          <input className="form-control" type="number" min="0" placeholder="0"
+                            value={tierForm.min_picks}
+                            onChange={e => setTierForm(f => ({ ...f, min_picks: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="col-sm-1">
+                        <div className="form-group form-group-sm">
+                          <label>Max</label>
+                          <input className="form-control" type="number" min="1" placeholder="∞"
+                            value={tierForm.max_picks}
+                            onChange={e => setTierForm(f => ({ ...f, max_picks: e.target.value }))} />
+                        </div>
+                      </div>
+                    </div>
+                    <button className="btn btn-sm btn-success" onClick={handleSaveTier}>Save</button>
+                    <button className="btn btn-sm btn-default" style={{ marginLeft: 6 }}
+                      onClick={() => setTierForm(null)}>Cancel</button>
+                  </div>
+                )}
+
+                {/* Tier list */}
+                {(poolDetail?.tiers || []).length === 0 && !tierForm && (
+                  <p className="text-muted" style={{ fontSize: 12 }}>No tiers defined — pool behaves as unrestricted async.</p>
+                )}
+                {(poolDetail?.tiers || []).map(tier => (
+                  <div key={tier.tier_id} style={{ border: '1px solid #e5e7eb', borderRadius: 4, marginBottom: 8, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8f9fa' }}>
+                      <strong style={{ flex: 1 }}>{tier.name}</strong>
+                      <span className={`label label-${tier.tier_type === 'ranking' ? 'info' : 'default'}`}>
+                        {tier.tier_type === 'ranking'
+                          ? `Rank ${tier.rank_min ?? '?'}–${tier.rank_max ?? '∞'}`
+                          : `Manual (${(poolDetail?.tier_players?.[String(tier.tier_id)] || []).length} players)`
+                        }
+                      </span>
+                      <span className="text-muted" style={{ fontSize: 12 }}>
+                        min {tier.min_picks} · max {tier.max_picks ?? '∞'}
+                      </span>
+                      {tier.tier_type === 'manual' && (
+                        <button className="btn btn-xs btn-default"
+                          onClick={() => expandedManualTier === tier.tier_id ? setExpandedManualTier(null) : openManualAssign(tier.tier_id)}>
+                          {expandedManualTier === tier.tier_id ? 'Close' : 'Assign Players'}
+                        </button>
+                      )}
+                      <button className="btn btn-xs btn-warning"
+                        onClick={() => { setTierForm({ tier_id: tier.tier_id, name: tier.name, tier_type: tier.tier_type, rank_min: tier.rank_min ?? '', rank_max: tier.rank_max ?? '', min_picks: tier.min_picks, max_picks: tier.max_picks ?? '' }) }}>
+                        Edit
+                      </button>
+                      <button className="btn btn-xs btn-danger"
+                        onClick={() => handleDeleteTier(tier.tier_id)}>
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Manual player assignment panel */}
+                    {expandedManualTier === tier.tier_id && (() => {
+                      const field = poolDetail?.espn_field || []
+                      if (field.length === 0) {
+                        return (
+                          <div style={{ padding: '10px 12px', fontSize: 13, color: '#666' }}>
+                            Tournament field not available — set pool to Open first.
+                          </div>
+                        )
+                      }
+                      const filteredField = field.filter(p =>
+                        !tierPlayerFilter || p.name.toLowerCase().includes(tierPlayerFilter.toLowerCase())
+                      )
+                      return (
+                        <div style={{ padding: '10px 12px' }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                            <input className="form-control input-sm" style={{ maxWidth: 200 }}
+                              placeholder="Filter players…"
+                              value={tierPlayerFilter}
+                              onChange={e => setTierPlayerFilter(e.target.value)} />
+                            <span className="text-muted" style={{ fontSize: 12 }}>
+                              {manualSelections.size} selected
+                            </span>
+                            <button className="btn btn-sm btn-success" onClick={handleSaveTierPlayers}>
+                              Save Selections
+                            </button>
+                          </div>
+                          <div style={{ maxHeight: 260, overflowY: 'auto', columns: 3, columnGap: 12 }}>
+                            {filteredField.map(p => (
+                              <label key={p.espn_id} style={{ display: 'block', fontWeight: 'normal', fontSize: 13, cursor: 'pointer', marginBottom: 2, breakInside: 'avoid' }}>
+                                <input type="checkbox"
+                                  checked={manualSelections.has(String(p.espn_id))}
+                                  onChange={() => toggleManualPlayer(p.espn_id)}
+                                  style={{ marginRight: 5 }} />
+                                {p.name}
+                                {p.world_rank ? <span className="text-muted" style={{ fontSize: 11 }}> #{p.world_rank}</span> : ''}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                ))}
               </div>
             )}
           </div>

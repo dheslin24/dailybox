@@ -202,7 +202,7 @@ export default function GolfPool() {
 
   const { pool, event, participants, picks, current_user_picks,
           snake_sequence, on_clock, is_on_clock, espn_field, standings, is_admin,
-          winning_score_leader, current_user_id } = data
+          winning_score_leader, current_user_id, tiers = [] } = data
 
   const pickedIds      = new Set(picks.map(p => p.player_espn_id))
   const myPickedIds    = new Set(current_user_picks.map(p => p.player_espn_id))
@@ -213,6 +213,17 @@ export default function GolfPool() {
   const filteredField  = espn_field.filter(p =>
     !filter || p.name.toLowerCase().includes(filter.toLowerCase())
   )
+
+  // Tier pick counts (for async + tiered pools)
+  const pickCountByTier = {}
+  current_user_picks.forEach(p => {
+    if (p.tier_id != null) pickCountByTier[p.tier_id] = (pickCountByTier[p.tier_id] || 0) + 1
+  })
+  const tierAtMax = (tier_id) => {
+    if (tier_id == null) return false
+    const t = tiers.find(t => t.tier_id === tier_id)
+    return t && t.max_picks !== null && (pickCountByTier[tier_id] || 0) >= t.max_picks
+  }
 
   // Max rounds across all players (for column headers)
   const maxRounds = espn_field.reduce((m, p) => Math.max(m, Object.keys(p.rounds || {}).length), 0)
@@ -305,47 +316,115 @@ export default function GolfPool() {
               placeholder="Filter by name…" value={filter}
               onChange={e => setFilter(e.target.value)} />
             {pickMsg && <div className="alert alert-danger">{pickMsg}</div>}
-            <div style={{ maxHeight: 420, overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: 4 }}>
-              <table className="table table-condensed table-bordered" style={{ marginBottom: 0 }}>
-                <thead>
-                  <tr><th>Rank</th><th>Player</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                  {filteredField.map(player => {
-                    const isMine  = myPickedIds.has(player.espn_id)
-                    const isTaken = pickedIds.has(player.espn_id)
-                    const isElim  = player.is_eliminated
-                    let rowStyle  = {}
-                    let label     = null
-                    if (isMine)       { rowStyle = { background: '#dbeafe' }; label = <span className="label label-primary">Your pick</span> }
-                    else if (isTaken && pool.pool_format === 'draft')
-                                      { rowStyle = { background: '#f1f5f9', color: '#94a3b8' }; label = <span className="label label-default">Taken</span> }
-                    else if (isElim)  { rowStyle = { color: '#94a3b8' }; label = <span className="label label-warning">CUT/WD</span> }
-                    else if (canPick) { rowStyle = { cursor: 'pointer', background: '#f0fdf4' } }
+            {(() => {
+              const PlayerRow = ({ player }) => {
+                const isMine    = myPickedIds.has(player.espn_id)
+                const isTaken   = pickedIds.has(player.espn_id)
+                const isElim    = player.is_eliminated
+                const blocked   = pool.pool_format === 'async' && tiers.length > 0 && tierAtMax(player.tier_id)
+                let rowStyle    = {}
+                let label       = null
+                if (isMine)                              { rowStyle = { background: '#dbeafe' }; label = <span className="label label-primary">Your pick</span> }
+                else if (isTaken && pool.pool_format === 'draft') { rowStyle = { background: '#f1f5f9', color: '#94a3b8' }; label = <span className="label label-default">Taken</span> }
+                else if (isElim)                         { rowStyle = { color: '#94a3b8' }; label = <span className="label label-warning">CUT/WD</span> }
+                else if (blocked)                        { rowStyle = { color: '#94a3b8' }; label = <span className="label label-warning">Max</span> }
+                else if (canPick)                        { rowStyle = { cursor: 'pointer', background: '#f0fdf4' } }
+                return (
+                  <tr key={player.espn_id} style={rowStyle}
+                    onClick={() => {
+                      if (!isMine && !isElim && !blocked && canPick &&
+                          !(isTaken && pool.pool_format === 'draft'))
+                        handlePick(player)
+                    }}>
+                    <td>{player.world_rank ? `#${player.world_rank}` : '—'}</td>
+                    <td>
+                      {player.name}
+                      {label && <span style={{ marginLeft: 6 }}>{label}</span>}
+                    </td>
+                    <td>
+                      {isTaken && !isMine && pool.pool_format === 'draft'
+                        ? picks.find(p => p.player_espn_id === player.espn_id)?.username || '—'
+                        : ''}
+                    </td>
+                  </tr>
+                )
+              }
 
-                    return (
-                      <tr key={player.espn_id} style={rowStyle}
-                        onClick={() => {
-                          if (!isMine && !isElim && canPick &&
-                              !(isTaken && pool.pool_format === 'draft'))
-                            handlePick(player)
-                        }}>
-                        <td>{player.world_rank ? `#${player.world_rank}` : '—'}</td>
-                        <td>
-                          {player.name}
-                          {label && <span style={{ marginLeft: 6 }}>{label}</span>}
-                        </td>
-                        <td>
-                          {isTaken && !isMine && pool.pool_format === 'draft'
-                            ? picks.find(p => p.player_espn_id === player.espn_id)?.username || '—'
-                            : ''}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+              if (pool.pool_format === 'async' && tiers.length > 0) {
+                // Group filtered field by tier
+                const tierGroups = {}
+                const uncovered  = []
+                filteredField.forEach(p => {
+                  if (p.tier_id != null) {
+                    if (!tierGroups[p.tier_id]) tierGroups[p.tier_id] = []
+                    tierGroups[p.tier_id].push(p)
+                  } else {
+                    uncovered.push(p)
+                  }
+                })
+                const renderTierTable = (players) => (
+                  <table className="table table-condensed table-bordered" style={{ marginBottom: 0 }}>
+                    <thead><tr><th>Rank</th><th>Player</th><th></th></tr></thead>
+                    <tbody>{players.map(p => <PlayerRow key={p.espn_id} player={p} />)}</tbody>
+                  </table>
+                )
+                return (
+                  <div>
+                    {tiers.map(tier => {
+                      const players   = tierGroups[tier.tier_id] || []
+                      const myCount   = pickCountByTier[tier.tier_id] || 0
+                      const atMax     = tier.max_picks !== null && myCount >= tier.max_picks
+                      const constraint = [
+                        tier.min_picks > 0 ? `min ${tier.min_picks}` : '',
+                        tier.max_picks !== null ? `max ${tier.max_picks}` : '',
+                      ].filter(Boolean).join(', ')
+                      return (
+                        <div key={tier.tier_id} style={{ marginBottom: 12 }}>
+                          <div style={{ background: '#f8f9fa', padding: '6px 10px', borderRadius: '4px 4px 0 0', border: '1px solid #dee2e6', borderBottom: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <strong>{tier.name}</strong>
+                            {constraint && <span className="text-muted" style={{ fontSize: 12 }}>({constraint})</span>}
+                            <span className={`label label-${atMax ? 'warning' : 'default'}`} style={{ fontSize: 11 }}>
+                              {myCount} selected{tier.max_picks !== null ? ` / ${tier.max_picks}` : ''}
+                            </span>
+                            {tier.tier_type === 'ranking' && tier.rank_min != null && (
+                              <span className="text-muted" style={{ fontSize: 11 }}>
+                                rank {tier.rank_min}–{tier.rank_max ?? '∞'}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ border: '1px solid #dee2e6', borderRadius: '0 0 4px 4px', overflow: 'hidden' }}>
+                            {players.length === 0
+                              ? <p className="text-muted" style={{ padding: '8px 12px', margin: 0, fontSize: 13 }}>No players match filter.</p>
+                              : renderTierTable(players)}
+                          </div>
+                        </div>
+                      )
+                    })}
+                    {uncovered.length > 0 && (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ background: '#f8f9fa', padding: '6px 10px', borderRadius: '4px 4px 0 0', border: '1px solid #dee2e6', borderBottom: 'none' }}>
+                          <strong>Other</strong>
+                          <span className="text-muted" style={{ fontSize: 12, marginLeft: 8 }}>unconstrained</span>
+                        </div>
+                        <div style={{ border: '1px solid #dee2e6', borderRadius: '0 0 4px 4px', overflow: 'hidden' }}>
+                          {renderTierTable(uncovered)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              // Flat view (draft or untired async)
+              return (
+                <div style={{ maxHeight: 420, overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: 4 }}>
+                  <table className="table table-condensed table-bordered" style={{ marginBottom: 0 }}>
+                    <thead><tr><th>Rank</th><th>Player</th><th>Status</th></tr></thead>
+                    <tbody>{filteredField.map(p => <PlayerRow key={p.espn_id} player={p} />)}</tbody>
+                  </table>
+                </div>
+              )
+            })()}
           </div>
 
           {/* My current picks while drafting */}
@@ -362,6 +441,11 @@ export default function GolfPool() {
                   <span>
                     <strong>{i + 1}. {p.player_name}</strong>
                     {p.is_tiebreaker && <span className="label label-info" style={{ marginLeft: 6 }}>TB</span>}
+                    {p.tier_id != null && tiers.find(t => t.tier_id === p.tier_id) && (
+                      <span className="label label-default" style={{ marginLeft: 6, fontSize: 10 }}>
+                        {tiers.find(t => t.tier_id === p.tier_id).name}
+                      </span>
+                    )}
                   </span>
                   <button className="btn btn-xs btn-danger" title="Remove pick"
                     onClick={() => handleRemovePick(p.pick_id)}>

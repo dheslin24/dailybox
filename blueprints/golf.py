@@ -33,6 +33,36 @@ def _can_manage_pool(pool_id):
     return bool(db2("SELECT 1 FROM golf_pools WHERE pool_id=%s AND created_by=%s", (pool_id, uid)))
 
 
+def _resolve_tier_from_data(tiers, manual_players, espn_id, world_rank):
+    """Return (tier_id, tier_name) for a player given pre-loaded tier data, or (None, None)."""
+    espn_id_str = str(espn_id)
+    for t in tiers:
+        if t['tier_type'] == 'ranking' and world_rank is not None:
+            rmin, rmax = t['rank_min'], t['rank_max']
+            if (rmin is None or world_rank >= rmin) and (rmax is None or world_rank <= rmax):
+                return t['tier_id'], t['name']
+        elif t['tier_type'] == 'manual':
+            if espn_id_str in manual_players.get(t['tier_id'], set()):
+                return t['tier_id'], t['name']
+    return None, None
+
+
+def _load_pool_tiers(pool_id):
+    """Return (tiers_list, manual_players_dict) for a pool."""
+    from services.espn_client import get_golf_world_rankings as _rankings  # noqa: local import fine
+    rows = db2("""SELECT tier_id, name, tier_order, tier_type, rank_min, rank_max, min_picks, max_picks
+                  FROM golf_pool_tiers WHERE pool_id=%s ORDER BY tier_order, tier_id""", (pool_id,))
+    tiers = [{'tier_id': r[0], 'name': r[1], 'tier_order': r[2], 'tier_type': r[3],
+               'rank_min': r[4], 'rank_max': r[5], 'min_picks': r[6], 'max_picks': r[7]}
+             for r in (rows or [])]
+    manual_players = {}
+    for t in tiers:
+        if t['tier_type'] == 'manual':
+            tp = db2("SELECT player_espn_id FROM golf_pool_tier_players WHERE tier_id=%s", (t['tier_id'],))
+            manual_players[t['tier_id']] = {r[0] for r in (tp or [])}
+    return tiers, manual_players
+
+
 # ── DB INIT ───────────────────────────────────────────────────────────────────
 
 @bp.route('/api/golf_init_db', methods=['POST'])
@@ -99,6 +129,31 @@ def api_golf_init_db():
         pass
     try:
         db2("ALTER TABLE golf_draft_order ADD COLUMN tiebreaker_prediction INT DEFAULT NULL")
+    except Exception:
+        pass
+    db2("""CREATE TABLE IF NOT EXISTS golf_pool_tiers (
+            tier_id    INT AUTO_INCREMENT PRIMARY KEY,
+            pool_id    INT NOT NULL,
+            name       VARCHAR(100) NOT NULL,
+            tier_order INT NOT NULL DEFAULT 0,
+            tier_type  VARCHAR(20) NOT NULL DEFAULT 'ranking',
+            rank_min   INT DEFAULT NULL,
+            rank_max   INT DEFAULT NULL,
+            min_picks  INT NOT NULL DEFAULT 0,
+            max_picks  INT DEFAULT NULL,
+            INDEX idx_pool (pool_id)
+        )""")
+    db2("""CREATE TABLE IF NOT EXISTS golf_pool_tier_players (
+            id             INT AUTO_INCREMENT PRIMARY KEY,
+            tier_id        INT NOT NULL,
+            pool_id        INT NOT NULL,
+            player_espn_id VARCHAR(50) NOT NULL,
+            player_name    VARCHAR(100) NOT NULL,
+            UNIQUE KEY uq_tier_player (tier_id, player_espn_id),
+            INDEX idx_pool (pool_id)
+        )""")
+    try:
+        db2("ALTER TABLE golf_picks ADD COLUMN tier_id INT DEFAULT NULL")
     except Exception:
         pass
     # Backfill invite codes for pools that don't have one
@@ -426,12 +481,12 @@ def api_golf_pool():
 
     # All picks
     pick_rows = db2("""SELECT gp.pick_id, gp.user_id, u.username, gp.player_espn_id,
-                              gp.player_name, gp.draft_position, gp.is_tiebreaker, gp.pick_type
+                              gp.player_name, gp.draft_position, gp.is_tiebreaker, gp.pick_type, gp.tier_id
                        FROM golf_picks gp JOIN users u ON u.userid = gp.user_id
                        WHERE gp.pool_id = %s ORDER BY gp.draft_position""", (pool_id,))
     picks = [{'pick_id': r[0], 'user_id': r[1], 'username': r[2],
               'player_espn_id': r[3], 'player_name': r[4],
-              'draft_position': r[5], 'is_tiebreaker': bool(r[6]), 'pick_type': r[7]}
+              'draft_position': r[5], 'is_tiebreaker': bool(r[6]), 'pick_type': r[7], 'tier_id': r[8]}
              for r in pick_rows]
 
     current_user_picks = [p for p in picks if p['user_id'] == user_id]
@@ -472,6 +527,15 @@ def api_golf_pool():
         event['espn_status'] = event_info.get('status_desc', '')
         espn_field        = players
         espn_scores_by_id = {p['espn_id']: p for p in players}
+
+    # Tiers (for async pools with tier config)
+    pool_tiers, manual_players = _load_pool_tiers(pool_id)
+    if pool_tiers and espn_field:
+        for player in espn_field:
+            tid, tname = _resolve_tier_from_data(pool_tiers, manual_players, player['espn_id'], player.get('world_rank'))
+            player['tier_id']   = tid
+            player['tier_name'] = tname
+    tier_players_serialized = {str(tid): list(espn_ids) for tid, espn_ids in manual_players.items()}
 
     winning_score_leader = None
 
@@ -554,6 +618,8 @@ def api_golf_pool():
         'standings':           standings,
         'is_admin':            is_admin,
         'winning_score_leader': winning_score_leader,
+        'tiers':               pool_tiers,
+        'tier_players':        {str(tid): list(ids) for tid, ids in manual_players.items()},
     })
 
 
@@ -600,10 +666,28 @@ def api_golf_pick():
     else:
         draft_position = existing_count + 1
 
+    # Tier validation for async pools with tier config
+    pick_tier_id = None
+    if pool_format == 'async':
+        pool_tiers, manual_players = _load_pool_tiers(pool_id)
+        if pool_tiers:
+            from services.espn_client import get_golf_world_rankings
+            world_rank = get_golf_world_rankings().get(str(player_espn_id))
+            pick_tier_id, tier_name = _resolve_tier_from_data(pool_tiers, manual_players, player_espn_id, world_rank)
+            if pick_tier_id is not None:
+                tier_def = next(t for t in pool_tiers if t['tier_id'] == pick_tier_id)
+                if tier_def['max_picks'] is not None:
+                    count_in_tier = db2(
+                        "SELECT COUNT(*) FROM golf_picks WHERE pool_id=%s AND user_id=%s AND tier_id=%s",
+                        (pool_id, user_id, pick_tier_id)
+                    )[0][0]
+                    if count_in_tier >= tier_def['max_picks']:
+                        return jsonify({'error': f'Max picks from "{tier_name}" reached ({tier_def["max_picks"]})'}), 400
+
     try:
-        db2("""INSERT INTO golf_picks (pool_id, user_id, player_espn_id, player_name, draft_position)
-               VALUES (%s,%s,%s,%s,%s)""",
-            (pool_id, user_id, player_espn_id, player_name, draft_position))
+        db2("""INSERT INTO golf_picks (pool_id, user_id, player_espn_id, player_name, draft_position, tier_id)
+               VALUES (%s,%s,%s,%s,%s,%s)""",
+            (pool_id, user_id, player_espn_id, player_name, draft_position, pick_tier_id))
     except Exception:
         return jsonify({'error': 'That golfer was just taken — please pick another'}), 400
 
@@ -815,4 +899,94 @@ def api_golf_admin_set_winning_score_tb():
 
     db2("UPDATE golf_draft_order SET tiebreaker_prediction=%s WHERE pool_id=%s AND user_id=%s",
         (score, pool_id, user_id))
+    return jsonify({'success': True})
+
+
+# ── TIER MANAGEMENT ───────────────────────────────────────────────────────────
+
+@bp.route('/api/golf_create_tier', methods=['POST'])
+@golf_admin_required
+def api_golf_create_tier():
+    data    = request.get_json()
+    pool_id = data.get('pool_id')
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
+    name       = (data.get('name') or '').strip()
+    tier_type  = data.get('tier_type', 'ranking')
+    rank_min   = data.get('rank_min')
+    rank_max   = data.get('rank_max')
+    min_picks  = int(data.get('min_picks') or 0)
+    max_picks  = data.get('max_picks')
+    if not name:
+        return jsonify({'error': 'name required'}), 400
+    if tier_type not in ('ranking', 'manual'):
+        return jsonify({'error': 'tier_type must be ranking or manual'}), 400
+    next_order_row = db2("SELECT COALESCE(MAX(tier_order), -1) + 1 FROM golf_pool_tiers WHERE pool_id=%s", (pool_id,))
+    next_order = next_order_row[0][0] if next_order_row else 0
+    db2("INSERT INTO golf_pool_tiers (pool_id, name, tier_order, tier_type, rank_min, rank_max, min_picks, max_picks) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+        (pool_id, name, next_order, tier_type,
+         int(rank_min) if rank_min not in (None, '') else None,
+         int(rank_max) if rank_max not in (None, '') else None,
+         min_picks,
+         int(max_picks) if max_picks not in (None, '') else None))
+    tier_id = db2("SELECT LAST_INSERT_ID()")[0][0]
+    return jsonify({'success': True, 'tier_id': tier_id})
+
+
+@bp.route('/api/golf_update_tier', methods=['POST'])
+@golf_admin_required
+def api_golf_update_tier():
+    data    = request.get_json()
+    tier_id = data.get('tier_id')
+    pool_id = data.get('pool_id')
+    if not tier_id or not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
+    name      = (data.get('name') or '').strip()
+    tier_type = data.get('tier_type', 'ranking')
+    rank_min  = data.get('rank_min')
+    rank_max  = data.get('rank_max')
+    min_picks = int(data.get('min_picks') or 0)
+    max_picks = data.get('max_picks')
+    db2("UPDATE golf_pool_tiers SET name=%s, tier_type=%s, rank_min=%s, rank_max=%s, min_picks=%s, max_picks=%s WHERE tier_id=%s AND pool_id=%s",
+        (name, tier_type,
+         int(rank_min) if rank_min not in (None, '') else None,
+         int(rank_max) if rank_max not in (None, '') else None,
+         min_picks,
+         int(max_picks) if max_picks not in (None, '') else None,
+         tier_id, pool_id))
+    return jsonify({'success': True})
+
+
+@bp.route('/api/golf_delete_tier', methods=['POST'])
+@golf_admin_required
+def api_golf_delete_tier():
+    data    = request.get_json()
+    tier_id = data.get('tier_id')
+    pool_id = data.get('pool_id')
+    if not tier_id or not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
+    db2("DELETE FROM golf_pool_tier_players WHERE tier_id=%s", (tier_id,))
+    db2("DELETE FROM golf_pool_tiers WHERE tier_id=%s AND pool_id=%s", (tier_id, pool_id))
+    return jsonify({'success': True})
+
+
+@bp.route('/api/golf_save_tier_players', methods=['POST'])
+@golf_admin_required
+def api_golf_save_tier_players():
+    data    = request.get_json()
+    tier_id = data.get('tier_id')
+    pool_id = data.get('pool_id')
+    players = data.get('players', [])  # [{espn_id, name}]
+    if not tier_id or not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
+    db2("DELETE FROM golf_pool_tier_players WHERE tier_id=%s", (tier_id,))
+    for p in players:
+        espn_id = str(p.get('espn_id', '')).strip()
+        name    = (p.get('name') or '').strip()
+        if espn_id and name:
+            try:
+                db2("INSERT INTO golf_pool_tier_players (tier_id, pool_id, player_espn_id, player_name) VALUES (%s,%s,%s,%s)",
+                    (tier_id, pool_id, espn_id, name))
+            except Exception:
+                pass
     return jsonify({'success': True})
