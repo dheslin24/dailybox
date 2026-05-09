@@ -905,10 +905,12 @@ export default function GolfAdmin() {
                         <label>Rank Range</label>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                           <input className="form-control" type="number" min="1" placeholder="Min"
+                            style={{ minWidth: 0 }}
                             value={tierForm.rank_min}
                             onChange={e => setTierForm(f => ({ ...f, rank_min: e.target.value }))} />
-                          <span className="text-muted">–</span>
+                          <span className="text-muted" style={{ flexShrink: 0 }}>–</span>
                           <input className="form-control" type="number" min="1" placeholder="Max (blank = ∞)"
+                            style={{ minWidth: 0 }}
                             value={tierForm.rank_max}
                             onChange={e => setTierForm(f => ({ ...f, rank_max: e.target.value }))} />
                         </div>
@@ -919,10 +921,12 @@ export default function GolfAdmin() {
                       <label>Players Required</label>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <input className="form-control" type="number" min="0" placeholder="Min (0)"
+                          style={{ minWidth: 0 }}
                           value={tierForm.min_picks}
                           onChange={e => setTierForm(f => ({ ...f, min_picks: e.target.value }))} />
-                        <span className="text-muted">–</span>
+                        <span className="text-muted" style={{ flexShrink: 0 }}>–</span>
                         <input className="form-control" type="number" min="1" placeholder="Max (blank = ∞)"
+                          style={{ minWidth: 0 }}
                           value={tierForm.max_picks}
                           onChange={e => setTierForm(f => ({ ...f, max_picks: e.target.value }))} />
                       </div>
