@@ -5,7 +5,7 @@ import { useSession } from '../SessionContext'
 const EMPTY_FORM = {
   espn_event_id: '', event_name: '', course: '', event_date: '',
   pool_name: '', fee: '', pool_format: 'draft', draft_type: 'manual', picks_per_user: 4,
-  tiebreaker_type: 'player',
+  tiebreaker_type: 'player', scoring_players: '',
 }
 
 const STATUS_FLOW = ['setup', 'open', 'active', 'complete']
@@ -510,6 +510,23 @@ export default function GolfAdmin() {
                     style={{ width: 80 }}
                     value={form.picks_per_user}
                     onChange={e => setForm(f => ({ ...f, picks_per_user: e.target.value }))} />
+                </td>
+              </tr>
+              <tr>
+                <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                  Scoring Players
+                </td>
+                <td style={{ padding: '4px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input className="form-control" type="number" min="1"
+                      style={{ width: 80 }}
+                      placeholder="all"
+                      value={form.scoring_players}
+                      onChange={e => setForm(f => ({ ...f, scoring_players: e.target.value }))} />
+                    <span className="text-muted" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+                      of {form.picks_per_user} picks count toward score (leave blank = all count)
+                    </span>
+                  </div>
                 </td>
               </tr>
               <tr>

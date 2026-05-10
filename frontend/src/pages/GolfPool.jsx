@@ -498,6 +498,11 @@ export default function GolfPool() {
                 : ''}
             </p>
           )}
+          {pool.scoring_players && (
+            <p className="text-center text-muted" style={{ fontSize: 13, marginTop: -8 }}>
+              Top {pool.scoring_players} of {pool.picks_per_user} picks count toward score
+            </p>
+          )}
           <div style={{ overflowX: 'auto' }}>
             <table className="table table-bordered table-striped">
               <thead>
@@ -526,8 +531,9 @@ export default function GolfPool() {
                       {Array.from({ length: pool.picks_per_user }, (_, i) => {
                         const pick = sortedPicks[i]
                         if (!pick) return <td key={i}>—</td>
+                        const isBench = pick.counts === false
                         return (
-                          <td key={i}>
+                          <td key={i} style={isBench ? { opacity: 0.5 } : {}}>
                             <div style={{ lineHeight: 1.3 }}>
                               <span style={pick.is_eliminated ? { textDecoration: 'line-through', color: '#94a3b8' } : {}}>
                                 {pick.player_name}
@@ -536,7 +542,10 @@ export default function GolfPool() {
                                 ? <span className="label label-warning" style={{ marginLeft: 4, fontSize: 10 }}>CUT</span>
                                 : <span style={{ marginLeft: 4 }}><ScoreBadge val={pick.total_value} display={pick.total_display} /></span>
                               }
-                              {pool.tiebreaker_type === 'player' && pick.is_tiebreaker && (
+                              {isBench && (
+                                <span className="label label-default" style={{ marginLeft: 4, fontSize: 10 }}>BENCH</span>
+                              )}
+                              {!isBench && pool.tiebreaker_type === 'player' && pick.is_tiebreaker && (
                                 <span className="label label-info" style={{ marginLeft: 4, fontSize: 10 }}>TB</span>
                               )}
                             </div>
