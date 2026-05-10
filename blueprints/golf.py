@@ -164,6 +164,10 @@ def api_golf_init_db():
         db2("ALTER TABLE golf_pools ADD COLUMN dnf_handling VARCHAR(20) NOT NULL DEFAULT 'eliminate'")
     except Exception:
         pass
+    try:
+        db2("ALTER TABLE golf_pools ADD COLUMN dnf_penalty INT NOT NULL DEFAULT 1")
+    except Exception:
+        pass
     # Backfill invite codes for pools that don't have one
     pools_without_code = db2("SELECT pool_id FROM golf_pools WHERE invite_code IS NULL OR invite_code = ''")
     for (pid,) in (pools_without_code or []):
@@ -262,6 +266,12 @@ def api_golf_create_pool():
     dnf_handling = data.get('dnf_handling', 'eliminate')
     if dnf_handling not in ('eliminate', 'worst_score'):
         dnf_handling = 'eliminate'
+    try:
+        dnf_penalty = int(data.get('dnf_penalty', 1))
+        if dnf_penalty < 0:
+            dnf_penalty = 0
+    except (TypeError, ValueError):
+        dnf_penalty = 1
 
     if not espn_event_id or not event_name or not pool_name:
         return jsonify({'error': 'espn_event_id, event_name, and pool_name required'}), 400
@@ -279,9 +289,9 @@ def api_golf_create_pool():
         event_id = db2("SELECT event_id FROM golf_events WHERE espn_event_id = %s", (espn_event_id,))[0][0]
 
     invite_code = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6))
-    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type, scoring_players, dnf_handling)
-           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s,%s,%s,%s,%s)""",
-        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type, scoring_players, dnf_handling))
+    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type, scoring_players, dnf_handling, dnf_penalty)
+           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type, scoring_players, dnf_handling, dnf_penalty))
     pool_id = db2("SELECT pool_id FROM golf_pools WHERE event_id=%s AND name=%s ORDER BY pool_id DESC LIMIT 1",
                   (event_id, pool_name))[0][0]
 
@@ -298,7 +308,7 @@ def api_golf_admin_pools():
     base = """SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
                      p.picks_per_user, p.draft_type,
                      e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code,
-                     p.tiebreaker_type, p.scoring_players, p.dnf_handling
+                     p.tiebreaker_type, p.scoring_players, p.dnf_handling, p.dnf_penalty
               FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id"""
     if session.get('is_admin') == 1:
         rows = db2(base + " ORDER BY p.pool_id DESC")
@@ -310,7 +320,7 @@ def api_golf_admin_pools():
          'event_id': r[7], 'event_name': r[8], 'espn_event_id': r[9],
          'course': r[10] or '', 'event_date': str(r[11]) if r[11] else '',
          'invite_code': r[12] or '', 'tiebreaker_type': r[13] or 'player',
-         'scoring_players': r[14], 'dnf_handling': r[15] or 'eliminate'}
+         'scoring_players': r[14], 'dnf_handling': r[15] or 'eliminate', 'dnf_penalty': r[16] if r[16] is not None else 1}
         for r in rows]})
 
 
@@ -478,7 +488,7 @@ def api_golf_pool():
     pool_row = db2("""SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
                              p.picks_per_user, p.draft_type,
                              e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code,
-                             p.tiebreaker_type, p.scoring_players, p.dnf_handling
+                             p.tiebreaker_type, p.scoring_players, p.dnf_handling, p.dnf_penalty
                       FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id
                       WHERE p.pool_id = %s""", (pool_id,))
     if not pool_row:
@@ -488,7 +498,8 @@ def api_golf_pool():
     pool  = {'pool_id': r[0], 'name': r[1], 'fee': r[2], 'status': r[3],
              'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6],
              'invite_code': r[12] or '', 'tiebreaker_type': r[13] or 'player',
-             'scoring_players': r[14], 'dnf_handling': r[15] or 'eliminate'}
+             'scoring_players': r[14], 'dnf_handling': r[15] or 'eliminate',
+             'dnf_penalty': r[16] if r[16] is not None else 1}
     event = {'event_id': r[7], 'name': r[8], 'espn_event_id': r[9],
              'course': r[10] or '', 'event_date': str(r[11]) if r[11] else ''}
 
@@ -582,12 +593,13 @@ def api_golf_pool():
         scoring_players = pool.get('scoring_players')
         dnf_handling    = pool.get('dnf_handling', 'eliminate')
 
-        # Penalty value for worst_score mode: worst active player's total + 1
+        # Penalty value for worst_score mode: worst active player's total + dnf_penalty
+        dnf_penalty   = pool.get('dnf_penalty', 1)
         penalty_value = None
         if dnf_handling == 'worst_score' and espn_field:
             active_totals = [p['total_value'] for p in espn_field
                              if not p.get('is_eliminated') and p.get('total_value') is not None]
-            penalty_value = (max(active_totals) + 1) if active_totals else 20
+            penalty_value = (max(active_totals) + dnf_penalty) if active_totals else 20
 
         for participant in participants:
             uid        = participant['user_id']

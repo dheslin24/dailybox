@@ -258,7 +258,7 @@ export default function GolfPool() {
         &nbsp;&nbsp;Format: <strong>{pool.pool_format}</strong>
         &nbsp;&nbsp;Picks/user: <strong>{pool.picks_per_user}</strong>
         {pool.dnf_handling === 'worst_score' && (
-          <>&nbsp;&nbsp;DNF: <strong>penalty score</strong></>
+          <>&nbsp;&nbsp;DNF: <strong>worst{pool.dnf_penalty > 0 ? ` +${pool.dnf_penalty}` : ''}</strong></>
         )}
       </p>
 
@@ -508,7 +508,10 @@ export default function GolfPool() {
           )}
           {pool.dnf_handling === 'worst_score' && (
             <p className="text-center text-muted" style={{ fontSize: 13, marginTop: -8 }}>
-              DNF players receive penalty score (worst active player + 1 stroke)
+              DNF picks receive{' '}
+              {pool.dnf_penalty === 0
+                ? 'worst active player score'
+                : `worst active player score + ${pool.dnf_penalty} stroke${pool.dnf_penalty !== 1 ? 's' : ''}`}
             </p>
           )}
           <div style={{ overflowX: 'auto' }}>

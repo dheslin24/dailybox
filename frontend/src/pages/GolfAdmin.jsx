@@ -5,7 +5,7 @@ import { useSession } from '../SessionContext'
 const EMPTY_FORM = {
   espn_event_id: '', event_name: '', course: '', event_date: '',
   pool_name: '', fee: '', pool_format: 'draft', draft_type: 'manual', picks_per_user: 4,
-  tiebreaker_type: 'player', scoring_players: '', dnf_handling: 'eliminate',
+  tiebreaker_type: 'player', scoring_players: '', dnf_handling: 'eliminate', dnf_penalty: 1,
 }
 
 const STATUS_FLOW = ['setup', 'open', 'active', 'complete']
@@ -549,8 +549,20 @@ export default function GolfAdmin() {
                   <select className="form-control" value={form.dnf_handling}
                     onChange={e => setForm(f => ({ ...f, dnf_handling: e.target.value }))}>
                     <option value="eliminate">Eliminate — participant is out if any pick misses cut/withdraws</option>
-                    <option value="worst_score">Penalty score — DNF picks receive worst active score + 1 stroke</option>
+                    <option value="worst_score">Penalty score — DNF picks receive worst active score + N strokes</option>
                   </select>
+                  {form.dnf_handling === 'worst_score' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                      <label style={{ margin: 0, fontWeight: 400 }}>Strokes added to worst:</label>
+                      <input className="form-control input-sm" type="number" min="0"
+                        style={{ width: 70 }}
+                        value={form.dnf_penalty}
+                        onChange={e => setForm(f => ({ ...f, dnf_penalty: e.target.value }))} />
+                      <span className="text-muted" style={{ fontSize: 12 }}>
+                        (0 = equal to worst, 1 = worst + 1, etc.)
+                      </span>
+                    </div>
+                  )}
                 </td>
               </tr>
             </tbody>
