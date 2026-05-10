@@ -257,6 +257,9 @@ export default function GolfPool() {
         Entry Fee: <strong>{pool.fee || 'None'}</strong>
         &nbsp;&nbsp;Format: <strong>{pool.pool_format}</strong>
         &nbsp;&nbsp;Picks/user: <strong>{pool.picks_per_user}</strong>
+        {pool.dnf_handling === 'worst_score' && (
+          <>&nbsp;&nbsp;DNF: <strong>penalty score</strong></>
+        )}
       </p>
 
       {/* ── SETUP ──────────────────────────────────────────────────────────── */}
@@ -503,6 +506,11 @@ export default function GolfPool() {
               Top {pool.scoring_players} of {pool.picks_per_user} picks count toward score
             </p>
           )}
+          {pool.dnf_handling === 'worst_score' && (
+            <p className="text-center text-muted" style={{ fontSize: 13, marginTop: -8 }}>
+              DNF players receive penalty score (worst active player + 1 stroke)
+            </p>
+          )}
           <div style={{ overflowX: 'auto' }}>
             <table className="table table-bordered table-striped">
               <thead>
@@ -538,10 +546,19 @@ export default function GolfPool() {
                               <span style={pick.is_eliminated ? { textDecoration: 'line-through', color: '#94a3b8' } : {}}>
                                 {pick.player_name}
                               </span>
-                              {pick.is_eliminated
-                                ? <span className="label label-warning" style={{ marginLeft: 4, fontSize: 10 }}>CUT</span>
-                                : <span style={{ marginLeft: 4 }}><ScoreBadge val={pick.total_value} display={pick.total_display} /></span>
-                              }
+                              {pick.is_eliminated ? (
+                                <>
+                                  <span className="label label-warning" style={{ marginLeft: 4, fontSize: 10 }}>CUT</span>
+                                  {pool.dnf_handling === 'worst_score' && (
+                                    <span style={{ marginLeft: 4 }}>
+                                      <ScoreBadge val={pick.total_value}
+                                        display={pick.total_value === 0 ? 'E' : pick.total_value > 0 ? `+${pick.total_value}` : String(pick.total_value)} />
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span style={{ marginLeft: 4 }}><ScoreBadge val={pick.total_value} display={pick.total_display} /></span>
+                              )}
                               {isBench && (
                                 <span className="label label-default" style={{ marginLeft: 4, fontSize: 10 }}>BENCH</span>
                               )}
