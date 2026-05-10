@@ -204,8 +204,15 @@ def api_golf_users():
     rows = db2("""SELECT userid, username, first_name, last_name, email
                   FROM users WHERE active = 1 AND alias_of_userid IS NULL
                   ORDER BY username""")
-    return jsonify({'users': [{'userid': r[0], 'username': r[1],
-                               'first_name': r[2], 'last_name': r[3], 'email': r[4] or ''} for r in rows]})
+    prev = db2("""SELECT DISTINCT d.user_id
+                  FROM golf_draft_order d
+                  JOIN golf_pools p ON p.pool_id = d.pool_id
+                  WHERE p.created_by = %s""", (session.get('userid'),))
+    return jsonify({
+        'users': [{'userid': r[0], 'username': r[1],
+                   'first_name': r[2], 'last_name': r[3], 'email': r[4] or ''} for r in rows],
+        'previous_user_ids': [r[0] for r in (prev or [])],
+    })
 
 
 @bp.route('/api/golf_create_pool', methods=['POST'])

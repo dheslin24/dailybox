@@ -27,8 +27,10 @@ export default function GolfAdmin() {
   const [manualSelections, setManualSelections]   = useState(new Set())
   const [tierPlayerFilter, setTierPlayerFilter]   = useState('')
   const [msg, setMsg]                 = useState('')
-  const [userFilter, setUserFilter]   = useState('')
-  const [userSort, setUserSort]       = useState({ col: 'username', dir: 'asc' })
+  const [userFilter, setUserFilter]       = useState('')
+  const [userSort, setUserSort]           = useState({ col: 'username', dir: 'asc' })
+  const [previousUserIds, setPreviousUserIds] = useState(new Set())
+  const [showAllUsers, setShowAllUsers]   = useState(false)
   const [grants, setGrants]           = useState([])
   const [grantForm, setGrantForm]     = useState({ user_id: '', pools_allowed: 1 })
 
@@ -45,7 +47,14 @@ export default function GolfAdmin() {
   }
 
   const loadUsers = () =>
-    fetch('/api/golf_users').then(r => r.json()).then(d => setUsers(d.users || []))
+    fetch('/api/golf_users')
+      .then(r => r.json())
+      .then(d => {
+        setUsers(d.users || [])
+        const ids = new Set(d.previous_user_ids || [])
+        setPreviousUserIds(ids)
+        if (ids.size === 0) setShowAllUsers(true)
+      })
 
   const loadPools = () =>
     fetch('/api/golf_admin_pools').then(r => r.json()).then(d => setPools(d.pools || []))
@@ -710,6 +719,21 @@ export default function GolfAdmin() {
                   : 'Check each user participating in this pool. Click a row to toggle.'
                 }
               </p>
+              {previousUserIds.size > 0 && (
+                <div style={{ marginBottom: 8 }}>
+                  <button
+                    className={`btn btn-xs ${!showAllUsers ? 'btn-primary' : 'btn-default'}`}
+                    onClick={() => { setShowAllUsers(false); setUserFilter('') }}>
+                    Past participants ({previousUserIds.size})
+                  </button>
+                  <button
+                    className={`btn btn-xs ${showAllUsers ? 'btn-primary' : 'btn-default'}`}
+                    style={{ marginLeft: 4 }}
+                    onClick={() => { setShowAllUsers(true); setUserFilter('') }}>
+                    All users ({users.length})
+                  </button>
+                </div>
+              )}
               <input
                 className="form-control input-sm"
                 style={{ maxWidth: 300, marginBottom: 8 }}
@@ -718,11 +742,12 @@ export default function GolfAdmin() {
                 onChange={e => setUserFilter(e.target.value)}
               />
               {(() => {
+                const scopedUsers = showAllUsers ? users : users.filter(u => previousUserIds.has(u.userid))
                 const q = userFilter.toLowerCase()
                 const cols = ['username', 'first_name', 'last_name', 'email']
                 const filtered = q
-                  ? users.filter(u => cols.some(c => (u[c] || '').toLowerCase().includes(q)))
-                  : users
+                  ? scopedUsers.filter(u => cols.some(c => (u[c] || '').toLowerCase().includes(q)))
+                  : scopedUsers
                 const sorted = [...filtered].sort((a, b) => {
                   const av = (a[userSort.col] || '').toLowerCase()
                   const bv = (b[userSort.col] || '').toLowerCase()
