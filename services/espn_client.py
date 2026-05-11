@@ -101,13 +101,13 @@ def get_golf_world_rankings():
     if cached is not None:
         return cached
     today = date.today()
-    for delta in range(10):
+    for delta in range(4):
         d = today - timedelta(days=delta)
         url = (f"https://sports.core.api.espn.com/v2/sports/golf/leagues/all"
                f"/seasons/{d.year}/rankings/1/dates/{d.strftime('%Y%m%d')}"
                f"?lang=en&region=us&limit=300")
         try:
-            ranks = requests.get(url, timeout=10).json().get('ranks', [])
+            ranks = requests.get(url, timeout=4).json().get('ranks', [])
             if not ranks:
                 continue
             rank_map = {}
@@ -155,6 +155,7 @@ def get_golf_event_detail(espn_event_id):
 
         players = []
         for competitor in comps[0].get('competitors', []):
+            athlete = competitor.get('athlete', {}) or {}
 
             # Status — present during/after event, absent pre-tournament
             c_status = competitor.get('status', {}) or {}
@@ -188,7 +189,7 @@ def get_golf_event_detail(espn_event_id):
                 total_value, total_display = 0, 'E'
 
             players.append({
-                'espn_id': competitor.get('id', ''),
+                'espn_id': competitor.get('id') or athlete.get('id', ''),
                 'name': athlete.get('displayName') or athlete.get('fullName', ''),
                 'short_name': athlete.get('shortName') or athlete.get('displayName', ''),
                 'status': status_name,
