@@ -155,7 +155,6 @@ def get_golf_event_detail(espn_event_id):
 
         players = []
         for competitor in comps[0].get('competitors', []):
-            athlete = competitor.get('athlete', {}) or {}
 
             # Status — present during/after event, absent pre-tournament
             c_status = competitor.get('status', {}) or {}
@@ -274,6 +273,33 @@ def get_golf_tee_times(espn_event_id):
 
     _cache_set(cache_key, result, 60)  # 60s
     return result
+
+
+def get_golf_event_raw(espn_event_id):
+    """Return the raw first competitor object and competition-level odds from ESPN.
+    Used for inspecting what fields ESPN exposes (odds, futures, etc.)."""
+    try:
+        r = requests.get(f"{_GOLF_BASE}/scoreboard?id={espn_event_id}", timeout=10).json()
+        target = next(
+            (e for e in r.get('events', []) if str(e.get('id')) == str(espn_event_id)),
+            None
+        )
+        if not target:
+            return {'error': 'event not found'}
+        comps = target.get('competitions', [])
+        if not comps:
+            return {'error': 'no competitions'}
+        comp = comps[0]
+        competitors = comp.get('competitors', [])
+        return {
+            'competition_keys':       list(comp.keys()),
+            'competition_odds':       comp.get('odds'),
+            'competition_futures':    comp.get('futures'),
+            'first_competitor_raw':   competitors[0] if competitors else None,
+            'second_competitor_raw':  competitors[1] if len(competitors) > 1 else None,
+        }
+    except Exception as e:
+        return {'error': str(e)}
 
 
 def _espn_url(league, endpoint, **params):

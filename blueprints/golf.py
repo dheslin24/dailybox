@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 from db_accessor.db_accessor import db2
 from utils import login_required, api_admin_required, golf_admin_required
-from services.espn_client import get_golf_tournaments, get_golf_event_detail, get_golf_event_venue, get_golf_tee_times
+from services.espn_client import get_golf_tournaments, get_golf_event_detail, get_golf_event_venue, get_golf_tee_times, get_golf_event_raw
 import logging
 import random
 
@@ -178,6 +178,16 @@ def api_golf_init_db():
 
 
 # ── ADMIN ENDPOINTS ───────────────────────────────────────────────────────────
+
+@bp.route('/api/golf_espn_raw', methods=['GET'])
+@api_admin_required
+def api_golf_espn_raw():
+    """Dump raw ESPN competitor data for a given event — use to inspect odds/futures fields."""
+    event_id = request.args.get('event_id', '')
+    if not event_id:
+        return jsonify({'error': 'event_id required'}), 400
+    return jsonify(get_golf_event_raw(event_id))
+
 
 @bp.route('/api/golf_espn_events', methods=['GET'])
 @golf_admin_required
