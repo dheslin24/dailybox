@@ -17,6 +17,7 @@ export default function HorseRacingAdmin() {
   const [draftOrder, setDraftOrder] = useState(Array(20).fill(''))
   const [draftOrderText, setDraftOrderText] = useState(Array(20).fill(''))
   const [activeDropdown, setActiveDropdown] = useState(null)
+  const [draftMode, setDraftMode] = useState('manual')
   const [adminPickUserId, setAdminPickUserId] = useState('')
   const [adminPickEntryId, setAdminPickEntryId] = useState('')
   const [metaEntryId, setMetaEntryId] = useState('')
@@ -101,6 +102,26 @@ export default function HorseRacingAdmin() {
     }
     post('/api/hr_set_draft_order', { race_id: selectedRace.race_id, order })
       .then(d => { flash(d.success ? 'Draft order saved!' : d.error, !!d.success); if (d.success) loadPool(selectedRace.race_id) })
+  }
+
+  const randomizeDraftOrder = () => {
+    const filled = draftOrder
+      .map((uid, i) => uid ? { uid, text: draftOrderText[i] || '' } : null)
+      .filter(Boolean)
+    if (!filled.length) { flash('Add at least one user first', false); return }
+    for (let i = filled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[filled[i], filled[j]] = [filled[j], filled[i]]
+    }
+    const slotCount = poolData.entries.length
+    const newIds  = Array(slotCount).fill('')
+    const newText = Array(slotCount).fill('')
+    filled.forEach((item, idx) => { newIds[idx] = item.uid; newText[idx] = item.text })
+    setDraftOrder(newIds)
+    setDraftOrderText(newText)
+    const order = filled.map((item, idx) => ({ pick_order: idx + 1, user_id: Number(item.uid) }))
+    post('/api/hr_set_draft_order', { race_id: selectedRace.race_id, order })
+      .then(d => { flash(d.success ? 'Draft order randomized and saved!' : d.error, !!d.success); if (d.success) loadPool(selectedRace.race_id) })
   }
 
   const setStatus = (status) =>
@@ -317,6 +338,15 @@ export default function HorseRacingAdmin() {
               <div className="panel panel-default">
                 <div className="panel-heading"><strong>Draft Order</strong></div>
                 <div className="panel-body">
+                  <div style={{ marginBottom: 10 }}>
+                    <button
+                      className={`btn btn-xs ${draftMode === 'manual' ? 'btn-primary' : 'btn-default'}`}
+                      onClick={() => setDraftMode('manual')}>Manual</button>
+                    <button
+                      className={`btn btn-xs ${draftMode === 'randomize' ? 'btn-primary' : 'btn-default'}`}
+                      style={{ marginLeft: 4 }}
+                      onClick={() => setDraftMode('randomize')}>Add & Randomize</button>
+                  </div>
                   {Array.from({ length: poolData.entries.length }, (_, i) => {
                     const q = (draftOrderText[i] || '').toLowerCase()
                     const matches = q.length >= 1 ? users.filter(u =>
@@ -328,7 +358,7 @@ export default function HorseRacingAdmin() {
                     return (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 3 }}>
                         <span style={{ width: 22, textAlign: 'right', marginRight: 6, color: '#888', fontSize: 12 }}>
-                          {i + 1}.
+                          {draftMode === 'manual' ? `${i + 1}.` : '·'}
                         </span>
                         <div style={{ position: 'relative' }}>
                           <input
@@ -398,10 +428,17 @@ export default function HorseRacingAdmin() {
                       </div>
                     )
                   })}
-                  <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}
-                    onClick={saveDraftOrder}>
-                    Save Draft Order
-                  </button>
+                  {draftMode === 'manual' ? (
+                    <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}
+                      onClick={saveDraftOrder}>
+                      Save Draft Order
+                    </button>
+                  ) : (
+                    <button className="btn btn-warning btn-sm" style={{ marginTop: 8 }}
+                      onClick={randomizeDraftOrder}>
+                      Randomize & Save
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
