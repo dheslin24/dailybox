@@ -457,6 +457,20 @@ export default function GolfPool() {
                 </div>
               ))
             }
+            {pool.tiebreaker_type === 'winning_score' && (() => {
+              const pred = participants.find(p => p.user_id === current_user_id)?.tiebreaker_prediction
+              const fmtPred = pred === null || pred === undefined ? null
+                : pred === 0 ? 'E' : pred > 0 ? `+${pred}` : String(pred)
+              return (
+                <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 4, background: '#f0f9ff', border: '1px solid #bae6fd', fontSize: 13 }}>
+                  <strong>Winning score prediction:</strong>{' '}
+                  {fmtPred
+                    ? <strong style={{ color: pred < 0 ? '#15803d' : pred > 0 ? '#dc2626' : '#374151' }}>{fmtPred}</strong>
+                    : <span className="text-muted">not set — scroll down to enter</span>
+                  }
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}

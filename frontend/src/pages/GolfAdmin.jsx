@@ -31,6 +31,7 @@ export default function GolfAdmin() {
   const [userSort, setUserSort]           = useState({ col: 'username', dir: 'asc' })
   const [previousUserIds, setPreviousUserIds] = useState(new Set())
   const [showAllUsers, setShowAllUsers]   = useState(false)
+  const [userLimit, setUserLimit]         = useState(25)
   const [grants, setGrants]           = useState([])
   const [grantForm, setGrantForm]     = useState({ user_id: '', pools_allowed: 1 })
 
@@ -610,7 +611,7 @@ export default function GolfAdmin() {
             <strong>Managing: {pool.name}</strong>
             <span className="label label-default" style={{ marginLeft: 10 }}>{pool.status}</span>
             <span style={{ marginLeft: 10, fontSize: 12 }}>
-              {pool.pool_format} · {pool.picks_per_user} picks/user · fee: {poolDetail.pool.fee || 'none'}
+              {pool.pool_format} · {pool.picks_per_user} picks/user · fee: {poolDetail.pool.fee || 'none'} · TB: {pool.tiebreaker_type === 'winning_score' ? 'winning score' : 'player score'}
             </span>
             {pool.invite_code && (
               <span style={{ marginLeft: 16, fontSize: 13 }}>
@@ -775,21 +776,34 @@ export default function GolfAdmin() {
                   </button>
                 </div>
               )}
-              <input
-                className="form-control input-sm"
-                style={{ maxWidth: 300, marginBottom: 8 }}
-                placeholder="Filter by name or email…"
-                value={userFilter}
-                onChange={e => setUserFilter(e.target.value)}
-              />
-              {(() => {
+              <div style={{ marginBottom: 8 }}>
+                {[10, 25, 50, null, 0].map(n => (
+                  <button key={String(n)}
+                    className={`btn btn-xs ${userLimit === n ? 'btn-info' : 'btn-default'}`}
+                    style={{ marginRight: 4 }}
+                    onClick={() => setUserLimit(n)}>
+                    {n === null ? 'All' : n === 0 ? 'None' : n}
+                  </button>
+                ))}
+              </div>
+              {userLimit !== 0 && (
+                <input
+                  className="form-control input-sm"
+                  style={{ maxWidth: 300, marginBottom: 8 }}
+                  placeholder="Filter by name or email…"
+                  value={userFilter}
+                  onChange={e => setUserFilter(e.target.value)}
+                />
+              )}
+              {userLimit !== 0 && (() => {
                 const scopedUsers = showAllUsers ? users : users.filter(u => previousUserIds.has(u.userid))
                 const q = userFilter.toLowerCase()
                 const cols = ['username', 'first_name', 'last_name', 'email']
                 const filtered = q
                   ? scopedUsers.filter(u => cols.some(c => (u[c] || '').toLowerCase().includes(q)))
                   : scopedUsers
-                const sorted = [...filtered].sort((a, b) => {
+                const limited = userLimit === null ? filtered : filtered.slice(0, userLimit)
+                const sorted = [...limited].sort((a, b) => {
                   const av = (a[userSort.col] || '').toLowerCase()
                   const bv = (b[userSort.col] || '').toLowerCase()
                   return userSort.dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
