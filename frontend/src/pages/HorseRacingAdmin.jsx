@@ -15,6 +15,7 @@ export default function HorseRacingAdmin() {
   const [postPos, setPostPos] = useState('')
   const [horseName, setHorseName] = useState('')
   const [draftOrder, setDraftOrder] = useState(Array(20).fill(''))
+  const [draftOrderText, setDraftOrderText] = useState(Array(20).fill(''))
   const [adminPickUserId, setAdminPickUserId] = useState('')
   const [adminPickEntryId, setAdminPickEntryId] = useState('')
   const [metaEntryId, setMetaEntryId] = useState('')
@@ -41,12 +42,17 @@ export default function HorseRacingAdmin() {
         }
         if (d.error) { flash(d.error, false); return }
         setPoolData(d)
-        const order = Array(20).fill('')
+        const slotCount = d.entries.length
+        const order = Array(slotCount).fill('')
+        const orderText = Array(slotCount).fill('')
         d.draft_order.forEach(slot => {
-          if (slot.pick_order >= 1 && slot.pick_order <= 20)
+          if (slot.pick_order >= 1 && slot.pick_order <= slotCount) {
             order[slot.pick_order - 1] = String(slot.user_id)
+            orderText[slot.pick_order - 1] = slot.username || ''
+          }
         })
         setDraftOrder(order)
+        setDraftOrderText(orderText)
       })
       .catch(e => flash(`Load failed: ${e.message}`, false))
 
@@ -310,25 +316,42 @@ export default function HorseRacingAdmin() {
               <div className="panel panel-default">
                 <div className="panel-heading"><strong>Draft Order</strong></div>
                 <div className="panel-body">
-                  {Array.from({ length: 20 }, (_, i) => (
+                  <datalist id="hr-users-list">
+                    {users.map(u => <option key={u.userid} value={u.username} />)}
+                  </datalist>
+                  {Array.from({ length: poolData.entries.length }, (_, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 3 }}>
                       <span style={{ width: 22, textAlign: 'right', marginRight: 6, color: '#888', fontSize: 12 }}>
                         {i + 1}.
                       </span>
-                      <select className="form-control input-sm" style={{ width: 165 }}
-                        value={draftOrder[i]}
+                      <input
+                        className="form-control input-sm"
+                        style={{ width: 165, color: draftOrder[i] ? undefined : '#999' }}
+                        list="hr-users-list"
+                        placeholder="Type to search…"
+                        value={draftOrderText[i] || ''}
                         onChange={e => {
-                          const updated = [...draftOrder]
-                          updated[i] = e.target.value
-                          setDraftOrder(updated)
-                        }}>
-                        <option value="">— empty —</option>
-                        {users.map(u => (
-                          <option key={u.userid} value={u.userid}>
-                            {u.username}
-                          </option>
-                        ))}
-                      </select>
+                          const text = e.target.value
+                          const updatedText = [...draftOrderText]
+                          updatedText[i] = text
+                          setDraftOrderText(updatedText)
+                          const match = users.find(u => u.username.toLowerCase() === text.toLowerCase())
+                          const updatedIds = [...draftOrder]
+                          updatedIds[i] = match ? String(match.userid) : ''
+                          setDraftOrder(updatedIds)
+                        }}
+                      />
+                      {draftOrder[i] && (
+                        <button className="btn btn-xs btn-default" style={{ marginLeft: 4 }}
+                          onClick={() => {
+                            const updatedIds = [...draftOrder]
+                            const updatedText = [...draftOrderText]
+                            updatedIds[i] = ''
+                            updatedText[i] = ''
+                            setDraftOrder(updatedIds)
+                            setDraftOrderText(updatedText)
+                          }}>×</button>
+                      )}
                     </div>
                   ))}
                   <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}

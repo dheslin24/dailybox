@@ -63,7 +63,7 @@ export default function Layout({ children }) {
                       </a>
                       <ul className="dropdown-menu">
                         {session.is_admin === 1 && <li><a href="/app/admin">Admin</a></li>}
-                        {session.is_admin === 1 && <li><a href="/app/horse_racing_admin">HR Admin</a></li>}
+                        {session.is_admin === 1 && <li><a href="/app/horse_racing_admin">Horse Admin</a></li>}
                         <li><a href="/app/golf_admin">Golf Admin</a></li>
                         {session.is_admin === 1 && <li role="separator" className="divider"></li>}
                         {session.is_admin === 1 && <li><a href="/app/bygzomo">BYGZomo</a></li>}
