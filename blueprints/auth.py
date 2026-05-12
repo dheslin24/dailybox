@@ -135,6 +135,11 @@ def api_me():
     except Exception:
         grant_row = None
         golf_grant = None
+    try:
+        deputy_rows = db2("SELECT pool_id FROM golf_pool_deputies WHERE user_id=%s", (session['userid'],))
+        golf_deputy_pool_ids = [r[0] for r in (deputy_rows or [])]
+    except Exception:
+        golf_deputy_pool_ids = []
     return jsonify({
         'logged_in': True,
         'userid': session['userid'],
@@ -142,6 +147,8 @@ def api_me():
         'is_admin': session.get('is_admin', 0),
         'has_golf_grant': bool(grant_row),
         'golf_grant': golf_grant,
+        'has_golf_deputy': bool(golf_deputy_pool_ids),
+        'golf_deputy_pool_ids': golf_deputy_pool_ids,
     })
 
 @bp.route("/api/user_details", methods=["GET"])

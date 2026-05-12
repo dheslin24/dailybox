@@ -24,13 +24,15 @@ def _compute_snake_sequence(base_order, picks_per_user):
 
 
 def _can_manage_pool(pool_id):
-    """True if current user is a super admin or created this pool via a grant."""
+    """True if current user is a super admin, created this pool, or is a deputy for it."""
     if session.get('is_admin') == 1:
         return True
     uid = session.get('userid')
     if not uid:
         return False
-    return bool(db2("SELECT 1 FROM golf_pools WHERE pool_id=%s AND created_by=%s", (pool_id, uid)))
+    if db2("SELECT 1 FROM golf_pools WHERE pool_id=%s AND created_by=%s", (pool_id, uid)):
+        return True
+    return bool(db2("SELECT 1 FROM golf_pool_deputies WHERE pool_id=%s AND user_id=%s", (pool_id, uid)))
 
 
 def _resolve_tier_from_data(tiers, manual_players, espn_id, world_rank):
@@ -168,6 +170,14 @@ def api_golf_init_db():
         db2("ALTER TABLE golf_pools ADD COLUMN dnf_penalty INT NOT NULL DEFAULT 1")
     except Exception:
         pass
+    db2("""CREATE TABLE IF NOT EXISTS golf_pool_deputies (
+            id         INT AUTO_INCREMENT PRIMARY KEY,
+            pool_id    INT NOT NULL,
+            user_id    INT NOT NULL,
+            granted_by INT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_pool_user (pool_id, user_id)
+        )""")
     # Backfill invite codes for pools that don't have one
     pools_without_code = db2("SELECT pool_id FROM golf_pools WHERE invite_code IS NULL OR invite_code = ''")
     for (pid,) in (pools_without_code or []):
@@ -323,7 +333,10 @@ def api_golf_admin_pools():
     if session.get('is_admin') == 1:
         rows = db2(base + " ORDER BY p.pool_id DESC")
     else:
-        rows = db2(base + " WHERE p.created_by=%s ORDER BY p.pool_id DESC", (session.get('userid'),))
+        uid = session.get('userid')
+        rows = db2(base + """ WHERE p.created_by=%s
+                                 OR p.pool_id IN (SELECT pool_id FROM golf_pool_deputies WHERE user_id=%s)
+                              ORDER BY p.pool_id DESC""", (uid, uid))
     return jsonify({'pools': [
         {'pool_id': r[0], 'name': r[1], 'fee': r[2], 'status': r[3],
          'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6],
@@ -498,7 +511,8 @@ def api_golf_pool():
     pool_row = db2("""SELECT p.pool_id, p.name, p.fee, p.status, p.pool_format,
                              p.picks_per_user, p.draft_type,
                              e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code,
-                             p.tiebreaker_type, p.scoring_players, p.dnf_handling, p.dnf_penalty
+                             p.tiebreaker_type, p.scoring_players, p.dnf_handling, p.dnf_penalty,
+                             p.created_by
                       FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id
                       WHERE p.pool_id = %s""", (pool_id,))
     if not pool_row:
@@ -509,7 +523,8 @@ def api_golf_pool():
              'pool_format': r[4], 'picks_per_user': r[5], 'draft_type': r[6],
              'invite_code': r[12] or '', 'tiebreaker_type': r[13] or 'player',
              'scoring_players': r[14], 'dnf_handling': r[15] or 'eliminate',
-             'dnf_penalty': r[16] if r[16] is not None else 1}
+             'dnf_penalty': r[16] if r[16] is not None else 1,
+             'created_by': r[17]}
     event = {'event_id': r[7], 'name': r[8], 'espn_event_id': r[9],
              'course': r[10] or '', 'event_date': str(r[11]) if r[11] else ''}
 
@@ -518,6 +533,13 @@ def api_golf_pool():
     ))
     if not in_pool:
         return jsonify({'error': 'You are not in this pool'}), 403
+
+    # Deputies
+    dep_rows = db2("""SELECT d.user_id, u.username
+                      FROM golf_pool_deputies d JOIN users u ON u.userid = d.user_id
+                      WHERE d.pool_id = %s""", (pool_id,))
+    deputies = [{'user_id': r[0], 'username': r[1]} for r in (dep_rows or [])]
+    can_manage_deputies = is_admin or (pool['created_by'] == user_id)
 
     # Participants (base draft order)
     p_rows = db2("""SELECT d.pick_order, d.user_id, u.username, d.paid, d.tiebreaker_prediction
@@ -688,12 +710,14 @@ def api_golf_pool():
         'snake_sequence':      snake_sequence,
         'on_clock':            on_clock,
         'is_on_clock':         is_on_clock,
-        'espn_field':          espn_field,
-        'standings':           standings,
-        'is_admin':            is_admin,
+        'espn_field':           espn_field,
+        'standings':            standings,
+        'is_admin':             is_admin,
         'winning_score_leader': winning_score_leader,
-        'tiers':               pool_tiers,
-        'tier_players':        {str(tid): list(ids) for tid, ids in manual_players.items()},
+        'tiers':                pool_tiers,
+        'tier_players':         {str(tid): list(ids) for tid, ids in manual_players.items()},
+        'deputies':             deputies,
+        'can_manage_deputies':  can_manage_deputies,
     })
 
 
@@ -886,6 +910,48 @@ def api_golf_grant_pool_admin():
         db2("INSERT INTO golf_pool_grants (user_id, granted_by, pools_allowed, pools_used) VALUES (%s,%s,%s,0)",
             (user_id, session.get('userid'), pools_allowed))
     logging.info("Golf pool grant: user %s granted %s pools by %s", user_id, pools_allowed, session.get('userid'))
+    return jsonify({'success': True})
+
+
+# ── POOL DEPUTY MANAGEMENT ────────────────────────────────────────────────────
+
+@bp.route('/api/golf_add_deputy', methods=['POST'])
+@golf_admin_required
+def api_golf_add_deputy():
+    data    = request.get_json()
+    pool_id = data.get('pool_id')
+    user_id = data.get('user_id')
+    if not pool_id or not user_id:
+        return jsonify({'error': 'pool_id and user_id required'}), 400
+    if not _can_manage_pool(pool_id):
+        return jsonify({'error': 'forbidden'}), 403
+    # Only pool creator or super admin can add deputies (not deputies themselves)
+    uid      = session.get('userid')
+    is_super = session.get('is_admin') == 1
+    creator  = db2("SELECT created_by FROM golf_pools WHERE pool_id=%s", (pool_id,))
+    if not is_super and (not creator or creator[0][0] != uid):
+        return jsonify({'error': 'Only the pool creator can add deputies'}), 403
+    db2("INSERT IGNORE INTO golf_pool_deputies (pool_id, user_id, granted_by) VALUES (%s,%s,%s)",
+        (pool_id, user_id, uid))
+    logging.info("Deputy added: pool %s user %s by %s", pool_id, user_id, uid)
+    return jsonify({'success': True})
+
+
+@bp.route('/api/golf_remove_deputy', methods=['POST'])
+@golf_admin_required
+def api_golf_remove_deputy():
+    data    = request.get_json()
+    pool_id = data.get('pool_id')
+    user_id = data.get('user_id')
+    if not pool_id or not user_id:
+        return jsonify({'error': 'pool_id and user_id required'}), 400
+    uid      = session.get('userid')
+    is_super = session.get('is_admin') == 1
+    creator  = db2("SELECT created_by FROM golf_pools WHERE pool_id=%s", (pool_id,))
+    if not is_super and (not creator or creator[0][0] != uid):
+        return jsonify({'error': 'Only the pool creator can remove deputies'}), 403
+    db2("DELETE FROM golf_pool_deputies WHERE pool_id=%s AND user_id=%s", (pool_id, user_id))
+    logging.info("Deputy removed: pool %s user %s by %s", pool_id, user_id, uid)
     return jsonify({'success': True})
 
 

@@ -34,6 +34,7 @@ export default function GolfAdmin() {
   const [userLimit, setUserLimit]         = useState(25)
   const [grants, setGrants]           = useState([])
   const [grantForm, setGrantForm]     = useState({ user_id: '', pools_allowed: 1 })
+  const [deputyPickUserId, setDeputyPickUserId] = useState('')
 
   const session = useSession()
   const isSuperAdmin = session?.is_admin === 1
@@ -245,6 +246,34 @@ export default function GolfAdmin() {
       .then(d => {
         if (d.error) { flash(d.error); return }
         flash('Tiebreaker set')
+        loadPoolDetail(selectedPoolId)
+      })
+  }
+
+  const handleAddDeputy = () => {
+    if (!deputyPickUserId) return
+    fetch('/api/golf_add_deputy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_id: selectedPoolId, user_id: parseInt(deputyPickUserId) }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flash(d.error); return }
+        setDeputyPickUserId('')
+        loadPoolDetail(selectedPoolId)
+      })
+  }
+
+  const handleRemoveDeputy = (userId) => {
+    fetch('/api/golf_remove_deputy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_id: selectedPoolId, user_id: userId }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { flash(d.error); return }
         loadPoolDetail(selectedPoolId)
       })
   }
@@ -953,6 +982,44 @@ export default function GolfAdmin() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* ── Deputies ─────────────────────────────────────────────────── */}
+            {poolDetail?.can_manage_deputies && (
+              <div style={{ marginTop: 20 }}>
+                <h4>Pool Deputies</h4>
+                <p className="text-muted" style={{ fontSize: 12, marginTop: -6 }}>
+                  Deputies can manage this pool but cannot add or remove other deputies.
+                </p>
+                {(poolDetail?.deputies || []).length === 0 ? (
+                  <p className="text-muted" style={{ fontSize: 13 }}>No deputies assigned.</p>
+                ) : (
+                  <ul style={{ paddingLeft: 0, listStyle: 'none', marginBottom: 8 }}>
+                    {(poolDetail?.deputies || []).map(d => (
+                      <li key={d.user_id} style={{ marginBottom: 4 }}>
+                        <strong>{d.username}</strong>{' '}
+                        <button className="btn btn-xs btn-danger"
+                          onClick={() => handleRemoveDeputy(d.user_id)}>Remove</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="input-group input-group-sm" style={{ maxWidth: 320 }}>
+                  <select className="form-control" value={deputyPickUserId}
+                    onChange={e => setDeputyPickUserId(e.target.value)}>
+                    <option value="">— select user to deputize —</option>
+                    {users
+                      .filter(u => !(poolDetail?.deputies || []).some(d => d.user_id === u.userid))
+                      .map(u => (
+                        <option key={u.userid} value={u.userid}>{u.username}</option>
+                      ))}
+                  </select>
+                  <span className="input-group-btn">
+                    <button className="btn btn-info" onClick={handleAddDeputy}
+                      disabled={!deputyPickUserId}>Add</button>
+                  </span>
+                </div>
               </div>
             )}
 

@@ -38,7 +38,7 @@ def api_admin_required(f):
 
 
 def golf_admin_required(f):
-    """Passes for super admins (is_admin=1) or users with a golf pool grant."""
+    """Passes for super admins, golf pool grant holders, or pool deputies."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get('is_admin') == 1:
@@ -47,6 +47,8 @@ def golf_admin_required(f):
         if uid:
             from db_accessor.db_accessor import db2
             if db2("SELECT 1 FROM golf_pool_grants WHERE user_id=%s", (uid,)):
+                return f(*args, **kwargs)
+            if db2("SELECT 1 FROM golf_pool_deputies WHERE user_id=%s", (uid,)):
                 return f(*args, **kwargs)
         return jsonify({'error': 'forbidden'}), 403
     return decorated_function

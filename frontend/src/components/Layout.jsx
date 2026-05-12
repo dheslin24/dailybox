@@ -56,7 +56,7 @@ export default function Layout({ children }) {
                   <li><a href="/app/golf_pool">Golf Pool</a></li>
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
-                  {(session.is_admin === 1 || session.has_golf_grant) && (
+                  {(session.is_admin === 1 || session.has_golf_grant || session.has_golf_deputy) && (
                     <li className={`dropdown${adminOpen ? ' open' : ''}`}>
                       <a href="#" className="dropdown-toggle" onClick={e => { e.preventDefault(); e.stopPropagation(); setAdminOpen(o => !o) }}>
                         Admin <span className="caret"></span>
