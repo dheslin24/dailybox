@@ -16,6 +16,7 @@ export default function HorseRacingAdmin() {
   const [horseName, setHorseName] = useState('')
   const [draftOrder, setDraftOrder] = useState(Array(20).fill(''))
   const [draftOrderText, setDraftOrderText] = useState(Array(20).fill(''))
+  const [activeDropdown, setActiveDropdown] = useState(null)
   const [adminPickUserId, setAdminPickUserId] = useState('')
   const [adminPickEntryId, setAdminPickEntryId] = useState('')
   const [metaEntryId, setMetaEntryId] = useState('')
@@ -316,44 +317,87 @@ export default function HorseRacingAdmin() {
               <div className="panel panel-default">
                 <div className="panel-heading"><strong>Draft Order</strong></div>
                 <div className="panel-body">
-                  <datalist id="hr-users-list">
-                    {users.map(u => <option key={u.userid} value={u.username} />)}
-                  </datalist>
-                  {Array.from({ length: poolData.entries.length }, (_, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 3 }}>
-                      <span style={{ width: 22, textAlign: 'right', marginRight: 6, color: '#888', fontSize: 12 }}>
-                        {i + 1}.
-                      </span>
-                      <input
-                        className="form-control input-sm"
-                        style={{ width: 165, color: draftOrder[i] ? undefined : '#999' }}
-                        list="hr-users-list"
-                        placeholder="Type to search…"
-                        value={draftOrderText[i] || ''}
-                        onChange={e => {
-                          const text = e.target.value
-                          const updatedText = [...draftOrderText]
-                          updatedText[i] = text
-                          setDraftOrderText(updatedText)
-                          const match = users.find(u => u.username.toLowerCase() === text.toLowerCase())
-                          const updatedIds = [...draftOrder]
-                          updatedIds[i] = match ? String(match.userid) : ''
-                          setDraftOrder(updatedIds)
-                        }}
-                      />
-                      {draftOrder[i] && (
-                        <button className="btn btn-xs btn-default" style={{ marginLeft: 4 }}
-                          onClick={() => {
-                            const updatedIds = [...draftOrder]
-                            const updatedText = [...draftOrderText]
-                            updatedIds[i] = ''
-                            updatedText[i] = ''
-                            setDraftOrder(updatedIds)
-                            setDraftOrderText(updatedText)
-                          }}>×</button>
-                      )}
-                    </div>
-                  ))}
+                  {Array.from({ length: poolData.entries.length }, (_, i) => {
+                    const q = (draftOrderText[i] || '').toLowerCase()
+                    const matches = q.length >= 1 ? users.filter(u =>
+                      (u.username    || '').toLowerCase().includes(q) ||
+                      (u.first_name  || '').toLowerCase().includes(q) ||
+                      (u.last_name   || '').toLowerCase().includes(q) ||
+                      (u.email       || '').toLowerCase().includes(q)
+                    ).slice(0, 8) : []
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 3 }}>
+                        <span style={{ width: 22, textAlign: 'right', marginRight: 6, color: '#888', fontSize: 12 }}>
+                          {i + 1}.
+                        </span>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            className="form-control input-sm"
+                            style={{ width: 190 }}
+                            autoComplete="off"
+                            placeholder="Type to search…"
+                            value={draftOrderText[i] || ''}
+                            onFocus={() => setActiveDropdown(i)}
+                            onBlur={() => setTimeout(() => setActiveDropdown(null), 150)}
+                            onChange={e => {
+                              const text = e.target.value
+                              const updatedText = [...draftOrderText]
+                              updatedText[i] = text
+                              setDraftOrderText(updatedText)
+                              setActiveDropdown(i)
+                              const updatedIds = [...draftOrder]
+                              updatedIds[i] = ''
+                              setDraftOrder(updatedIds)
+                            }}
+                          />
+                          {activeDropdown === i && matches.length > 0 && (
+                            <ul style={{
+                              position: 'absolute', top: '100%', left: 0, zIndex: 1000,
+                              background: '#fff', border: '1px solid #ccc', borderRadius: 3,
+                              padding: 0, margin: 0, listStyle: 'none',
+                              maxHeight: 200, overflowY: 'auto', width: 260,
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                            }}>
+                              {matches.map(u => (
+                                <li key={u.userid}
+                                  style={{ padding: '5px 8px', cursor: 'pointer', fontSize: 12, borderBottom: '1px solid #f0f0f0' }}
+                                  onMouseEnter={e => e.currentTarget.style.background = '#eef4ff'}
+                                  onMouseLeave={e => e.currentTarget.style.background = ''}
+                                  onMouseDown={() => {
+                                    const updatedIds = [...draftOrder]
+                                    const updatedText = [...draftOrderText]
+                                    updatedIds[i] = String(u.userid)
+                                    updatedText[i] = u.username
+                                    setDraftOrder(updatedIds)
+                                    setDraftOrderText(updatedText)
+                                    setActiveDropdown(null)
+                                  }}>
+                                  <strong>{u.username}</strong>
+                                  {(u.first_name || u.last_name) && (
+                                    <span style={{ marginLeft: 5, color: '#555' }}>{u.first_name} {u.last_name}</span>
+                                  )}
+                                  {u.email && (
+                                    <span style={{ marginLeft: 5, color: '#999' }}>— {u.email}</span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        {draftOrder[i] && (
+                          <button className="btn btn-xs btn-default" style={{ marginLeft: 4 }}
+                            onClick={() => {
+                              const updatedIds = [...draftOrder]
+                              const updatedText = [...draftOrderText]
+                              updatedIds[i] = ''
+                              updatedText[i] = ''
+                              setDraftOrder(updatedIds)
+                              setDraftOrderText(updatedText)
+                            }}>×</button>
+                        )}
+                      </div>
+                    )
+                  })}
                   <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }}
                     onClick={saveDraftOrder}>
                     Save Draft Order
