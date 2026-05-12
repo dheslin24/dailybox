@@ -914,6 +914,7 @@ export default function GolfAdmin() {
                       {Array.from({ length: pool.picks_per_user }, (_, i) => (
                         <th key={i}>Pick {i + 1}</th>
                       ))}
+                      {pool.tiebreaker_type === 'winning_score' && <th>TB Prediction</th>}
                       <th>Paid</th>
                     </tr>
                   </thead>
@@ -922,6 +923,9 @@ export default function GolfAdmin() {
                       const userPicks = (poolDetail?.picks || [])
                         .filter(p => p.user_id === participant.user_id)
                         .sort((a, b) => a.draft_position - b.draft_position)
+                      const pred = participant.tiebreaker_prediction
+                      const fmtPred = pred === null || pred === undefined ? null
+                        : pred === 0 ? 'E' : pred > 0 ? `+${pred}` : String(pred)
                       return (
                         <tr key={participant.user_id}>
                           <td>{participant.pick_order}</td>
@@ -929,6 +933,14 @@ export default function GolfAdmin() {
                           {Array.from({ length: pool.picks_per_user }, (_, i) => (
                             <td key={i}>{userPicks[i]?.player_name || '—'}</td>
                           ))}
+                          {pool.tiebreaker_type === 'winning_score' && (
+                            <td style={{ whiteSpace: 'nowrap' }}>
+                              {fmtPred
+                                ? <span style={{ color: pred < 0 ? '#15803d' : pred > 0 ? '#dc2626' : '#374151', fontWeight: 'bold' }}>{fmtPred}</span>
+                                : <span className="label label-warning">Not set</span>
+                              }
+                            </td>
+                          )}
                           <td>
                             <button
                               className={`btn btn-xs ${participant.paid ? 'btn-success' : 'btn-default'}`}
