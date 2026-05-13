@@ -29,6 +29,7 @@ export default function GolfPool() {
   const [joinCode, setJoinCode]         = useState('')
   const [joinMsg, setJoinMsg]           = useState('')
   const [winScoreInput, setWinScoreInput] = useState('')
+  const [showCompleted, setShowCompleted] = useState(false)
 
   const flashPick = (m) => { setPickMsg(m); setTimeout(() => setPickMsg(''), 4000) }
   const flashTb   = (m) => { setTbMsg(m);   setTimeout(() => setTbMsg(''), 4000) }
@@ -182,18 +183,42 @@ export default function GolfPool() {
             {joinMsg && <p style={{ marginTop: 8 }}>{joinMsg}</p>}
           </div>
         )}
-        {pools && pools.length > 1 && (
-          <div className="list-group" style={{ maxWidth: 600, margin: '0 auto' }}>
-            {pools.map(p => (
-              <button key={p.pool_id} className="list-group-item"
-                onClick={() => setSelectedPoolId(p.pool_id)}>
-                <strong>{p.name}</strong>
-                <span className="text-muted" style={{ marginLeft: 8 }}>{p.event_name}</span>
-                <span className="label label-default pull-right">{p.status}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        {pools && pools.length > 0 && (() => {
+          const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
+          const isRecent = (p) => p.status !== 'complete' ||
+            (p.event_date && (Date.now() - new Date(p.event_date).getTime()) <= ONE_WEEK)
+          const visible = showCompleted ? pools : pools.filter(isRecent)
+          const hiddenCount = pools.length - pools.filter(isRecent).length
+          return (
+            <>
+              {hiddenCount > 0 && (
+                <div style={{ textAlign: 'center', marginBottom: 10 }}>
+                  <button className="btn btn-xs btn-default"
+                    onClick={() => setShowCompleted(s => !s)}>
+                    {showCompleted
+                      ? 'Hide completed pools'
+                      : `Show ${hiddenCount} completed pool${hiddenCount !== 1 ? 's' : ''}`}
+                  </button>
+                </div>
+              )}
+              {visible.length === 0 && (
+                <p className="text-center text-muted">No active pools. <button className="btn btn-link btn-xs" style={{ padding: 0 }} onClick={() => setShowCompleted(true)}>Show completed pools</button></p>
+              )}
+              {visible.length > 0 && (
+                <div className="list-group" style={{ maxWidth: 600, margin: '0 auto' }}>
+                  {visible.map(p => (
+                    <button key={p.pool_id} className="list-group-item"
+                      onClick={() => setSelectedPoolId(p.pool_id)}>
+                      <strong>{p.name}</strong>
+                      <span className="text-muted" style={{ marginLeft: 8 }}>{p.event_name}</span>
+                      <span className="label label-default pull-right">{p.status}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )
+        })()}
       </Layout>
     )
   }

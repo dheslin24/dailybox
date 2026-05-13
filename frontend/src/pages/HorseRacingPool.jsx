@@ -12,6 +12,7 @@ export default function HorseRacingPool() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [picking, setPicking] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   // Load race list when no race selected
   useEffect(() => {
@@ -70,10 +71,28 @@ export default function HorseRacingPool() {
       setSearchParams({ race_id: races[0].race_id })
       return null
     }
+    const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
+    const isRecent = (r) => r.status !== 'final' ||
+      (r.race_date && (Date.now() - new Date(r.race_date).getTime()) <= ONE_WEEK)
+    const visible = showCompleted ? races : races.filter(isRecent)
+    const hiddenCount = races.length - races.filter(isRecent).length
     return (
       <Layout>
         <h2>Horse Racing Pools</h2>
-        {races.map(r => (
+        {hiddenCount > 0 && (
+          <div style={{ marginBottom: 10 }}>
+            <button className="btn btn-xs btn-default"
+              onClick={() => setShowCompleted(s => !s)}>
+              {showCompleted
+                ? 'Hide completed races'
+                : `Show ${hiddenCount} completed race${hiddenCount !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+        )}
+        {visible.length === 0 && (
+          <p className="text-muted">No active races. <button className="btn btn-link btn-xs" style={{ padding: 0 }} onClick={() => setShowCompleted(true)}>Show completed races</button></p>
+        )}
+        {visible.map(r => (
           <div key={r.race_id} style={{ marginBottom: 8 }}>
             <a href={`/app/horse_racing?race_id=${r.race_id}`}>
               <strong>{r.name}</strong>
