@@ -308,6 +308,47 @@ export default function GolfPool() {
 
       {pool.status === 'open' && espn_field.length > 0 && (
         <div className="row" style={{ marginBottom: 20 }}>
+          <div className="col-md-4">
+            <h4>My Picks ({current_user_picks.length} / {pool.picks_per_user})</h4>
+            {current_user_picks.length === 0
+              ? <p className="text-muted">None yet.</p>
+              : current_user_picks.map((p, i) => (
+                <div key={p.pick_id} style={{
+                  padding: '8px 12px', marginBottom: 6, borderRadius: 4,
+                  background: '#dbeafe', border: '1px solid #93c5fd',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                }}>
+                  <span>
+                    <strong>{i + 1}. {p.player_name}</strong>
+                    {p.is_tiebreaker && <span className="label label-info" style={{ marginLeft: 6 }}>TB</span>}
+                    {p.tier_id != null && tiers.find(t => t.tier_id === p.tier_id) && (
+                      <span className="label label-default" style={{ marginLeft: 6, fontSize: 10 }}>
+                        {tiers.find(t => t.tier_id === p.tier_id).name}
+                      </span>
+                    )}
+                  </span>
+                  <button className="btn btn-xs btn-danger" title="Remove pick"
+                    onClick={() => handleRemovePick(p.pick_id)}>
+                    ✕
+                  </button>
+                </div>
+              ))
+            }
+            {pool.tiebreaker_type === 'winning_score' && (() => {
+              const pred = participants.find(p => p.user_id === current_user_id)?.tiebreaker_prediction
+              const fmtPred = pred === null || pred === undefined ? null
+                : pred === 0 ? 'E' : pred > 0 ? `+${pred}` : String(pred)
+              return (
+                <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 4, background: '#f0f9ff', border: '1px solid #bae6fd', fontSize: 13 }}>
+                  <strong>Winning score prediction:</strong>{' '}
+                  {fmtPred
+                    ? <strong style={{ color: pred < 0 ? '#15803d' : pred > 0 ? '#dc2626' : '#374151' }}>{fmtPred}</strong>
+                    : <span className="text-muted">not set — scroll down to enter</span>
+                  }
+                </div>
+              )
+            })()}
+          </div>
           <div className="col-md-8">
             <h4>
               Tournament Field
@@ -430,48 +471,6 @@ export default function GolfPool() {
             })()}
           </div>
 
-          {/* My current picks while drafting */}
-          <div className="col-md-4">
-            <h4>My Picks ({current_user_picks.length} / {pool.picks_per_user})</h4>
-            {current_user_picks.length === 0
-              ? <p className="text-muted">None yet.</p>
-              : current_user_picks.map((p, i) => (
-                <div key={p.pick_id} style={{
-                  padding: '8px 12px', marginBottom: 6, borderRadius: 4,
-                  background: '#dbeafe', border: '1px solid #93c5fd',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                }}>
-                  <span>
-                    <strong>{i + 1}. {p.player_name}</strong>
-                    {p.is_tiebreaker && <span className="label label-info" style={{ marginLeft: 6 }}>TB</span>}
-                    {p.tier_id != null && tiers.find(t => t.tier_id === p.tier_id) && (
-                      <span className="label label-default" style={{ marginLeft: 6, fontSize: 10 }}>
-                        {tiers.find(t => t.tier_id === p.tier_id).name}
-                      </span>
-                    )}
-                  </span>
-                  <button className="btn btn-xs btn-danger" title="Remove pick"
-                    onClick={() => handleRemovePick(p.pick_id)}>
-                    ✕
-                  </button>
-                </div>
-              ))
-            }
-            {pool.tiebreaker_type === 'winning_score' && (() => {
-              const pred = participants.find(p => p.user_id === current_user_id)?.tiebreaker_prediction
-              const fmtPred = pred === null || pred === undefined ? null
-                : pred === 0 ? 'E' : pred > 0 ? `+${pred}` : String(pred)
-              return (
-                <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 4, background: '#f0f9ff', border: '1px solid #bae6fd', fontSize: 13 }}>
-                  <strong>Winning score prediction:</strong>{' '}
-                  {fmtPred
-                    ? <strong style={{ color: pred < 0 ? '#15803d' : pred > 0 ? '#dc2626' : '#374151' }}>{fmtPred}</strong>
-                    : <span className="text-muted">not set — scroll down to enter</span>
-                  }
-                </div>
-              )
-            })()}
-          </div>
         </div>
       )}
 
