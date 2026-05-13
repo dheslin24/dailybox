@@ -7,6 +7,7 @@ export default function Bygzomo() {
   const [tables, setTables] = useState([])
   const [query, setQuery] = useState('')
   const [result, setResult] = useState(null)
+  const [columns, setColumns] = useState([])
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -32,7 +33,8 @@ export default function Bygzomo() {
       .then(res => res.json())
       .then(d => {
         if (d.error) setError(d.error)
-        else setResult(d.result)
+        setResult(d.result || null)
+        setColumns(d.columns || [])
       })
   }
 
@@ -56,18 +58,29 @@ export default function Bygzomo() {
       {result && (
         <>
           <h3>Result:</h3>
-          <table align="center" cellPadding="6" style={{ borderCollapse: 'collapse' }}>
-            <tbody>
-              {result.map((row, i) => (
-                <tr key={i}>
-                  {row.map((cell, j) => (
-                    <td key={j} style={{ border: '1px solid #ccc', padding: '4px 8px' }}>{String(cell)}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {result.length === 0 && <p>Query executed (no rows returned).</p>}
+          {result.length === 0
+            ? <p>Query executed (no rows returned).</p>
+            : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table table-condensed table-bordered table-striped" style={{ fontSize: 12 }}>
+                  {columns.length > 0 && (
+                    <thead>
+                      <tr>{columns.map((c, i) => <th key={i}>{c}</th>)}</tr>
+                    </thead>
+                  )}
+                  <tbody>
+                    {result.map((row, i) => (
+                      <tr key={i}>
+                        {row.map((cell, j) => (
+                          <td key={j}>{cell === null ? <span className="text-muted">NULL</span> : String(cell)}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          }
         </>
       )}
 

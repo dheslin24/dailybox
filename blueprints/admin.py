@@ -75,12 +75,30 @@ def api_bygzomo():
     data = request.get_json()
     q = data.get('query', '').strip()
     if not q:
-        return jsonify({'result': [], 'error': 'No query provided'})
+        return jsonify({'result': [], 'columns': [], 'error': 'No query provided'})
     try:
-        result = db2(q)
-        return jsonify({'result': [list(row) for row in (result or [])], 'query': q})
+        import mysql.connector
+        import config as cfg
+        cnx = mysql.connector.connect(user=cfg.user, password=cfg.password,
+                                      host=cfg.host, database=cfg.database)
+        cursor = cnx.cursor()
+        cursor.execute(q)
+        columns = [d[0] for d in (cursor.description or [])]
+        if q.lstrip()[:4].upper() in ('SELE', 'SHOW', 'DESC'):
+            rows = cursor.fetchall()
+        else:
+            cnx.commit()
+            rows = []
+        cursor.close()
+        cnx.close()
+        def _coerce(v):
+            if isinstance(v, bytes):
+                return v.decode('utf-8', errors='replace')
+            return v
+        result = [[_coerce(cell) for cell in row] for row in rows]
+        return jsonify({'result': result, 'columns': columns, 'query': q})
     except Exception as e:
-        return jsonify({'result': [], 'error': str(e), 'query': q})
+        return jsonify({'result': [], 'columns': [], 'error': str(e), 'query': q})
 
 
 @bp.route("/add_money", methods=["POST"])
