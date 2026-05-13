@@ -217,6 +217,25 @@ export default function GolfPool() {
                   ))}
                 </div>
               )}
+              <div style={{ maxWidth: 400, margin: '24px auto 0' }}>
+                <p style={{ marginBottom: 6 }}>Have an invite code? Join another pool:</p>
+                <div className="input-group">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Invite code"
+                    value={joinCode}
+                    onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                    onKeyDown={e => e.key === 'Enter' && handleJoinPool()}
+                    maxLength={8}
+                    style={{ letterSpacing: 2, textTransform: 'uppercase' }}
+                  />
+                  <span className="input-group-btn">
+                    <button className="btn btn-primary" onClick={handleJoinPool}>Join</button>
+                  </span>
+                </div>
+                {joinMsg && <p style={{ marginTop: 8 }}>{joinMsg}</p>}
+              </div>
             </>
           )
         })()}
