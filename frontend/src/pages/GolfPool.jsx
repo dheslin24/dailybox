@@ -187,7 +187,7 @@ export default function GolfPool() {
                 style={{ letterSpacing: 2, textTransform: 'uppercase' }}
               />
               <span className="input-group-btn">
-                <button className="btn btn-primary" onClick={handleJoinPool}>Join</button>
+                <button className="btn btn-primary" onClick={() => handleJoinPool()}>Join</button>
               </span>
             </div>
             {joinMsg && <p style={{ marginTop: 8 }}>{joinMsg}</p>}
@@ -241,7 +241,7 @@ export default function GolfPool() {
                     style={{ letterSpacing: 2, textTransform: 'uppercase' }}
                   />
                   <span className="input-group-btn">
-                    <button className="btn btn-primary" onClick={handleJoinPool}>Join</button>
+                    <button className="btn btn-primary" onClick={() => handleJoinPool()}>Join</button>
                   </span>
                 </div>
                 {joinMsg && <p style={{ marginTop: 8 }}>{joinMsg}</p>}
