@@ -268,6 +268,7 @@ export default function GolfPool() {
     (pool.pool_format === 'async' || is_on_clock)
   const canAddEntry        = pool.status === 'open' && pool.pool_format === 'async' &&
     current_user_entries.length < pool.max_entries_per_user
+  const currentEntryFull   = current_entry_picks.length >= pool.picks_per_user
 
   const filteredField  = espn_field.filter(p =>
     !filter || p.name.toLowerCase().includes(filter.toLowerCase())
@@ -379,10 +380,16 @@ export default function GolfPool() {
                   </button>
                 ))}
                 {canAddEntry && (
-                  <button className="btn btn-xs btn-success"
-                    onClick={() => handleJoinPool(pool.invite_code)}>
-                    + Add Entry
-                  </button>
+                  <span
+                    title={!currentEntryFull ? `Complete all ${pool.picks_per_user} picks for Entry ${activeEntry} first` : ''}
+                    style={!currentEntryFull ? { cursor: 'not-allowed' } : {}}>
+                    <button className="btn btn-xs btn-success"
+                      disabled={!currentEntryFull}
+                      style={!currentEntryFull ? { pointerEvents: 'none' } : {}}
+                      onClick={() => handleJoinPool(pool.invite_code)}>
+                      + Add Entry
+                    </button>
+                  </span>
                 )}
               </div>
             )}
