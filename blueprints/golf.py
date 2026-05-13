@@ -65,6 +65,76 @@ def _load_pool_tiers(pool_id):
     return tiers, manual_players
 
 
+def _snapshot_pool_scores(pool_id):
+    """Fetch ESPN scores for a pool and persist them to golf_pool_final_scores.
+    Called when a pool is marked complete so scores survive ESPN's cache expiry."""
+    import json as _json
+    try:
+        row = db2("""SELECT e.espn_event_id FROM golf_pools p
+                     JOIN golf_events e ON e.event_id = p.event_id
+                     WHERE p.pool_id = %s""", (pool_id,))
+        if not row:
+            return
+        espn_event_id = row[0][0]
+        _, players = get_golf_event_detail(espn_event_id)
+        if not players:
+            logging.warning("_snapshot_pool_scores: no ESPN data for pool %s / event %s", pool_id, espn_event_id)
+            return
+        for p in players:
+            rounds_json = _json.dumps(p.get('rounds', {}))
+            db2("""INSERT INTO golf_pool_final_scores
+                       (pool_id, player_espn_id, player_name, total_value, total_display,
+                        display_position, is_eliminated, total_strokes, rounds_json)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                   ON DUPLICATE KEY UPDATE
+                       total_value=%s, total_display=%s, display_position=%s,
+                       is_eliminated=%s, total_strokes=%s, rounds_json=%s""",
+                (pool_id, str(p['espn_id']), p['name'],
+                 p['total_value'], p['total_display'], p['display_position'],
+                 int(p['is_eliminated']), str(p.get('total_strokes', '-')), rounds_json,
+                 p['total_value'], p['total_display'], p['display_position'],
+                 int(p['is_eliminated']), str(p.get('total_strokes', '-')), rounds_json))
+        logging.info("Snapshotted %d player scores for pool %s", len(players), pool_id)
+    except Exception as e:
+        logging.error("_snapshot_pool_scores(%s) error: %s", pool_id, e)
+
+
+def _load_pool_score_snapshot(pool_id):
+    """Load persisted final scores for a completed pool.
+    Returns (players_list, scores_by_espn_id) in the same shape as get_golf_event_detail."""
+    import json as _json
+    rows = db2("""SELECT player_espn_id, player_name, total_value, total_display,
+                         display_position, is_eliminated, total_strokes, rounds_json
+                  FROM golf_pool_final_scores WHERE pool_id=%s""", (pool_id,))
+    if not rows:
+        return [], {}
+    players = []
+    for r in rows:
+        try:
+            rounds = _json.loads(r[7]) if r[7] else {}
+        except Exception:
+            rounds = {}
+        eliminated = bool(r[5])
+        players.append({
+            'espn_id':          r[0],
+            'name':             r[1],
+            'short_name':       r[1],
+            'total_value':      r[2],
+            'total_display':    r[3],
+            'display_position': r[4],
+            'is_eliminated':    eliminated,
+            'total_strokes':    r[6] or '-',
+            'rounds':           rounds,
+            'status':           'STATUS_CUT' if eliminated else 'STATUS_ACTIVE',
+            'sort_order':       0,
+            'world_rank':       None,
+            'tee_time':         None,
+            'thru':             None,
+        })
+    players.sort(key=lambda p: (p['is_eliminated'], p['total_value']))
+    return players, {p['espn_id']: p for p in players}
+
+
 # ── DB INIT ───────────────────────────────────────────────────────────────────
 
 @bp.route('/api/golf_init_db', methods=['POST'])
@@ -177,6 +247,21 @@ def api_golf_init_db():
             granted_by INT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY uq_pool_user (pool_id, user_id)
+        )""")
+    db2("""CREATE TABLE IF NOT EXISTS golf_pool_final_scores (
+            id               INT AUTO_INCREMENT PRIMARY KEY,
+            pool_id          INT          NOT NULL,
+            player_espn_id   VARCHAR(50)  NOT NULL,
+            player_name      VARCHAR(100) NOT NULL,
+            total_value      INT          NOT NULL DEFAULT 0,
+            total_display    VARCHAR(10)  NOT NULL DEFAULT 'E',
+            display_position VARCHAR(20)  NOT NULL DEFAULT '-',
+            is_eliminated    TINYINT      NOT NULL DEFAULT 0,
+            total_strokes    VARCHAR(20),
+            rounds_json      TEXT,
+            snapshotted_at   DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_pool_player (pool_id, player_espn_id),
+            INDEX idx_pool (pool_id)
         )""")
     # Backfill invite codes for pools that don't have one
     pools_without_code = db2("SELECT pool_id FROM golf_pools WHERE invite_code IS NULL OR invite_code = ''")
@@ -398,6 +483,8 @@ def api_golf_set_pool_status():
     if not _can_manage_pool(pool_id):
         return jsonify({'error': 'forbidden'}), 403
     db2("UPDATE golf_pools SET status = %s WHERE pool_id = %s", (status, pool_id))
+    if status == 'complete':
+        _snapshot_pool_scores(pool_id)
     return jsonify({'success': True})
 
 
@@ -597,6 +684,11 @@ def api_golf_pool():
         event['espn_status'] = event_info.get('status_desc', '')
         espn_field        = players
         espn_scores_by_id = {p['espn_id']: p for p in players}
+        # ESPN drops completed events after ~24-48h — fall back to our snapshot
+        if not espn_field and pool['status'] == 'complete':
+            espn_field, espn_scores_by_id = _load_pool_score_snapshot(pool_id)
+            if espn_field:
+                event['espn_status'] = 'Final'
 
     # Tiers (for async pools with tier config)
     pool_tiers, manual_players = _load_pool_tiers(pool_id)
