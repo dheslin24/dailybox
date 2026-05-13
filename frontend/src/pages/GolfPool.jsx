@@ -30,23 +30,27 @@ export default function GolfPool() {
   const [joinMsg, setJoinMsg]           = useState('')
   const [winScoreInput, setWinScoreInput] = useState('')
   const [showCompleted, setShowCompleted] = useState(false)
+  const [activeEntry, setActiveEntry]   = useState(1)
 
   const flashPick = (m) => { setPickMsg(m); setTimeout(() => setPickMsg(''), 4000) }
   const flashTb   = (m) => { setTbMsg(m);   setTimeout(() => setTbMsg(''), 4000) }
 
-  const handleJoinPool = () => {
-    if (!joinCode.trim()) return
+  const handleJoinPool = (code) => {
+    const invite = (code || joinCode).trim()
+    if (!invite) return
     fetch('/api/golf_join_pool', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_code: joinCode.trim() }),
+      body: JSON.stringify({ invite_code: invite }),
     })
       .then(r => r.json())
       .then(d => {
         if (d.error) { setJoinMsg(d.error); return }
+        if (d.entry_number) setActiveEntry(d.entry_number)
         setJoinMsg(`Joined "${d.pool_name}"!`)
         setSelectedPoolId(d.pool_id)
         fetch('/api/golf_pools').then(r => r.json()).then(d2 => setPools(d2.pools || []))
+        load()
       })
   }
 
@@ -64,7 +68,12 @@ export default function GolfPool() {
     if (!selectedPoolId) return
     fetch(`/api/golf_pool?pool_id=${selectedPoolId}`)
       .then(r => r.json())
-      .then(d => { if (!d.error) setData(d) })
+      .then(d => {
+        if (!d.error) {
+          setData(d)
+          setActiveEntry(e => (d.current_user_entries || []).includes(e) ? e : (d.current_user_entries?.[0] || 1))
+        }
+      })
   }, [selectedPoolId])
 
   useEffect(load, [load])
@@ -102,6 +111,7 @@ export default function GolfPool() {
         pool_id: selectedPoolId,
         player_espn_id: player.espn_id,
         player_name: player.name,
+        entry_number: activeEntry,
       }),
     })
       .then(r => r.json())
@@ -143,7 +153,7 @@ export default function GolfPool() {
     fetch('/api/golf_set_winning_score_tb', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pool_id: selectedPoolId, score }),
+      body: JSON.stringify({ pool_id: selectedPoolId, score, entry_number: activeEntry }),
     })
       .then(r => r.json())
       .then(d => {
@@ -245,23 +255,27 @@ export default function GolfPool() {
 
   if (!data) return <Layout><p>Loading…</p></Layout>
 
-  const { pool, event, participants, picks, current_user_picks,
+  const { pool, event, participants, picks, current_user_picks, current_user_entries = [1],
           snake_sequence, on_clock, is_on_clock, espn_field, standings, is_admin,
           winning_score_leader, current_user_id, tiers = [] } = data
 
-  const pickedIds      = new Set(picks.map(p => p.player_espn_id))
-  const myPickedIds    = new Set(current_user_picks.map(p => p.player_espn_id))
-  const canPick        = pool.status === 'open' &&
-    current_user_picks.length < pool.picks_per_user &&
+  const multiEntry         = pool.max_entries_per_user > 1
+  const current_entry_picks = current_user_picks.filter(p => p.entry_number === activeEntry)
+  const pickedIds          = new Set(picks.map(p => p.player_espn_id))
+  const myPickedIds        = new Set(current_entry_picks.map(p => p.player_espn_id))
+  const canPick            = pool.status === 'open' &&
+    current_entry_picks.length < pool.picks_per_user &&
     (pool.pool_format === 'async' || is_on_clock)
+  const canAddEntry        = pool.status === 'open' && pool.pool_format === 'async' &&
+    current_user_entries.length < pool.max_entries_per_user
 
   const filteredField  = espn_field.filter(p =>
     !filter || p.name.toLowerCase().includes(filter.toLowerCase())
   )
 
-  // Tier pick counts (for async + tiered pools)
+  // Tier pick counts (for async + tiered pools) — scoped to active entry
   const pickCountByTier = {}
-  current_user_picks.forEach(p => {
+  current_entry_picks.forEach(p => {
     if (p.tier_id != null) pickCountByTier[p.tier_id] = (pickCountByTier[p.tier_id] || 0) + 1
   })
   const tierAtMax = (tier_id) => {
@@ -338,9 +352,9 @@ export default function GolfPool() {
 
       {/* ── OPEN: async all-picked banner ─────────────────────────────────── */}
       {pool.status === 'open' && pool.pool_format === 'async' &&
-        current_user_picks.length >= pool.picks_per_user && (
+        current_entry_picks.length >= pool.picks_per_user && (
         <div className="alert alert-success text-center">
-          You&apos;ve submitted all {pool.picks_per_user} picks. Waiting for the tournament to begin.
+          You&apos;ve submitted all {pool.picks_per_user} picks{multiEntry ? ` for Entry ${activeEntry}` : ''}. Waiting for the tournament to begin.
         </div>
       )}
 
@@ -354,10 +368,27 @@ export default function GolfPool() {
       {pool.status === 'open' && espn_field.length > 0 && (
         <div className="row" style={{ marginBottom: 20 }}>
           <div className="col-md-4">
-            <h4>My Picks ({current_user_picks.length} / {pool.picks_per_user})</h4>
-            {current_user_picks.length === 0
+            <h4>My Picks ({current_entry_picks.length} / {pool.picks_per_user})</h4>
+            {multiEntry && (
+              <div style={{ marginBottom: 8, display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                {current_user_entries.map(en => (
+                  <button key={en}
+                    className={`btn btn-xs ${activeEntry === en ? 'btn-primary' : 'btn-default'}`}
+                    onClick={() => setActiveEntry(en)}>
+                    Entry {en}
+                  </button>
+                ))}
+                {canAddEntry && (
+                  <button className="btn btn-xs btn-success"
+                    onClick={() => handleJoinPool(pool.invite_code)}>
+                    + Add Entry
+                  </button>
+                )}
+              </div>
+            )}
+            {current_entry_picks.length === 0
               ? <p className="text-muted">None yet.</p>
-              : current_user_picks.map((p, i) => (
+              : current_entry_picks.map((p, i) => (
                 <div key={p.pick_id} style={{
                   padding: '8px 12px', marginBottom: 6, borderRadius: 4,
                   background: '#dbeafe', border: '1px solid #93c5fd',
@@ -380,7 +411,7 @@ export default function GolfPool() {
               ))
             }
             {pool.tiebreaker_type === 'winning_score' && (() => {
-              const pred = participants.find(p => p.user_id === current_user_id)?.tiebreaker_prediction
+              const pred = participants.find(p => p.user_id === current_user_id && p.entry_number === activeEntry)?.tiebreaker_prediction
               const fmtPred = pred === null || pred === undefined ? null
                 : pred === 0 ? 'E' : pred > 0 ? `+${pred}` : String(pred)
               return (
@@ -591,10 +622,10 @@ export default function GolfPool() {
                   const sortedPicks = [...s.picks].sort((a, b) => a.draft_position - b.draft_position)
                   const fmtScore = (v) => v === null || v === undefined ? '—' : v === 0 ? 'E' : v > 0 ? `+${v}` : String(v)
                   return (
-                    <tr key={s.user_id} style={s.is_eliminated ? { background: '#f1f5f9', color: '#94a3b8' } : {}}>
+                    <tr key={`${s.user_id}-${s.entry_number}`} style={s.is_eliminated ? { background: '#f1f5f9', color: '#94a3b8' } : {}}>
                       <td>{s.is_eliminated ? '—' : idx + 1}</td>
                       <td>
-                        <strong>{s.username}</strong>
+                        <strong>{s.display_name || s.username}</strong>
                         {s.is_eliminated && <span className="label label-danger" style={{ marginLeft: 6 }}>Eliminated</span>}
                       </td>
                       {Array.from({ length: pool.picks_per_user }, (_, i) => {
@@ -656,11 +687,16 @@ export default function GolfPool() {
 
       {/* ── ACTIVE / COMPLETE: ESPN leaderboard ───────────────────────────── */}
       {(pool.status === 'active' || pool.status === 'complete') && espn_field.length > 0 && (() => {
-        // Build espn_id → [usernames] map (all pickers, not just one)
+        // Build espn_id → [display names] map (all pickers, not just one)
+        const participantDisplayMap = {}
+        participants.forEach(p => {
+          participantDisplayMap[`${p.user_id}-${p.entry_number}`] = p.display_name || p.username
+        })
         const pickerMap = {}
         picks.forEach(p => {
           if (!pickerMap[p.player_espn_id]) pickerMap[p.player_espn_id] = []
-          pickerMap[p.player_espn_id].push(p.username)
+          const dn = participantDisplayMap[`${p.user_id}-${p.entry_number}`] || p.username
+          if (!pickerMap[p.player_espn_id].includes(dn)) pickerMap[p.player_espn_id].push(dn)
         })
         const hasStatus = Object.keys(teeTimes).length > 0
         const lbField = lbPickedOnly
@@ -740,15 +776,17 @@ export default function GolfPool() {
       })()}
 
       {/* ── Tiebreaker selector ────────────────────────────────────────────── */}
-      {pool.status === 'open' && pool.tiebreaker_type === 'player' && current_user_picks.length > 0 && (
+      {pool.status === 'open' && pool.tiebreaker_type === 'player' && current_entry_picks.length > 0 && (
         <div className="panel panel-default" style={{ maxWidth: 500, margin: '0 auto 20px' }}>
-          <div className="panel-heading"><strong>Your Tiebreaker Pick</strong></div>
+          <div className="panel-heading">
+            <strong>Your Tiebreaker Pick{multiEntry ? ` — Entry ${activeEntry}` : ''}</strong>
+          </div>
           <div className="panel-body">
             <p className="text-muted" style={{ fontSize: 13 }}>
               Select one golfer whose individual score will be used to break a tie.
             </p>
             {tbMsg && <div className="alert alert-info">{tbMsg}</div>}
-            {current_user_picks.map(pick => (
+            {current_entry_picks.map(pick => (
               <div key={pick.pick_id} style={{ marginBottom: 6 }}>
                 <button
                   className={`btn btn-sm ${pick.is_tiebreaker ? 'btn-info' : 'btn-default'}`}
@@ -762,7 +800,7 @@ export default function GolfPool() {
         </div>
       )}
       {pool.status === 'open' && pool.tiebreaker_type === 'winning_score' && (() => {
-        const myParticipant = participants.find(p => p.user_id === current_user_id)
+        const myParticipant = participants.find(p => p.user_id === current_user_id && p.entry_number === activeEntry)
         if (!myParticipant) return null
         const myPred = myParticipant.tiebreaker_prediction
         return (

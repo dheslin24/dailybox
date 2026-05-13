@@ -6,6 +6,7 @@ const EMPTY_FORM = {
   espn_event_id: '', event_name: '', course: '', event_date: '',
   pool_name: '', fee: '', pool_format: 'draft', draft_type: 'manual', picks_per_user: 4,
   tiebreaker_type: 'player', scoring_players: '', dnf_handling: 'eliminate', dnf_penalty: 1,
+  max_entries_per_user: 1,
 }
 
 const STATUS_FLOW = ['setup', 'open', 'active', 'complete']
@@ -592,6 +593,26 @@ export default function GolfAdmin() {
                         (0 = equal to worst, 1 = worst + 1, etc.)
                       </span>
                     </div>
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                  Entries per User
+                </td>
+                <td style={{ padding: '4px 0' }}>
+                  {form.pool_format === 'async' ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input className="form-control" type="number" min="1" max="10"
+                        style={{ width: 80 }}
+                        value={form.max_entries_per_user}
+                        onChange={e => setForm(f => ({ ...f, max_entries_per_user: e.target.value }))} />
+                      <span className="text-muted" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+                        max entries per user (1 = one entry, the default)
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted" style={{ fontSize: 12 }}>1 (draft pools allow one entry per user)</span>
                   )}
                 </td>
               </tr>
