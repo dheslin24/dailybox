@@ -359,6 +359,33 @@ export default function GolfPool() {
         </div>
       )}
 
+      {/* ── SETUP / OPEN: who's joined ────────────────────────────────────── */}
+      {(pool.status === 'setup' || pool.status === 'open') && participants.length > 0 && (() => {
+        const byUser = Object.values(
+          participants.reduce((acc, p) => {
+            if (!acc[p.user_id]) acc[p.user_id] = { username: p.username, count: 0 }
+            acc[p.user_id].count++
+            return acc
+          }, {})
+        ).sort((a, b) => a.username.localeCompare(b.username))
+        const totalEntries = participants.length
+        const uniqueUsers  = byUser.length
+        return (
+          <div style={{ marginBottom: 16, padding: '8px 14px', background: '#f8f9fa', borderRadius: 6, border: '1px solid #e5e7eb' }}>
+            <span style={{ fontWeight: 600, marginRight: 8 }}>
+              {uniqueUsers} {uniqueUsers === 1 ? 'player' : 'players'} joined
+              {multiEntry && totalEntries !== uniqueUsers ? ` (${totalEntries} entries)` : ''}:
+            </span>
+            {byUser.map((u, i) => (
+              <span key={u.username}>
+                {u.username}{multiEntry && u.count > 1 ? ` (${u.count})` : ''}
+                {i < byUser.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+          </div>
+        )
+      })()}
+
       {/* ── OPEN: field picker ─────────────────────────────────────────────── */}
       {pool.status === 'open' && espn_field.length === 0 && (
         <div className="alert alert-info text-center">
