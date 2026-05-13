@@ -185,8 +185,9 @@ export default function GolfPool() {
         )}
         {pools && pools.length > 0 && (() => {
           const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
-          const isRecent = (p) => p.status !== 'complete' ||
-            (p.event_date && (Date.now() - new Date(p.event_date).getTime()) <= ONE_WEEK)
+          const ACTIVE = new Set(['setup', 'open', 'active'])
+          const isRecent = (p) => ACTIVE.has(p.status) ||
+            (p.status === 'complete' && p.event_date && (Date.now() - new Date(p.event_date).getTime()) <= ONE_WEEK)
           const visible = showCompleted ? pools : pools.filter(isRecent)
           const hiddenCount = pools.length - pools.filter(isRecent).length
           return (
