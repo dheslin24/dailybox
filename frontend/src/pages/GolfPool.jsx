@@ -198,7 +198,7 @@ export default function GolfPool() {
                     onClick={() => setShowCompleted(s => !s)}>
                     {showCompleted
                       ? 'Hide completed pools'
-                      : `Show ${hiddenCount} completed pool${hiddenCount !== 1 ? 's' : ''}`}
+                      : `Show ${hiddenCount} >7 day old completed pool${hiddenCount !== 1 ? 's' : ''}`}
                   </button>
                 </div>
               )}
