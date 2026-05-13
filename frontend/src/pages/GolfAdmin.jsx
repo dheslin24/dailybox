@@ -345,11 +345,11 @@ export default function GolfAdmin() {
     })
   }
 
-  const handleSetPaid = (user_id, paid) => {
+  const handleSetPaid = (user_id, entry_number, paid) => {
     fetch('/api/golf_set_paid', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pool_id: selectedPoolId, user_id, paid }),
+      body: JSON.stringify({ pool_id: selectedPoolId, user_id, entry_number, paid }),
     })
       .then(r => r.json())
       .then(d => { if (!d.error) loadPoolDetail(selectedPoolId) })
@@ -994,7 +994,7 @@ export default function GolfAdmin() {
                           <td>
                             <button
                               className={`btn btn-xs ${participant.paid ? 'btn-success' : 'btn-default'}`}
-                              onClick={() => handleSetPaid(participant.user_id, !participant.paid)}>
+                              onClick={() => handleSetPaid(participant.user_id, participant.entry_number || 1, !participant.paid)}>
                               {participant.paid ? '$' : 'Unpaid'}
                             </button>
                           </td>
