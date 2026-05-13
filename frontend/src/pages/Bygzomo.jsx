@@ -74,9 +74,27 @@ export default function Bygzomo() {
       {tables.length > 0 && (
         <>
           <h3>Tables:</h3>
-          <ul>
-            {tables.map(t => <li key={t}>{t}</li>)}
-          </ul>
+          <table className="table table-condensed table-bordered" style={{ maxWidth: 500 }}>
+            <tbody>
+              {tables.map(t => (
+                <tr key={t}>
+                  <td>{t}</td>
+                  <td>
+                    <span style={{ color: '#337ab7', cursor: 'pointer' }}
+                      onClick={() => setQuery(`SELECT * FROM ${t} LIMIT 10;`)}>
+                      show top 10
+                    </span>
+                  </td>
+                  <td>
+                    <span style={{ color: '#337ab7', cursor: 'pointer' }}
+                      onClick={() => setQuery(`DESC ${t};`)}>
+                      desc table
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
     </Layout>
