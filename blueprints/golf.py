@@ -698,9 +698,7 @@ def api_golf_pool():
              for r in pick_rows]
 
     current_user_picks = [p for p in picks if p['user_id'] == user_id]
-    current_user_entries = sorted({p['entry_number'] for p in current_user_picks}) if current_user_picks else (
-        [r['entry_number'] for r in participants if r['user_id'] == user_id] or [1]
-    )
+    current_user_entries = sorted([r['entry_number'] for r in participants if r['user_id'] == user_id]) or [1]
 
     # Snake sequence + on-clock (draft format only)
     snake_sequence = []
