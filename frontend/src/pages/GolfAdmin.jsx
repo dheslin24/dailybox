@@ -971,13 +971,13 @@ export default function GolfAdmin() {
                   <tbody>
                     {(poolDetail?.participants || []).map(participant => {
                       const userPicks = (poolDetail?.picks || [])
-                        .filter(p => p.user_id === participant.user_id)
+                        .filter(p => p.user_id === participant.user_id && p.entry_number === participant.entry_number)
                         .sort((a, b) => a.draft_position - b.draft_position)
                       const pred = participant.tiebreaker_prediction
                       const fmtPred = pred === null || pred === undefined ? null
                         : pred === 0 ? 'E' : pred > 0 ? `+${pred}` : String(pred)
                       return (
-                        <tr key={participant.user_id}>
+                        <tr key={`${participant.user_id}-${participant.entry_number}`}>
                           <td>{participant.pick_order}</td>
                           <td><strong>{participant.username}</strong></td>
                           {Array.from({ length: pool.picks_per_user }, (_, i) => (
