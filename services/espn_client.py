@@ -101,7 +101,7 @@ def get_golf_world_rankings():
     if cached is not None:
         return cached
     today = date.today()
-    for delta in range(4):
+    for delta in range(10):
         d = today - timedelta(days=delta)
         url = (f"https://sports.core.api.espn.com/v2/sports/golf/leagues/all"
                f"/seasons/{d.year}/rankings/1/dates/{d.strftime('%Y%m%d')}"

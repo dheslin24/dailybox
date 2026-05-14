@@ -481,17 +481,21 @@ def api_golf_set_draft_order():
         return jsonify({'error': 'pool_id and order required'}), 400
     if not _can_manage_pool(pool_id):
         return jsonify({'error': 'forbidden'}), 403
-    preserved = db2("SELECT user_id, entry_number, paid, tiebreaker_prediction FROM golf_draft_order WHERE pool_id=%s", (pool_id,))
-    preserved_map = {(r[0], r[1]): {'paid': r[2], 'tiebreaker_prediction': r[3]} for r in (preserved or [])}
-    db2("DELETE FROM golf_draft_order WHERE pool_id = %s", (pool_id,))
+    # Only update pick_order for the users explicitly provided — never delete rows
+    # for users not in the payload (they may have joined after the frontend last loaded).
     entry_counters = {}
     for slot in order:
         uid = slot['user_id']
         entry_counters[uid] = entry_counters.get(uid, 0) + 1
         entry_num = entry_counters[uid]
-        prev = preserved_map.get((uid, entry_num), {})
-        db2("INSERT INTO golf_draft_order (pool_id, user_id, pick_order, paid, tiebreaker_prediction, entry_number) VALUES (%s,%s,%s,%s,%s,%s)",
-            (pool_id, uid, slot['pick_order'], prev.get('paid', 0), prev.get('tiebreaker_prediction'), entry_num))
+        existing = db2("SELECT 1 FROM golf_draft_order WHERE pool_id=%s AND user_id=%s AND entry_number=%s",
+                       (pool_id, uid, entry_num))
+        if existing:
+            db2("UPDATE golf_draft_order SET pick_order=%s WHERE pool_id=%s AND user_id=%s AND entry_number=%s",
+                (slot['pick_order'], pool_id, uid, entry_num))
+        else:
+            db2("INSERT INTO golf_draft_order (pool_id, user_id, pick_order, entry_number) VALUES (%s,%s,%s,%s)",
+                (pool_id, uid, slot['pick_order'], entry_num))
     return jsonify({'success': True})
 
 
