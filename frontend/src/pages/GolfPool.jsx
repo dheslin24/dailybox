@@ -676,7 +676,12 @@ export default function GolfPool() {
                   const sortedPicks = [...s.picks].sort((a, b) => a.draft_position - b.draft_position)
                   const fmtScore = (v) => v === null || v === undefined ? '—' : v === 0 ? 'E' : v > 0 ? `+${v}` : String(v)
                   return (
-                    <tr key={`${s.user_id}-${s.entry_number}`} style={s.is_eliminated ? { background: '#f1f5f9', color: '#94a3b8' } : {}}>
+                    <tr
+                      key={`${s.user_id}-${s.entry_number}`}
+                      style={{
+                        ...(s.is_eliminated ? { background: '#f1f5f9', color: '#94a3b8' } : {}),
+                        ...(s.user_id === current_user_id ? { background: s.is_eliminated ? '#f1f5f9' : '#eff6ff', borderLeft: '3px solid #3b82f6' } : {}),
+                      }}>
                       <td>{s.is_eliminated ? '—' : idx + 1}</td>
                       <td>
                         <strong>{s.display_name || s.username}</strong>

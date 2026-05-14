@@ -610,10 +610,19 @@ def api_golf_admin_pick():
     else:
         draft_position = existing_count + 1
 
+    # Resolve tier so the pick appears in the correct column on the standings view
+    pick_tier_id = None
+    if pool_format == 'async':
+        pool_tiers, manual_players = _load_pool_tiers(pool_id)
+        if pool_tiers:
+            from services.espn_client import get_golf_world_rankings
+            world_rank = get_golf_world_rankings().get(str(player_espn_id))
+            pick_tier_id, _ = _resolve_tier_from_data(pool_tiers, manual_players, player_espn_id, world_rank)
+
     try:
-        db2("""INSERT INTO golf_picks (pool_id, user_id, player_espn_id, player_name, draft_position, entry_number)
-               VALUES (%s,%s,%s,%s,%s,%s)""",
-            (pool_id, user_id, player_espn_id, player_name, draft_position, entry_number))
+        db2("""INSERT INTO golf_picks (pool_id, user_id, player_espn_id, player_name, draft_position, entry_number, tier_id)
+               VALUES (%s,%s,%s,%s,%s,%s,%s)""",
+            (pool_id, user_id, player_espn_id, player_name, draft_position, entry_number, pick_tier_id))
     except Exception:
         return jsonify({'error': 'Could not add pick (duplicate?)'}), 400
 
