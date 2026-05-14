@@ -272,7 +272,7 @@ def get_golf_tee_times(espn_event_id):
     except Exception as e:
         logging.warning("get_golf_tee_times(%s) error: %s", espn_event_id, e)
 
-    _cache_set(cache_key, result, 60)  # 60s
+    _cache_set(cache_key, result, 300)  # 5 min — tee times don't change mid-round
     return result
 
 

@@ -57,11 +57,14 @@ def _load_pool_tiers(pool_id):
     tiers = [{'tier_id': r[0], 'name': r[1], 'tier_order': r[2], 'tier_type': r[3],
                'rank_min': r[4], 'rank_max': r[5], 'min_picks': r[6], 'max_picks': r[7]}
              for r in (rows or [])]
+    manual_ids = [t['tier_id'] for t in tiers if t['tier_type'] == 'manual']
     manual_players = {}
-    for t in tiers:
-        if t['tier_type'] == 'manual':
-            tp = db2("SELECT player_espn_id FROM golf_pool_tier_players WHERE tier_id=%s", (t['tier_id'],))
-            manual_players[t['tier_id']] = {r[0] for r in (tp or [])}
+    if manual_ids:
+        fmt = ','.join(['%s'] * len(manual_ids))
+        tp_rows = db2(f"SELECT tier_id, player_espn_id FROM golf_pool_tier_players WHERE tier_id IN ({fmt})",
+                      tuple(manual_ids))
+        for tier_id, espn_id in (tp_rows or []):
+            manual_players.setdefault(tier_id, set()).add(espn_id)
     return tiers, manual_players
 
 
