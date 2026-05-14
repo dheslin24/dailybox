@@ -31,7 +31,7 @@ elif config.env == 'dev' and os.getcwd() != dev_path:
     os.chdir(dev_path)
 print(f"OS CWD after: {os.getcwd()}")
 
-logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
+logging.basicConfig(filename="byg.log", format="%(asctime)s %(levelname)-8s %(message)s", level=logging.WARNING, datefmt="%Y-%m-%d %H:%M:%S")
 logging.info(f"OS instance PATH {os.path.dirname(app.instance_path)}")
 logging.info(f"OS root PATH {os.path.dirname(app.root_path)}")
 logging.info(f"OS CWD {os.getcwd()}")

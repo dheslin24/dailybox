@@ -672,7 +672,7 @@ export default function GolfPool() {
                         if (!pick) return <td key={i}>—</td>
                         const isBench = pick.counts === false
                         return (
-                          <td key={i} style={isBench ? { opacity: 0.5 } : {}}>
+                          <td key={i} style={isBench ? { color: '#9ca3af' } : {}}>
                             <div style={{ lineHeight: 1.3 }}>
                               <span style={pick.is_eliminated ? { textDecoration: 'line-through', color: '#94a3b8' } : {}}>
                                 {pick.player_name}
