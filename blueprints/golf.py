@@ -481,13 +481,17 @@ def api_golf_set_draft_order():
         return jsonify({'error': 'pool_id and order required'}), 400
     if not _can_manage_pool(pool_id):
         return jsonify({'error': 'forbidden'}), 403
-    preserved = db2("SELECT user_id, paid, tiebreaker_prediction FROM golf_draft_order WHERE pool_id=%s", (pool_id,))
-    preserved_map = {r[0]: {'paid': r[1], 'tiebreaker_prediction': r[2]} for r in (preserved or [])}
+    preserved = db2("SELECT user_id, entry_number, paid, tiebreaker_prediction FROM golf_draft_order WHERE pool_id=%s", (pool_id,))
+    preserved_map = {(r[0], r[1]): {'paid': r[2], 'tiebreaker_prediction': r[3]} for r in (preserved or [])}
     db2("DELETE FROM golf_draft_order WHERE pool_id = %s", (pool_id,))
+    entry_counters = {}
     for slot in order:
-        prev = preserved_map.get(slot['user_id'], {})
-        db2("INSERT INTO golf_draft_order (pool_id, user_id, pick_order, paid, tiebreaker_prediction) VALUES (%s,%s,%s,%s,%s)",
-            (pool_id, slot['user_id'], slot['pick_order'], prev.get('paid', 0), prev.get('tiebreaker_prediction')))
+        uid = slot['user_id']
+        entry_counters[uid] = entry_counters.get(uid, 0) + 1
+        entry_num = entry_counters[uid]
+        prev = preserved_map.get((uid, entry_num), {})
+        db2("INSERT INTO golf_draft_order (pool_id, user_id, pick_order, paid, tiebreaker_prediction, entry_number) VALUES (%s,%s,%s,%s,%s,%s)",
+            (pool_id, uid, slot['pick_order'], prev.get('paid', 0), prev.get('tiebreaker_prediction'), entry_num))
     return jsonify({'success': True})
 
 
@@ -501,15 +505,18 @@ def api_golf_randomize_draft():
         return jsonify({'error': 'pool_id and user_ids required'}), 400
     if not _can_manage_pool(pool_id):
         return jsonify({'error': 'forbidden'}), 403
-    preserved = db2("SELECT user_id, paid, tiebreaker_prediction FROM golf_draft_order WHERE pool_id=%s", (pool_id,))
-    preserved_map = {r[0]: {'paid': r[1], 'tiebreaker_prediction': r[2]} for r in (preserved or [])}
+    preserved = db2("SELECT user_id, entry_number, paid, tiebreaker_prediction FROM golf_draft_order WHERE pool_id=%s", (pool_id,))
+    preserved_map = {(r[0], r[1]): {'paid': r[2], 'tiebreaker_prediction': r[3]} for r in (preserved or [])}
     shuffled = list(user_ids)
     random.shuffle(shuffled)
     db2("DELETE FROM golf_draft_order WHERE pool_id = %s", (pool_id,))
+    entry_counters = {}
     for i, uid in enumerate(shuffled, 1):
-        prev = preserved_map.get(uid, {})
-        db2("INSERT INTO golf_draft_order (pool_id, user_id, pick_order, paid, tiebreaker_prediction) VALUES (%s,%s,%s,%s,%s)",
-            (pool_id, uid, i, prev.get('paid', 0), prev.get('tiebreaker_prediction')))
+        entry_counters[uid] = entry_counters.get(uid, 0) + 1
+        entry_num = entry_counters[uid]
+        prev = preserved_map.get((uid, entry_num), {})
+        db2("INSERT INTO golf_draft_order (pool_id, user_id, pick_order, paid, tiebreaker_prediction, entry_number) VALUES (%s,%s,%s,%s,%s,%s)",
+            (pool_id, uid, i, prev.get('paid', 0), prev.get('tiebreaker_prediction'), entry_num))
     rows = db2("""SELECT d.pick_order, u.username
                   FROM golf_draft_order d JOIN users u ON u.userid = d.user_id
                   WHERE d.pool_id = %s ORDER BY d.pick_order""", (pool_id,))

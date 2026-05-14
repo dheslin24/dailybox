@@ -203,12 +203,14 @@ export default function GolfAdmin() {
   const handleAdminPick = () => {
     if (!adminPick.user_id || !adminPick.espn_id || !adminPick.name)
       return flash('Select user and enter player ESPN ID and name')
+    const [pickUserId, pickEntryNum] = adminPick.user_id.split('|')
     fetch('/api/golf_admin_pick', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         pool_id: selectedPoolId,
-        user_id: parseInt(adminPick.user_id),
+        user_id: parseInt(pickUserId),
+        entry_number: parseInt(pickEntryNum),
         player_espn_id: adminPick.espn_id,
         player_name: adminPick.name,
       }),
@@ -223,10 +225,11 @@ export default function GolfAdmin() {
   }
 
   const handleAdminSetTiebreaker = (pick_id) => {
+    const [tbUserId] = adminTbUser.split('|')
     fetch('/api/golf_admin_set_tiebreaker', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pool_id: selectedPoolId, user_id: parseInt(adminTbUser), pick_id }),
+      body: JSON.stringify({ pool_id: selectedPoolId, user_id: parseInt(tbUserId), pick_id }),
     })
       .then(r => r.json())
       .then(d => {
@@ -238,10 +241,11 @@ export default function GolfAdmin() {
 
   const handleAdminSetWinningScoreTb = () => {
     if (!adminTbUser || adminTbWinScore === '') return
+    const [tbUserId, tbEntryNum] = adminTbUser.split('|')
     fetch('/api/golf_admin_set_winning_score_tb', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pool_id: selectedPoolId, user_id: parseInt(adminTbUser), score: parseInt(adminTbWinScore) }),
+      body: JSON.stringify({ pool_id: selectedPoolId, user_id: parseInt(tbUserId), entry_number: parseInt(tbEntryNum), score: parseInt(adminTbWinScore) }),
     })
       .then(r => r.json())
       .then(d => {
@@ -695,9 +699,17 @@ export default function GolfAdmin() {
                       value={adminPick.user_id}
                       onChange={e => setAdminPick(p => ({ ...p, user_id: e.target.value }))}>
                       <option value="">— select user —</option>
-                      {(poolDetail?.participants || []).map(p => (
-                        <option key={p.user_id} value={p.user_id}>{p.username}</option>
-                      ))}
+                      {(() => {
+                        const participants = poolDetail?.participants || []
+                        const multiEntry = new Set(
+                          participants.filter(p => participants.filter(q => q.user_id === p.user_id).length > 1).map(p => p.user_id)
+                        )
+                        return participants.map(p => (
+                          <option key={`${p.user_id}|${p.entry_number}`} value={`${p.user_id}|${p.entry_number}`}>
+                            {p.username}{multiEntry.has(p.user_id) ? ` (Entry ${p.entry_number})` : ''}
+                          </option>
+                        ))
+                      })()}
                     </select>
                   </div>
                   {espnField.length > 0 ? (
@@ -751,14 +763,23 @@ export default function GolfAdmin() {
                       value={adminTbUser}
                       onChange={e => { setAdminTbUser(e.target.value); setAdminTbWinScore('') }}>
                       <option value="">— select user —</option>
-                      {(poolDetail?.participants || []).map(p => (
-                        <option key={p.user_id} value={p.user_id}>{p.username}</option>
-                      ))}
+                      {(() => {
+                        const participants = poolDetail?.participants || []
+                        const multiEntry = new Set(
+                          participants.filter(p => participants.filter(q => q.user_id === p.user_id).length > 1).map(p => p.user_id)
+                        )
+                        return participants.map(p => (
+                          <option key={`${p.user_id}|${p.entry_number}`} value={`${p.user_id}|${p.entry_number}`}>
+                            {p.username}{multiEntry.has(p.user_id) ? ` (Entry ${p.entry_number})` : ''}
+                          </option>
+                        ))
+                      })()}
                     </select>
                   </div>
                   {adminTbUser && pool.tiebreaker_type === 'player' && (() => {
+                    const [tbUserId, tbEntryNum] = adminTbUser.split('|')
                     const userPicks = (poolDetail?.picks || [])
-                      .filter(p => p.user_id === parseInt(adminTbUser))
+                      .filter(p => p.user_id === parseInt(tbUserId) && p.entry_number === parseInt(tbEntryNum))
                       .sort((a, b) => a.draft_position - b.draft_position)
                     if (!userPicks.length) return <p className="text-muted" style={{ fontSize: 12 }}>No picks yet.</p>
                     return userPicks.map(pick => (
@@ -772,7 +793,8 @@ export default function GolfAdmin() {
                     ))
                   })()}
                   {adminTbUser && pool.tiebreaker_type === 'winning_score' && (() => {
-                    const participant = (poolDetail?.participants || []).find(p => p.user_id === parseInt(adminTbUser))
+                    const [tbUserId, tbEntryNum] = adminTbUser.split('|')
+                    const participant = (poolDetail?.participants || []).find(p => p.user_id === parseInt(tbUserId) && p.entry_number === parseInt(tbEntryNum))
                     const current = participant?.tiebreaker_prediction
                     return (
                       <div>
