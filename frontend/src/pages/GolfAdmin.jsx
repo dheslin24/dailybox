@@ -665,7 +665,7 @@ export default function GolfAdmin() {
             <strong>Managing: {pool.name}</strong>
             <span className="label label-default" style={{ marginLeft: 10 }}>{pool.status}</span>
             <span style={{ marginLeft: 10, fontSize: 12 }}>
-              {pool.pool_format} · {pool.picks_per_user} picks/user · fee: {poolDetail.pool.fee || 'none'} · TB: {pool.tiebreaker_type === 'winning_score' ? 'winning score' : 'player score'}
+              {pool.pool_format} · {pool.picks_per_user} picks/user{pool.scoring_players ? ` (top ${pool.scoring_players} score)` : ''} · fee: {poolDetail.pool.fee || 'none'} · TB: {pool.tiebreaker_type === 'winning_score' ? 'winning score' : 'player score'}
             </span>
             {pool.invite_code && (
               <span style={{ marginLeft: 16, fontSize: 13 }}>

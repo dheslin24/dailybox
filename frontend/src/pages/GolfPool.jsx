@@ -317,6 +317,9 @@ export default function GolfPool() {
         Entry Fee: <strong>{pool.fee || 'None'}</strong>
         &nbsp;&nbsp;Format: <strong>{pool.pool_format}</strong>
         &nbsp;&nbsp;Picks/user: <strong>{pool.picks_per_user}</strong>
+        {pool.scoring_players && (
+          <>&nbsp;&nbsp;Scoring: <strong>top {pool.scoring_players} of {pool.picks_per_user}</strong></>
+        )}
         {pool.dnf_handling === 'worst_score' && (
           <>&nbsp;&nbsp;DNF: <strong>worst{pool.dnf_penalty > 0 ? ` +${pool.dnf_penalty}` : ''}</strong></>
         )}
