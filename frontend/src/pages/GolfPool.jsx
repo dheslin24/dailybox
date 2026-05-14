@@ -642,14 +642,29 @@ export default function GolfPool() {
                 : `worst active player score + ${pool.dnf_penalty} stroke${pool.dnf_penalty !== 1 ? 's' : ''}`}
             </p>
           )}
+          {(() => {
+            // Build column definitions — tier-named if tiers exist, otherwise Pick 1..N
+            const pickColumns = tiers.length === 0
+              ? Array.from({ length: pool.picks_per_user }, (_, i) => ({ label: `Pick ${i + 1}`, tier_id: null, idx: i }))
+              : [...tiers].sort((a, b) => a.tier_order - b.tier_order).flatMap(tier => {
+                  const count = tier.max_picks !== null
+                    ? tier.max_picks
+                    : Math.max(1, ...standings.map(s => s.picks.filter(p => p.tier_id === tier.tier_id).length))
+                  return Array.from({ length: count }, (_, i) => ({
+                    label: count > 1 ? `${tier.name}-${i + 1}` : tier.name,
+                    tier_id: tier.tier_id,
+                    idx: i,
+                  }))
+                })
+            return (
           <div style={{ overflowX: 'auto' }}>
             <table className="table table-bordered table-striped">
               <thead>
                 <tr>
                   <th>Rank</th>
                   <th>Player</th>
-                  {Array.from({ length: pool.picks_per_user }, (_, i) => (
-                    <th key={i}>Pick {i + 1}</th>
+                  {pickColumns.map((col, i) => (
+                    <th key={i}>{col.label}</th>
                   ))}
                   <th>Total</th>
                   {pool.tiebreaker_type === 'winning_score' && <th>TB Pred</th>}
@@ -667,8 +682,10 @@ export default function GolfPool() {
                         <strong>{s.display_name || s.username}</strong>
                         {s.is_eliminated && <span className="label label-danger" style={{ marginLeft: 6 }}>Eliminated</span>}
                       </td>
-                      {Array.from({ length: pool.picks_per_user }, (_, i) => {
-                        const pick = sortedPicks[i]
+                      {pickColumns.map((col, i) => {
+                        const pick = col.tier_id === null
+                          ? sortedPicks[col.idx]
+                          : s.picks.filter(p => p.tier_id === col.tier_id).sort((a, b) => a.draft_position - b.draft_position)[col.idx]
                         if (!pick) return <td key={i}>—</td>
                         const isBench = pick.counts === false
                         return (
@@ -721,6 +738,8 @@ export default function GolfPool() {
               </tbody>
             </table>
           </div>
+            )
+          })()}
         </div>
       )}
 
