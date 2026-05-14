@@ -240,7 +240,7 @@ export default function HorseRacingPool() {
                     background: isOnClock ? '#fff3cd' : undefined,
                     fontWeight: isOnClock ? 'bold' : undefined,
                   }}>
-                    <td>{d.pick_order}</td>
+                    <td>{race.status === 'setup' ? 'TBD' : d.pick_order}</td>
                     <td>{d.username}{isOnClock ? ' ⏰' : ''}</td>
                     <td>{d.horse_name || (isOnClock ? '...' : '—')}</td>
                     <td style={{ textAlign: 'center', color: '#28a745', fontWeight: 'bold' }}>
