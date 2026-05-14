@@ -691,9 +691,14 @@ def api_golf_pool():
                     FROM golf_draft_order d JOIN users u ON u.userid = d.user_id
                     WHERE d.pool_id = %s ORDER BY d.pick_order""", (pool_id,))
     max_entries_per_user = pool['max_entries_per_user']
+    if max_entries_per_user > 1:
+        from collections import Counter
+        multi_entry_users = {uid for uid, cnt in Counter(r[1] for r in p_rows).items() if cnt > 1}
+    else:
+        multi_entry_users = set()
     participants = [{'pick_order': r[0], 'user_id': r[1], 'username': r[2], 'paid': bool(r[3]),
                      'tiebreaker_prediction': r[4], 'entry_number': r[5] or 1,
-                     'display_name': f"{r[2]}-{r[5] or 1}" if max_entries_per_user > 1 else r[2]}
+                     'display_name': f"{r[2]}-{r[5] or 1}" if r[1] in multi_entry_users else r[2]}
                     for r in p_rows]
 
     # All picks
