@@ -81,8 +81,10 @@ export default function GolfPool() {
   useEffect(() => {
     if (!data) return
     const status = data.pool?.status
-    if (status === 'complete') return
-    const id = setInterval(load, 15000)
+    if (status !== 'active') return  // only poll live scores during active tournament
+    const id = setInterval(() => {
+      if (document.visibilityState !== 'hidden') load()
+    }, 60000)  // match backend cache TTL — polling faster returns the same data
     return () => clearInterval(id)
   }, [load, data])
 

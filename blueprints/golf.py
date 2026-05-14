@@ -580,8 +580,8 @@ def api_golf_admin_pick():
     if not pool_row:
         return jsonify({'error': 'Pool not found'}), 404
     pool_status, pool_format, picks_per_user = pool_row[0]
-    if pool_status != 'open':
-        return jsonify({'error': 'Pool is not open'}), 400
+    if pool_status not in ('open', 'active'):
+        return jsonify({'error': 'Pool is not open or active'}), 400
 
     existing_count = db2("SELECT COUNT(*) FROM golf_picks WHERE pool_id=%s AND user_id=%s AND entry_number=%s",
                          (pool_id, user_id, entry_number))[0][0]
