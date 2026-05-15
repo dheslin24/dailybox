@@ -6,7 +6,24 @@ const EMPTY_FORM = {
   espn_event_id: '', event_name: '', course: '', event_date: '',
   pool_name: '', fee: '', pool_format: 'draft', draft_type: 'manual', picks_per_user: 4,
   tiebreaker_type: 'player', scoring_players: '', dnf_handling: 'eliminate', dnf_penalty: 1,
-  max_entries_per_user: 1,
+  max_entries_per_user: 1, cut_rule_type: 'top_n', cut_n: '', cut_within_shots: '',
+}
+
+const KNOWN_CUT_RULES = {
+  'masters':           { cut_rule_type: 'top_n', cut_n: 50 },
+  'u.s. open':         { cut_rule_type: 'top_n', cut_n: 60 },
+  'us open':           { cut_rule_type: 'top_n', cut_n: 60 },
+  'open championship': { cut_rule_type: 'top_n', cut_n: 70 },
+  'british open':      { cut_rule_type: 'top_n', cut_n: 70 },
+  'pga championship':  { cut_rule_type: 'top_n', cut_n: 70 },
+}
+
+function lookupCutRules(eventName) {
+  const lower = (eventName || '').toLowerCase()
+  for (const [key, rules] of Object.entries(KNOWN_CUT_RULES)) {
+    if (lower.includes(key)) return rules
+  }
+  return {}
 }
 
 const STATUS_FLOW = ['setup', 'open', 'active', 'complete']
@@ -93,12 +110,16 @@ export default function GolfAdmin() {
   }
 
   const handleSelectEspnEvent = (ev) => {
+    const cutRules = lookupCutRules(ev.name)
     setForm(f => ({
       ...f,
       espn_event_id: ev.espn_event_id,
       event_name: ev.name,
       course: '',
       event_date: ev.start_date,
+      cut_rule_type: cutRules.cut_rule_type ?? f.cut_rule_type,
+      cut_n: cutRules.cut_n !== undefined ? String(cutRules.cut_n) : f.cut_n,
+      cut_within_shots: '',
     }))
     fetch(`/api/golf_event_venue?event_id=${ev.espn_event_id}`)
       .then(r => r.json())
@@ -620,6 +641,54 @@ export default function GolfAdmin() {
                   )}
                 </td>
               </tr>
+              <tr>
+                <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                  Cut Rule
+                </td>
+                <td style={{ padding: '4px 0' }}>
+                  <select className="form-control" value={form.cut_rule_type}
+                    onChange={e => setForm(f => ({ ...f, cut_rule_type: e.target.value }))}>
+                    <option value="top_n">Top N + ties</option>
+                    <option value="top_n_and_within">Top N + ties, or within X shots of leader</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                  Cut N
+                </td>
+                <td style={{ padding: '4px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input className="form-control" type="number" min="1" max="200"
+                      style={{ width: 80 }}
+                      placeholder="e.g. 70"
+                      value={form.cut_n}
+                      onChange={e => setForm(f => ({ ...f, cut_n: e.target.value }))} />
+                    <span className="text-muted" style={{ fontSize: 12 }}>
+                      players who make the cut — Masters=50, US Open=60, Open/PGA=70 (auto-fills on selection)
+                    </span>
+                  </div>
+                </td>
+              </tr>
+              {form.cut_rule_type === 'top_n_and_within' && (
+                <tr>
+                  <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                    Within Shots
+                  </td>
+                  <td style={{ padding: '4px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input className="form-control" type="number" min="1" max="30"
+                        style={{ width: 80 }}
+                        placeholder="e.g. 10"
+                        value={form.cut_within_shots}
+                        onChange={e => setForm(f => ({ ...f, cut_within_shots: e.target.value }))} />
+                      <span className="text-muted" style={{ fontSize: 12 }}>
+                        shots of the leader also make the cut
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
 

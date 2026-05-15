@@ -138,6 +138,39 @@ def _load_pool_score_snapshot(pool_id):
     return players, {p['espn_id']: p for p in players}
 
 
+def _projected_cut(espn_field, cut_rule_type, cut_n, cut_within_shots):
+    """Calculate the projected or actual cut line from the ESPN field and tournament cut rules."""
+    if not espn_field or not cut_n:
+        return None
+
+    cut_already_happened = any(p.get('status') == 'STATUS_CUT' for p in espn_field)
+
+    if cut_already_happened:
+        return {'score': None, 'display': None, 'is_projected': False, 'cut_n': cut_n}
+
+    active = [p for p in espn_field if not p.get('is_eliminated')]
+    active.sort(key=lambda p: p.get('total_value', 0))
+
+    if len(active) < cut_n:
+        return None
+
+    if cut_rule_type == 'top_n_and_within':
+        base_cut = active[cut_n - 1]['total_value']
+        within_line = active[0]['total_value'] + (cut_within_shots or 10)
+        cut_score = max(base_cut, within_line)
+    else:
+        cut_score = active[cut_n - 1]['total_value']
+
+    if cut_score == 0:
+        display = 'E'
+    elif cut_score > 0:
+        display = f'+{cut_score}'
+    else:
+        display = str(cut_score)
+
+    return {'score': cut_score, 'display': display, 'is_projected': True, 'cut_n': cut_n}
+
+
 # ── DB INIT ───────────────────────────────────────────────────────────────────
 
 @bp.route('/api/golf_init_db', methods=['POST'])
@@ -300,6 +333,18 @@ def api_golf_init_db():
         db2("ALTER TABLE golf_picks ADD UNIQUE KEY uq_pool_entry_player (pool_id, user_id, entry_number, player_espn_id)")
     except Exception:
         pass
+    try:
+        db2("ALTER TABLE golf_events ADD COLUMN cut_rule_type VARCHAR(20) DEFAULT 'top_n'")
+    except Exception:
+        pass
+    try:
+        db2("ALTER TABLE golf_events ADD COLUMN cut_n INT DEFAULT NULL")
+    except Exception:
+        pass
+    try:
+        db2("ALTER TABLE golf_events ADD COLUMN cut_within_shots INT DEFAULT NULL")
+    except Exception:
+        pass
     logging.info("golf_ tables initialised")
     return jsonify({'success': True})
 
@@ -418,6 +463,18 @@ def api_golf_create_pool():
     if pool_format == 'draft':
         max_entries_per_user = 1  # draft format does not support multiple entries
 
+    cut_rule_type = data.get('cut_rule_type', 'top_n')
+    if cut_rule_type not in ('top_n', 'top_n_and_within'):
+        cut_rule_type = 'top_n'
+    try:
+        cut_n = int(data.get('cut_n')) if data.get('cut_n') not in (None, '') else None
+    except (TypeError, ValueError):
+        cut_n = None
+    try:
+        cut_within_shots = int(data.get('cut_within_shots')) if data.get('cut_within_shots') not in (None, '') else None
+    except (TypeError, ValueError):
+        cut_within_shots = None
+
     if not espn_event_id or not event_name or not pool_name:
         return jsonify({'error': 'espn_event_id, event_name, and pool_name required'}), 400
     if pool_format not in ('draft', 'async'):
@@ -426,11 +483,11 @@ def api_golf_create_pool():
     existing = db2("SELECT event_id FROM golf_events WHERE espn_event_id = %s", (espn_event_id,))
     if existing:
         event_id = existing[0][0]
-        db2("UPDATE golf_events SET name=%s, course=%s, event_date=%s WHERE event_id=%s",
-            (event_name, course, event_date, event_id))
+        db2("UPDATE golf_events SET name=%s, course=%s, event_date=%s, cut_rule_type=%s, cut_n=%s, cut_within_shots=%s WHERE event_id=%s",
+            (event_name, course, event_date, cut_rule_type, cut_n, cut_within_shots, event_id))
     else:
-        db2("INSERT INTO golf_events (name, espn_event_id, course, event_date, status) VALUES (%s,%s,%s,%s,'setup')",
-            (event_name, espn_event_id, course, event_date))
+        db2("INSERT INTO golf_events (name, espn_event_id, course, event_date, status, cut_rule_type, cut_n, cut_within_shots) VALUES (%s,%s,%s,%s,'setup',%s,%s,%s)",
+            (event_name, espn_event_id, course, event_date, cut_rule_type, cut_n, cut_within_shots))
         event_id = db2("SELECT event_id FROM golf_events WHERE espn_event_id = %s", (espn_event_id,))[0][0]
 
     invite_code = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6))
@@ -669,7 +726,8 @@ def api_golf_pool():
                              p.picks_per_user, p.draft_type,
                              e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code,
                              p.tiebreaker_type, p.scoring_players, p.dnf_handling, p.dnf_penalty,
-                             p.created_by, COALESCE(p.max_entries_per_user, 1)
+                             p.created_by, COALESCE(p.max_entries_per_user, 1),
+                             COALESCE(e.cut_rule_type, 'top_n'), e.cut_n, e.cut_within_shots
                       FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id
                       WHERE p.pool_id = %s""", (pool_id,))
     if not pool_row:
@@ -684,6 +742,9 @@ def api_golf_pool():
              'created_by': r[17], 'max_entries_per_user': r[18]}
     event = {'event_id': r[7], 'name': r[8], 'espn_event_id': r[9],
              'course': r[10] or '', 'event_date': str(r[11]) if r[11] else ''}
+    cut_rule_type    = r[19]
+    cut_n            = r[20]
+    cut_within_shots = r[21]
 
     in_pool = _can_manage_pool(pool_id) or bool(db2(
         "SELECT 1 FROM golf_draft_order WHERE pool_id=%s AND user_id=%s", (pool_id, user_id)
@@ -778,6 +839,8 @@ def api_golf_pool():
             player['tier_id']   = tid
             player['tier_name'] = tname
     tier_players_serialized = {str(tid): list(espn_ids) for tid, espn_ids in manual_players.items()}
+
+    projected_cut = _projected_cut(espn_field, cut_rule_type, cut_n, cut_within_shots)
 
     winning_score_leader = None
 
@@ -890,6 +953,7 @@ def api_golf_pool():
         'standings':            standings,
         'is_admin':             is_admin,
         'winning_score_leader': winning_score_leader,
+        'projected_cut':        projected_cut,
         'tiers':                pool_tiers,
         'tier_players':         {str(tid): list(ids) for tid, ids in manual_players.items()},
         'deputies':             deputies,

@@ -259,7 +259,7 @@ export default function GolfPool() {
 
   const { pool, event, participants, picks, current_user_picks, current_user_entries = [1],
           snake_sequence, on_clock, is_on_clock, espn_field, standings, is_admin,
-          winning_score_leader, current_user_id, tiers = [] } = data
+          winning_score_leader, current_user_id, tiers = [], projected_cut = null } = data
 
   const multiEntry         = pool.max_entries_per_user > 1
   const current_entry_picks = current_user_picks.filter(p => p.entry_number === activeEntry)
@@ -765,6 +765,20 @@ export default function GolfPool() {
         const lbField = lbPickedOnly
           ? espn_field.filter(p => pickerMap[p.espn_id])
           : espn_field
+
+        let cutSeparatorAfterIdx = -1
+        if (projected_cut) {
+          if (projected_cut.is_projected && projected_cut.score !== null) {
+            lbField.forEach((p, idx) => {
+              if (!p.is_eliminated && p.total_value <= projected_cut.score)
+                cutSeparatorAfterIdx = idx
+            })
+          } else if (!projected_cut.is_projected) {
+            const firstElim = lbField.findIndex(p => p.is_eliminated)
+            if (firstElim > 0) cutSeparatorAfterIdx = firstElim - 1
+          }
+        }
+
         return (
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 8 }}>
@@ -788,7 +802,7 @@ export default function GolfPool() {
                   </tr>
                 </thead>
                 <tbody>
-                  {lbField.map(player => {
+                  {lbField.flatMap((player, idx) => {
                     const pickers = pickerMap[player.espn_id] || []
                     let pickerLabel = null
                     if (pickers.length === 1) {
@@ -813,7 +827,7 @@ export default function GolfPool() {
                       }
                     }
 
-                    return (
+                    const playerRow = (
                       <tr key={player.espn_id}
                         style={player.is_eliminated ? { background: '#f1f5f9', color: '#9ca3af' } : {}}>
                         <td>
@@ -830,6 +844,25 @@ export default function GolfPool() {
                         {maxRounds > 0 && <RoundCells rounds={player.rounds} numRounds={maxRounds} />}
                       </tr>
                     )
+
+                    if (cutSeparatorAfterIdx === idx) {
+                      const colCount = 2 + (hasStatus ? 1 : 0) + (maxRounds > 0 ? maxRounds : 0)
+                      return [playerRow, (
+                        <tr key="cut-line-separator">
+                          <td colSpan={colCount} style={{
+                            textAlign: 'center', background: '#fef3c7', color: '#92400e',
+                            fontWeight: 600, padding: '4px 8px', fontSize: 12,
+                            borderTop: '2px dashed #f59e0b', borderBottom: '2px dashed #f59e0b',
+                          }}>
+                            {projected_cut.is_projected ? '✂ PROJECTED CUT' : '✂ CUT LINE'}
+                            {projected_cut.display ? ` — ${projected_cut.display}` : ''}
+                            {projected_cut.is_projected && projected_cut.cut_n ? ` (top ${projected_cut.cut_n})` : ''}
+                          </td>
+                        </tr>
+                      )]
+                    }
+
+                    return [playerRow]
                   })}
                 </tbody>
               </table>
