@@ -33,6 +33,16 @@ const CARDS = [
     img: '/static/simpsons_globetrotters.webp',
   },
   {
+    label: 'Baseball Pools',
+    href: '/app/baseball_pools',
+    img: '/static/simpsons-baseball-homer.gif',
+  },
+  {
+    label: 'Soccer Pools',
+    href: '/app/soccer_pools',
+    img: '/static/simpsons-soccer-4.gif',
+  },
+  {
     label: 'Register for Private Event',
     href: '/app/private_pswd',
     img: 'https://pbs.twimg.com/media/ECkwxxLX4AE_btl.jpg',
