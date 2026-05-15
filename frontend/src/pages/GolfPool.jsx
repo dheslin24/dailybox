@@ -3,9 +3,9 @@ import { useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 
 function ScoreBadge({ val, display }) {
-  if (display === 'E' || val === 0) return <span style={{ color: '#374151' }}>E</span>
-  if (val < 0) return <span style={{ color: '#15803d', fontWeight: 'bold' }}>{display}</span>
-  return <span style={{ color: '#dc2626', fontWeight: 'bold' }}>{display}</span>
+  if (display === 'E' || val === 0) return <span style={{ color: '#374151', whiteSpace: 'nowrap' }}>E</span>
+  if (val < 0) return <span style={{ color: '#15803d', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{display}</span>
+  return <span style={{ color: '#dc2626', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{display}</span>
 }
 
 function RoundCells({ rounds, numRounds }) {
