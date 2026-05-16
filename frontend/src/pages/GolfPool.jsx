@@ -693,7 +693,8 @@ export default function GolfPool() {
                           : s.picks.filter(p => p.tier_id === col.tier_id).sort((a, b) => a.draft_position - b.draft_position)[col.idx]
                         if (!pick) return <td key={i}>—</td>
                         const isBench = pick.counts === false
-                        const isBelowCut = projected_cut?.is_projected && !pick.is_eliminated && pick.total_value > projected_cut.score
+                        const isBelowCut = pick.is_eliminated ||
+                          (projected_cut?.is_projected && !pick.is_eliminated && pick.total_value > projected_cut.score)
                         return (
                           <td key={i} style={{ ...(isBench ? { color: '#9ca3af' } : {}), ...(isBelowCut ? { background: '#fef3c7' } : {}) }}>
                             <div style={{ lineHeight: 1.3 }}>
