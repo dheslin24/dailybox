@@ -768,16 +768,11 @@ export default function GolfPool() {
           : espn_field
 
         let cutSeparatorAfterIdx = -1
-        if (projected_cut) {
-          if (projected_cut.is_projected && projected_cut.score !== null) {
-            lbField.forEach((p, idx) => {
-              if (!p.is_eliminated && p.total_value <= projected_cut.score)
-                cutSeparatorAfterIdx = idx
-            })
-          } else if (!projected_cut.is_projected) {
-            const firstElim = lbField.findIndex(p => p.is_eliminated)
-            if (firstElim > 0) cutSeparatorAfterIdx = firstElim - 1
-          }
+        if (projected_cut?.is_projected && projected_cut.score !== null) {
+          lbField.forEach((p, idx) => {
+            if (!p.is_eliminated && p.total_value <= projected_cut.score)
+              cutSeparatorAfterIdx = idx
+          })
         }
 
         return (

@@ -143,7 +143,7 @@ def _projected_cut(espn_field, cut_rule_type, cut_n, cut_within_shots):
     if not espn_field or not cut_n:
         return None
 
-    cut_already_happened = any(p.get('status') == 'STATUS_CUT' for p in espn_field)
+    cut_already_happened = any(p.get('status') in ('STATUS_CUT', 'STATUS_MC') for p in espn_field)
 
     if cut_already_happened:
         return {'score': None, 'display': None, 'is_projected': False, 'cut_n': cut_n}
