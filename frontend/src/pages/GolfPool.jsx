@@ -675,6 +675,9 @@ export default function GolfPool() {
                 {standings.map((s, idx) => {
                   const sortedPicks = [...s.picks].sort((a, b) => a.draft_position - b.draft_position)
                   const fmtScore = (v) => v === null || v === undefined ? '—' : v === 0 ? 'E' : v > 0 ? `+${v}` : String(v)
+                  const cutHappenedRow = projected_cut && !projected_cut.is_projected
+                  const isEffectivelyEliminated = !s.is_eliminated && cutHappenedRow &&
+                    s.picks.some(p => p.counts !== false && (p.is_eliminated || Object.keys(p.rounds || {}).length < 3))
                   return (
                     <tr
                       key={`${s.user_id}-${s.entry_number}`}
@@ -684,8 +687,11 @@ export default function GolfPool() {
                       }}>
                       <td>{s.is_eliminated ? '—' : idx + 1}</td>
                       <td>
-                        <strong>{s.display_name || s.username}</strong>
+                        <strong style={isEffectivelyEliminated ? { color: '#9ca3af' } : {}}>
+                          {s.display_name || s.username}
+                        </strong>
                         {s.is_eliminated && <span className="label label-danger" style={{ marginLeft: 6 }}>Eliminated</span>}
+                        {isEffectivelyEliminated && <span style={{ marginLeft: 6, fontSize: '0.75em', color: '#9ca3af' }}>has cut pick</span>}
                       </td>
                       {pickColumns.map((col, i) => {
                         const pick = col.tier_id === null
@@ -693,10 +699,9 @@ export default function GolfPool() {
                           : s.picks.filter(p => p.tier_id === col.tier_id).sort((a, b) => a.draft_position - b.draft_position)[col.idx]
                         if (!pick) return <td key={i}>—</td>
                         const isBench = pick.counts === false
-                        const cutHappened = projected_cut && !projected_cut.is_projected
                         const isBelowCut = pick.is_eliminated ||
                           (projected_cut?.is_projected && !pick.is_eliminated && pick.total_value > projected_cut.score) ||
-                          (cutHappened && Object.keys(pick.rounds || {}).length < 3)
+                          (cutHappenedRow && Object.keys(pick.rounds || {}).length < 3)
                         return (
                           <td key={i} style={{ ...(isBench ? { color: '#9ca3af' } : {}), ...(isBelowCut ? { background: '#fef3c7' } : {}) }}>
                             <div style={{ lineHeight: 1.3 }}>
