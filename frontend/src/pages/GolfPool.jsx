@@ -672,83 +672,102 @@ export default function GolfPool() {
                 </tr>
               </thead>
               <tbody>
-                {standings.map((s, idx) => {
-                  const sortedPicks = [...s.picks].sort((a, b) => a.draft_position - b.draft_position)
+                {(() => {
                   const fmtScore = (v) => v === null || v === undefined ? '—' : v === 0 ? 'E' : v > 0 ? `+${v}` : String(v)
                   const cutHappenedRow = projected_cut && !projected_cut.is_projected
-                  const isEffectivelyEliminated = !s.is_eliminated && cutHappenedRow &&
+                  const isEffElim = (s) => !s.is_eliminated && cutHappenedRow &&
                     s.picks.some(p => p.counts !== false && (p.is_eliminated || Object.keys(p.rounds || {}).length < 3))
-                  return (
-                    <tr
-                      key={`${s.user_id}-${s.entry_number}`}
-                      style={{
-                        ...(s.is_eliminated ? { background: '#f1f5f9', color: '#94a3b8' } : {}),
-                        ...(s.user_id === current_user_id ? { background: s.is_eliminated ? '#f1f5f9' : '#eff6ff', borderLeft: '3px solid #3b82f6' } : {}),
-                      }}>
-                      <td>{s.is_eliminated ? '—' : idx + 1}</td>
-                      <td>
-                        <strong style={isEffectivelyEliminated ? { color: '#9ca3af' } : {}}>
-                          {s.display_name || s.username}
-                        </strong>
-                        {s.is_eliminated && <span className="label label-danger" style={{ marginLeft: 6 }}>Eliminated</span>}
-                        {isEffectivelyEliminated && <span style={{ marginLeft: 6, fontSize: '0.75em', color: '#9ca3af' }}>has cut pick</span>}
-                      </td>
-                      {pickColumns.map((col, i) => {
-                        const pick = col.tier_id === null
-                          ? sortedPicks[col.idx]
-                          : s.picks.filter(p => p.tier_id === col.tier_id).sort((a, b) => a.draft_position - b.draft_position)[col.idx]
-                        if (!pick) return <td key={i}>—</td>
-                        const isBench = pick.counts === false
-                        const isBelowCut = pick.is_eliminated ||
-                          (projected_cut?.is_projected && !pick.is_eliminated && pick.total_value > projected_cut.score) ||
-                          (cutHappenedRow && Object.keys(pick.rounds || {}).length < 3)
-                        return (
-                          <td key={i} style={{ ...(isBench ? { color: '#9ca3af' } : {}), ...(isBelowCut ? { background: '#fef3c7' } : {}) }}>
-                            <div style={{ lineHeight: 1.3 }}>
-                              <span style={pick.is_eliminated ? { textDecoration: 'line-through', color: '#94a3b8' } : {}}>
-                                {pick.player_name}
-                              </span>
-                              {pick.is_eliminated ? (
-                                <>
-                                  <span className="label label-warning" style={{ marginLeft: 4, fontSize: 10 }}>CUT</span>
-                                  {pool.dnf_handling === 'worst_score' && (
-                                    <span style={{ marginLeft: 4 }}>
-                                      <ScoreBadge val={pick.total_value}
-                                        display={pick.total_value === 0 ? 'E' : pick.total_value > 0 ? `+${pick.total_value}` : String(pick.total_value)} />
-                                    </span>
-                                  )}
-                                </>
-                              ) : (
-                                <span style={{ marginLeft: 4 }}><ScoreBadge val={pick.total_value} display={pick.total_display} /></span>
-                              )}
-                              {isBench && (
-                                <span className="label label-default" style={{ marginLeft: 4, fontSize: 10 }}>BENCH</span>
-                              )}
-                              {!isBench && pool.tiebreaker_type === 'player' && pick.is_tiebreaker && (
-                                <span className="label label-info" style={{ marginLeft: 4, fontSize: 10 }}>TB</span>
-                              )}
-                            </div>
-                          </td>
-                        )
-                      })}
-                      <td>
-                        {s.is_eliminated
-                          ? <span style={{ color: '#94a3b8' }}>—</span>
-                          : <ScoreBadge val={s.total_value}
-                              display={s.total_value === 0 ? 'E' : (s.total_value > 0 ? `+${s.total_value}` : String(s.total_value))} />
-                        }
-                      </td>
-                      {pool.tiebreaker_type === 'winning_score' && (
-                        <td style={{ whiteSpace: 'nowrap' }}>
-                          {s.tiebreaker_prediction !== null && s.tiebreaker_prediction !== undefined
-                            ? fmtScore(s.tiebreaker_prediction)
-                            : <span className="text-muted">—</span>}
+                  const normalRows    = standings.filter(s => !s.is_eliminated && !isEffElim(s))
+                  const cutElimRows   = standings.filter(s => isEffElim(s))
+                  const formalElimRows = standings.filter(s => s.is_eliminated)
+                  const colSpan = 2 + pickColumns.length + 1 + (pool.tiebreaker_type === 'winning_score' ? 1 : 0) + 1
+                  const renderRow = (s, rank) => {
+                    const sortedPicks = [...s.picks].sort((a, b) => a.draft_position - b.draft_position)
+                    const effElim = isEffElim(s)
+                    return (
+                      <tr
+                        key={`${s.user_id}-${s.entry_number}`}
+                        style={{
+                          ...(s.is_eliminated ? { background: '#f1f5f9', color: '#94a3b8' } : {}),
+                          ...(s.user_id === current_user_id ? { background: s.is_eliminated ? '#f1f5f9' : '#eff6ff', borderLeft: '3px solid #3b82f6' } : {}),
+                        }}>
+                        <td>{rank !== null ? rank : '—'}</td>
+                        <td>
+                          <strong style={effElim ? { color: '#9ca3af' } : {}}>
+                            {s.display_name || s.username}
+                          </strong>
+                          {s.is_eliminated && <span className="label label-danger" style={{ marginLeft: 6 }}>Eliminated</span>}
+                          {effElim && <span style={{ marginLeft: 6, fontSize: '0.75em', color: '#9ca3af' }}>has cut pick</span>}
                         </td>
-                      )}
-                      <td>{s.paid ? <span style={{ color: '#15803d' }}>$</span> : ''}</td>
-                    </tr>
-                  )
-                })}
+                        {pickColumns.map((col, i) => {
+                          const pick = col.tier_id === null
+                            ? sortedPicks[col.idx]
+                            : s.picks.filter(p => p.tier_id === col.tier_id).sort((a, b) => a.draft_position - b.draft_position)[col.idx]
+                          if (!pick) return <td key={i}>—</td>
+                          const isBench = pick.counts === false
+                          const isBelowCut = pick.is_eliminated ||
+                            (projected_cut?.is_projected && !pick.is_eliminated && pick.total_value > projected_cut.score) ||
+                            (cutHappenedRow && Object.keys(pick.rounds || {}).length < 3)
+                          return (
+                            <td key={i} style={{ ...(isBench ? { color: '#9ca3af' } : {}), ...(isBelowCut ? { background: '#fef3c7' } : {}) }}>
+                              <div style={{ lineHeight: 1.3 }}>
+                                <span style={pick.is_eliminated ? { textDecoration: 'line-through', color: '#94a3b8' } : {}}>
+                                  {pick.player_name}
+                                </span>
+                                {pick.is_eliminated ? (
+                                  <>
+                                    <span className="label label-warning" style={{ marginLeft: 4, fontSize: 10 }}>CUT</span>
+                                    {pool.dnf_handling === 'worst_score' && (
+                                      <span style={{ marginLeft: 4 }}>
+                                        <ScoreBadge val={pick.total_value}
+                                          display={pick.total_value === 0 ? 'E' : pick.total_value > 0 ? `+${pick.total_value}` : String(pick.total_value)} />
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span style={{ marginLeft: 4 }}><ScoreBadge val={pick.total_value} display={pick.total_display} /></span>
+                                )}
+                                {isBench && (
+                                  <span className="label label-default" style={{ marginLeft: 4, fontSize: 10 }}>BENCH</span>
+                                )}
+                                {!isBench && pool.tiebreaker_type === 'player' && pick.is_tiebreaker && (
+                                  <span className="label label-info" style={{ marginLeft: 4, fontSize: 10 }}>TB</span>
+                                )}
+                              </div>
+                            </td>
+                          )
+                        })}
+                        <td>
+                          {s.is_eliminated
+                            ? <span style={{ color: '#94a3b8' }}>—</span>
+                            : <ScoreBadge val={s.total_value}
+                                display={s.total_value === 0 ? 'E' : (s.total_value > 0 ? `+${s.total_value}` : String(s.total_value))} />
+                          }
+                        </td>
+                        {pool.tiebreaker_type === 'winning_score' && (
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            {s.tiebreaker_prediction !== null && s.tiebreaker_prediction !== undefined
+                              ? fmtScore(s.tiebreaker_prediction)
+                              : <span className="text-muted">—</span>}
+                          </td>
+                        )}
+                        <td>{s.paid ? <span style={{ color: '#15803d' }}>$</span> : ''}</td>
+                      </tr>
+                    )
+                  }
+                  return [
+                    ...normalRows.map((s, idx) => renderRow(s, idx + 1)),
+                    ...(cutElimRows.length > 0 ? [
+                      <tr key="cut-elim-separator">
+                        <td colSpan={colSpan} style={{ background: '#f1f5f9', color: '#6b7280', textAlign: 'center', fontSize: '0.85em', borderTop: '2px solid #d1d5db', borderBottom: '2px solid #d1d5db', padding: '6px' }}>
+                          Players below have been eliminated — a non bench pick missed the cut
+                        </td>
+                      </tr>,
+                      ...cutElimRows.map(s => renderRow(s, null)),
+                    ] : []),
+                    ...formalElimRows.map(s => renderRow(s, null)),
+                  ]
+                })()}
               </tbody>
             </table>
           </div>
