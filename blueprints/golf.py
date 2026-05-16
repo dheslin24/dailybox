@@ -138,6 +138,20 @@ def _load_pool_score_snapshot(pool_id):
     return players, {p['espn_id']: p for p in players}
 
 
+def _parse_round_val(val):
+    if not val or val in ('-', 'E', ''):
+        return 0
+    try:
+        return int(str(val).replace('+', ''))
+    except (ValueError, TypeError):
+        return 0
+
+
+def _fmt_score(score):
+    if score == 0: return 'E'
+    return f'+{score}' if score > 0 else str(score)
+
+
 def _projected_cut(espn_field, cut_rule_type, cut_n, cut_within_shots):
     """Calculate the projected or actual cut line from the ESPN field and tournament cut rules."""
     if not espn_field or not cut_n:
@@ -147,7 +161,17 @@ def _projected_cut(espn_field, cut_rule_type, cut_n, cut_within_shots):
     cut_already_happened = max_rounds >= 3
 
     if cut_already_happened:
-        return {'score': None, 'display': None, 'is_projected': False, 'cut_n': cut_n}
+        two_round_totals = sorted(
+            _parse_round_val((p.get('rounds') or {}).get('1')) +
+            _parse_round_val((p.get('rounds') or {}).get('2'))
+            for p in espn_field
+        )
+        if len(two_round_totals) >= cut_n:
+            cut_score = two_round_totals[cut_n - 1]
+            display = _fmt_score(cut_score)
+        else:
+            cut_score, display = None, None
+        return {'score': cut_score, 'display': display, 'is_projected': False, 'cut_n': cut_n}
 
     active = [p for p in espn_field if not p.get('is_eliminated')]
     active.sort(key=lambda p: p.get('total_value', 0))
@@ -162,14 +186,7 @@ def _projected_cut(espn_field, cut_rule_type, cut_n, cut_within_shots):
     else:
         cut_score = active[cut_n - 1]['total_value']
 
-    if cut_score == 0:
-        display = 'E'
-    elif cut_score > 0:
-        display = f'+{cut_score}'
-    else:
-        display = str(cut_score)
-
-    return {'score': cut_score, 'display': display, 'is_projected': True, 'cut_n': cut_n}
+    return {'score': cut_score, 'display': _fmt_score(cut_score), 'is_projected': True, 'cut_n': cut_n}
 
 
 # ── DB INIT ───────────────────────────────────────────────────────────────────

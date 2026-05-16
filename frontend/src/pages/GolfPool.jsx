@@ -773,6 +773,11 @@ export default function GolfPool() {
             if (!p.is_eliminated && p.total_value <= projected_cut.score)
               cutSeparatorAfterIdx = idx
           })
+        } else if (projected_cut && !projected_cut.is_projected) {
+          lbField.forEach((p, idx) => {
+            if (Object.keys(p.rounds || {}).length >= 3)
+              cutSeparatorAfterIdx = idx
+          })
         }
 
         return (
@@ -843,16 +848,20 @@ export default function GolfPool() {
 
                     if (cutSeparatorAfterIdx === idx) {
                       const colCount = 2 + (hasStatus ? 1 : 0) + (maxRounds > 0 ? maxRounds : 0)
+                      const isProjected = projected_cut.is_projected
+                      const separatorStyle = isProjected
+                        ? { background: '#fef3c7', color: '#92400e', borderTop: '2px dashed #f59e0b', borderBottom: '2px dashed #f59e0b' }
+                        : { background: '#f1f5f9', color: '#475569', borderTop: '2px solid #cbd5e1', borderBottom: '2px solid #cbd5e1' }
                       return [playerRow, (
                         <tr key="cut-line-separator">
                           <td colSpan={colCount} style={{
-                            textAlign: 'center', background: '#fef3c7', color: '#92400e',
-                            fontWeight: 600, padding: '4px 8px', fontSize: 12,
-                            borderTop: '2px dashed #f59e0b', borderBottom: '2px dashed #f59e0b',
+                            textAlign: 'center', fontWeight: 600, padding: '4px 8px', fontSize: 12,
+                            ...separatorStyle,
                           }}>
-                            {projected_cut.is_projected ? '✂ PROJECTED CUT' : '✂ CUT LINE'}
-                            {projected_cut.display ? ` — ${projected_cut.display}` : ''}
-                            {projected_cut.is_projected && projected_cut.cut_n ? ` (top ${projected_cut.cut_n})` : ''}
+                            {isProjected
+                              ? `✂ PROJECTED CUT${projected_cut.display ? ` — ${projected_cut.display}` : ''}${projected_cut.cut_n ? ` (top ${projected_cut.cut_n})` : ''}`
+                              : `The following players did not make the cut${projected_cut.display ? ` — ${projected_cut.display}` : ''}`
+                            }
                           </td>
                         </tr>
                       )]
