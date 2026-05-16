@@ -913,8 +913,13 @@ def api_golf_pool():
 
             # Mark bench picks when pool uses scoring_players
             if scoring_players and len(detailed_picks) > scoring_players:
-                sorted_indices = sorted(range(len(detailed_picks)),
-                                        key=lambda i: detailed_picks[i]['total_value'])
+                max_rounds_in_field = max((len(p.get('rounds') or {}) for p in espn_field), default=0)
+                cut_has_happened = max_rounds_in_field >= 3
+                def _bench_key(pick):
+                    missed_cut = pick.get('is_eliminated', False) or (
+                        cut_has_happened and len(pick.get('rounds') or {}) < 3)
+                    return (1 if missed_cut else 0, pick['total_value'])
+                sorted_indices = sorted(range(len(detailed_picks)), key=lambda i: _bench_key(detailed_picks[i]))
                 for i in sorted_indices[scoring_players:]:
                     detailed_picks[i]['counts'] = False
 
