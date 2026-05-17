@@ -25,12 +25,7 @@ export default function Layout({ children }) {
               <span className="icon-bar"></span>
             </button>
             <a className="navbar-brand" href="/">
-              <span className="blue">B</span>
-              <span className="blue">Y</span>
-              <span className="blue">G</span>
-              <span className="green">T</span>
-              e<span className="red">c</span>
-              <span className="yellow">h</span>
+              <span className="blue">BYGGaming</span>
             </a>
           </div>
           <div className="collapse navbar-collapse" id="navbar">
