@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, redirect, request, session
 from db_accessor.db_accessor import db2
 from constants import BOX_TYPE_ID
-from utils import login_required, admin_required
+from utils import login_required, admin_required, api_admin_required
 from email_helper import send_email
 import logging
 
@@ -175,17 +175,43 @@ def api_admin_summary():
         'total_max': total_max,
     })
 
-@bp.route("/send_bygemail", methods=["POST"])
-@login_required
+@bp.route("/api/send_bygemail", methods=["POST"])
+@api_admin_required
 def send_bygemail():
-    userid = request.form.get('userid')
-    rcpt = request.form.get('rcpt')
-    subject = request.form.get('subject')
-    body = request.form.get('body')
+    data = request.get_json()
+    rcpt = (data.get('rcpt') or '').strip()
+    subject = (data.get('subject') or '').strip()
+    body = (data.get('body') or '').strip()
+    if not rcpt or not subject or not body:
+        return jsonify({'error': 'rcpt, subject, and body are required'}), 400
+    body_html = f"<p>{body.replace(chr(10), '</p><p>')}</p>"
+    ok = send_email(rcpt, subject, body_html, body_text=body)
+    logging.info("Admin email sent to %s subject '%s': %s", rcpt, subject, ok)
+    return jsonify({'ok': ok})
 
-    logging.info("sending email for userid: %s to %s", userid, rcpt)
 
-    if userid == 19 or userid == '19':
-        send_email(rcpt=rcpt, subj=subject, b_text=body, body_header=subject)
-
-    return redirect('/app/email_users')
+@bp.route("/api/send_invite_email", methods=["POST"])
+@api_admin_required
+def send_invite_email():
+    data = request.get_json()
+    pool_id = data.get('pool_id')
+    emails  = data.get('emails') or []
+    if not pool_id or not emails:
+        return jsonify({'error': 'pool_id and emails required'}), 400
+    row = db2("SELECT name, invite_code FROM golf_pools WHERE pool_id = %s", (pool_id,))
+    if not row:
+        return jsonify({'error': 'Pool not found'}), 404
+    pool_name, invite_code = row[0]
+    register_url = "https://byggaming.com/app/golf_pool"
+    body_html = f"""<p>You've been invited to join the <strong>{pool_name}</strong> golf pool on BYGaming!</p>
+<p>Use invite code: <strong>{invite_code}</strong></p>
+<p><a href="{register_url}">Click here to join</a></p>"""
+    sent = 0
+    for email in emails:
+        email = email.strip()
+        if email:
+            ok = send_email(email, f"You're invited to join {pool_name}", body_html)
+            if ok:
+                sent += 1
+    logging.info("Invite emails sent for pool %s: %s/%s", pool_id, sent, len(emails))
+    return jsonify({'ok': True, 'sent': sent})

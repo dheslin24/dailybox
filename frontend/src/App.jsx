@@ -42,6 +42,8 @@ import ViewAllPicks from './pages/ViewAllPicks.jsx'
 import DisplayBox from './pages/DisplayBox.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPasswordToken from './pages/ResetPasswordToken.jsx'
 import HorseRacingPool from './pages/HorseRacingPool.jsx'
 import HorseRacingAdmin from './pages/HorseRacingAdmin.jsx'
 import GolfPool from './pages/GolfPool.jsx'
@@ -55,6 +57,8 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot_password" element={<ForgotPassword />} />
+      <Route path="/reset_password_token" element={<ResetPasswordToken />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/user_details" element={<UserDetails />} />
         <Route path="/admin" element={<Admin />} />

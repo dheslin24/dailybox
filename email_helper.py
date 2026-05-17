@@ -1,99 +1,26 @@
-import boto3
-from botocore.exceptions import ClientError
+import os
+import requests
+import logging
+
+RESEND_API_KEY = os.getenv('RESEND_API_KEY')
+DEFAULT_FROM   = 'noreply@byggaming.com'
 
 
-def send_email(sndr=None, rcpt=None, subj=None, b_text='', b_html=None, body_header=''):
-    # Replace sender@example.com with your "From" address.
-    # This address must be verified with Amazon SES.
-    if sndr:
-        SENDER = sndr
-    else:
-        SENDER = "dan@bygtech.com"
-
-    # Replace recipient@example.com with a "To" address. If your account 
-    # is still in the sandbox, this address must be verified.
-    if rcpt:
-        RECIPIENT = rcpt
-    else:
-        RECIPIENT = "dheslin@gmail.com"
-
-    # Specify a configuration set. If you do not want to use a configuration
-    # set, comment the following variable, and the 
-    # ConfigurationSetName=CONFIGURATION_SET argument below.
-    # CONFIGURATION_SET = "ConfigSet"
-
-    # If necessary, replace us-west-2 with the AWS Region you're using for Amazon SES.
-    AWS_REGION = "us-east-2"
-
-    # The subject line for the email.
-    if subj:
-        SUBJECT = subj
-    else:
-        SUBJECT = "Amazon SES Test (SDK for Python)"
-
-    # The email body for recipients with non-HTML email clients.
-    if b_text:
-        BODY_TEXT = b_text
-    else:
-        BODY_TEXT = ("Amazon SES Test (Python)\r\n"
-                    "This email was sent with Amazon SES using the "
-                    "AWS SDK for Python (Boto)."
-                    )
-                
-    # The HTML body of the email.
-    if b_html:
-        BODY_HTML = b_html
-    else:
-        BODY_HTML = f"""<html>
-        <head></head>
-        <body>
-        <h1>{body_header}</h1>
-        <p>{b_text}</p>
-        </body>
-        </html>
-                    """            
-
-    # The character encoding for the email.
-    CHARSET = "UTF-8"
-
-    # Create a new SES resource and specify a region.
-    client = boto3.client('ses',region_name=AWS_REGION)
-
-    # Try to send the email.
-    try:
-        #Provide the contents of the email.
-        response = client.send_email(
-            Destination={
-                'ToAddresses': [
-                    RECIPIENT,
-                ],
-            },
-            Message={
-                'Body': {
-                    'Html': {
-                        'Charset': CHARSET,
-                        'Data': BODY_HTML,
-                    },
-                    'Text': {
-                        'Charset': CHARSET,
-                        'Data': BODY_TEXT,
-                    },
-                },
-                'Subject': {
-                    'Charset': CHARSET,
-                    'Data': SUBJECT,
-                },
-            },
-            Source=SENDER,
-            # If you are not using a configuration set, comment or delete the
-            # following line
-            # ConfigurationSetName=CONFIGURATION_SET,
-        )
-    # Display an error if something goes wrong.	
-    except ClientError as e:
-        print(e.response['Error']['Message'])
-        return['Error sending email']
-    else:
-        print("Email sent! Message ID:"),
-        print(response['MessageId'])
-        return response['MessageId']
+def send_email(rcpt, subject, body_html, body_text=''):
+    if not RESEND_API_KEY:
+        logging.error("RESEND_API_KEY not set — email not sent")
+        return False
+    resp = requests.post(
+        'https://api.resend.com/emails',
+        headers={'Authorization': f'Bearer {RESEND_API_KEY}', 'Content-Type': 'application/json'},
+        json={
+            'from':    DEFAULT_FROM,
+            'to':      rcpt if isinstance(rcpt, list) else [rcpt],
+            'subject': subject,
+            'html':    body_html,
+            'text':    body_text or subject,
+        },
+    )
+    if not resp.ok:
+        logging.error("Resend error %s: %s", resp.status_code, resp.text)
+    return resp.ok

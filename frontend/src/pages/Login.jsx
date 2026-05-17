@@ -57,6 +57,8 @@ export default function Login() {
             <button className="btn btn-default" type="submit" disabled={loading}>
               {loading ? 'Logging in...' : 'Log In'}
             </button>
+            {' '}
+            <a href="/app/forgot_password" style={{ fontSize: '0.9em' }}>Forgot password?</a>
           </div>
         </fieldset>
       </form>

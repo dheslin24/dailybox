@@ -739,6 +739,24 @@ export default function GolfAdmin() {
             {pool.invite_code && (
               <span style={{ marginLeft: 16, fontSize: 13 }}>
                 Invite code: <strong style={{ letterSpacing: 2 }}>{pool.invite_code}</strong>
+                {' '}
+                <button
+                  className="btn btn-xs btn-default"
+                  style={{ marginLeft: 8 }}
+                  onClick={() => {
+                    const raw = window.prompt('Enter email addresses to invite (one per line or comma-separated):')
+                    if (!raw) return
+                    const emails = raw.split(/[\n,]+/).map(e => e.trim()).filter(Boolean)
+                    if (!emails.length) return
+                    fetch('/api/send_invite_email', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ pool_id: pool.pool_id, emails }),
+                    })
+                      .then(r => r.json())
+                      .then(d => alert(d.ok ? `Sent ${d.sent} invite(s)` : `Error: ${d.error}`))
+                  }}
+                >Email Invite</button>
               </span>
             )}
           </div>

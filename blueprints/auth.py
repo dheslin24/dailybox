@@ -7,6 +7,8 @@ from email_helper import send_email
 import config
 import requests
 import logging
+import secrets
+from datetime import datetime, timedelta
 
 bp = Blueprint('auth', __name__)
 
@@ -188,6 +190,49 @@ def reset_password():
             return apology("old password is incorrect")
     else:
         return redirect('/app/reset_password')
+
+@bp.route("/api/forgot_password", methods=["POST"])
+def api_forgot_password():
+    data = request.get_json()
+    email = (data.get('email') or '').strip().lower()
+    if not email:
+        return jsonify({'error': 'Email required'}), 400
+    row = db2("SELECT userid FROM users WHERE LOWER(email) = %s AND active = 1", (email,))
+    if row:
+        uid = row[0][0]
+        token = secrets.token_urlsafe(32)
+        expires = datetime.utcnow() + timedelta(hours=1)
+        db2("INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (%s, %s, %s)",
+            (uid, token, expires))
+        reset_url = f"https://byggaming.com/app/reset_password_token?token={token}"
+        body_html = f"""<p>You requested a password reset for your BYGaming account.</p>
+<p><a href="{reset_url}">Click here to reset your password</a></p>
+<p>This link expires in 1 hour. If you did not request this, ignore this email.</p>"""
+        send_email(email, 'BYGaming Password Reset', body_html)
+        logging.info("Password reset requested for userid %s", uid)
+    return jsonify({'ok': True})
+
+
+@bp.route("/api/reset_password_token", methods=["POST"])
+def api_reset_password_token():
+    data = request.get_json()
+    token = (data.get('token') or '').strip()
+    password = data.get('password') or ''
+    if not token or not password:
+        return jsonify({'error': 'Token and password required'}), 400
+    if len(password) < 4:
+        return jsonify({'error': 'Password must be at least 4 characters'}), 400
+    row = db2("""SELECT id, user_id FROM password_reset_tokens
+                 WHERE token = %s AND used = 0 AND expires_at > UTC_TIMESTAMP()""", (token,))
+    if not row:
+        return jsonify({'error': 'Reset link is invalid or has expired'}), 400
+    token_id, user_id = row[0]
+    hashed = pwd_context.hash(password)
+    db2("UPDATE users SET password = %s, failed_login_count = 0 WHERE userid = %s", (hashed, user_id))
+    db2("UPDATE password_reset_tokens SET used = 1 WHERE id = %s", (token_id,))
+    logging.info("Password reset completed for userid %s", user_id)
+    return jsonify({'ok': True})
+
 
 @bp.route("/deactivate_user", methods=["GET", "POST"])
 def deactivate_user():
