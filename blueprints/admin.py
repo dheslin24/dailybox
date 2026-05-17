@@ -175,19 +175,32 @@ def api_admin_summary():
         'total_max': total_max,
     })
 
+@bp.route("/api/admin_users", methods=["GET"])
+@api_admin_required
+def api_admin_users():
+    users = db2("SELECT userid, username, first_name, last_name, email FROM users WHERE active = 1 AND alias_of_userid IS NULL ORDER BY username")
+    return jsonify({'users': [{'userid': r[0], 'username': r[1], 'first_name': r[2], 'last_name': r[3], 'email': r[4] or ''} for r in users]})
+
+
 @bp.route("/api/send_bygemail", methods=["POST"])
 @api_admin_required
 def send_bygemail():
     data = request.get_json()
-    rcpt = (data.get('rcpt') or '').strip()
+    rcpts   = data.get('rcpts') or []
     subject = (data.get('subject') or '').strip()
-    body = (data.get('body') or '').strip()
-    if not rcpt or not subject or not body:
-        return jsonify({'error': 'rcpt, subject, and body are required'}), 400
+    body    = (data.get('body') or '').strip()
+    if not rcpts or not subject or not body:
+        return jsonify({'error': 'rcpts, subject, and body are required'}), 400
     body_html = f"<p>{body.replace(chr(10), '</p><p>')}</p>"
-    ok = send_email(rcpt, subject, body_html, body_text=body)
-    logging.info("Admin email sent to %s subject '%s': %s", rcpt, subject, ok)
-    return jsonify({'ok': ok})
+    sent = 0
+    for rcpt in rcpts:
+        rcpt = rcpt.strip()
+        if rcpt:
+            ok = send_email(rcpt, subject, body_html, body_text=body)
+            if ok:
+                sent += 1
+    logging.info("Admin email sent to %s/%s recipients subject '%s'", sent, len(rcpts), subject)
+    return jsonify({'ok': True, 'sent': sent})
 
 
 @bp.route("/api/send_invite_email", methods=["POST"])
