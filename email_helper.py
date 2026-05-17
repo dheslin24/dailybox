@@ -3,18 +3,23 @@ import requests
 import logging
 
 RESEND_API_KEY = os.getenv('RESEND_API_KEY')
-DEFAULT_FROM   = 'noreply@byggaming.com'
+DEFAULT_FROM   = 'BYGaming <noreply@byggaming.com>'
+DOMAIN         = 'byggaming.com'
 
 
-def send_email(rcpt, subject, body_html, body_text=''):
+def send_email(rcpt, subject, body_html, body_text='', from_username=None):
     if not RESEND_API_KEY:
         logging.error("RESEND_API_KEY not set — email not sent")
         return False
+    if from_username:
+        sender = f'BYGaming <{from_username}@{DOMAIN}>'
+    else:
+        sender = DEFAULT_FROM
     resp = requests.post(
         'https://api.resend.com/emails',
         headers={'Authorization': f'Bearer {RESEND_API_KEY}', 'Content-Type': 'application/json'},
         json={
-            'from':    DEFAULT_FROM,
+            'from':    sender,
             'to':      rcpt if isinstance(rcpt, list) else [rcpt],
             'subject': subject,
             'html':    body_html,

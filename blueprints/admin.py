@@ -192,11 +192,12 @@ def send_bygemail():
     if not rcpts or not subject or not body:
         return jsonify({'error': 'rcpts, subject, and body are required'}), 400
     body_html = f"<p>{body.replace(chr(10), '</p><p>')}</p>"
+    sender = session.get('username')
     sent = 0
     for rcpt in rcpts:
         rcpt = rcpt.strip()
         if rcpt:
-            ok = send_email(rcpt, subject, body_html, body_text=body)
+            ok = send_email(rcpt, subject, body_html, body_text=body, from_username=sender)
             if ok:
                 sent += 1
     logging.info("Admin email sent to %s/%s recipients subject '%s'", sent, len(rcpts), subject)
@@ -219,11 +220,12 @@ def send_invite_email():
     body_html = f"""<p>You've been invited to join the <strong>{pool_name}</strong> golf pool on BYGaming!</p>
 <p>Use invite code: <strong>{invite_code}</strong></p>
 <p><a href="{register_url}">Click here to join</a></p>"""
+    sender = session.get('username')
     sent = 0
     for email in emails:
         email = email.strip()
         if email:
-            ok = send_email(email, f"You're invited to join {pool_name}", body_html)
+            ok = send_email(email, f"You're invited to join {pool_name}", body_html, from_username=sender)
             if ok:
                 sent += 1
     logging.info("Invite emails sent for pool %s: %s/%s", pool_id, sent, len(emails))
