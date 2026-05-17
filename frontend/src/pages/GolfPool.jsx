@@ -300,7 +300,13 @@ export default function GolfPool() {
           <select className="form-control" style={{ maxWidth: 400, display: 'inline-block' }}
             value={selectedPoolId}
             onChange={e => { setSelectedPoolId(parseInt(e.target.value)); setData(null) }}>
-            {pools.map(p => (
+            {pools.filter(p => {
+              const ACTIVE = new Set(['setup', 'open', 'active'])
+              if (ACTIVE.has(p.status)) return true
+              if (p.status === 'complete' && p.event_date)
+                return (Date.now() - new Date(p.event_date).getTime()) <= 7 * 24 * 60 * 60 * 1000
+              return false
+            }).map(p => (
               <option key={p.pool_id} value={p.pool_id}>{p.name} — {p.event_name}</option>
             ))}
           </select>
