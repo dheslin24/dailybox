@@ -1,6 +1,54 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import { useSession } from '../SessionContext'
+
+function UserAutocomplete({ users, value, onChange, onSelect, placeholder }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  const matches = value.trim().length > 0
+    ? users.filter(u => u.username.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
+    : []
+
+  useEffect(() => {
+    const close = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flex: 1 }}>
+      <input
+        className="form-control input-sm"
+        placeholder={placeholder || 'Search username'}
+        value={value}
+        onChange={e => { onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        autoComplete="off"
+      />
+      {open && matches.length > 0 && (
+        <ul style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000,
+          background: '#fff', border: '1px solid #d1d5db', borderRadius: 4,
+          margin: 0, padding: 0, listStyle: 'none',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxHeight: 200, overflowY: 'auto',
+        }}>
+          {matches.map(u => (
+            <li
+              key={u.userid}
+              onMouseDown={() => { onSelect(u.username); setOpen(false) }}
+              style={{ padding: '6px 10px', cursor: 'pointer', fontSize: 13 }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+            >
+              {u.username}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 const DEFAULT_PTS = { pts_group: 1, pts_r32: 2, pts_r16: 3, pts_qf: 4, pts_sf: 5, pts_3rd: 3, pts_final: 6 }
 const PTS_LABELS = [
@@ -18,6 +66,7 @@ export default function SoccerAdmin() {
   const isSuperAdmin = session?.is_admin === 1
 
   const [pools, setPools] = useState([])
+  const [users, setUsers] = useState([])
   const [selectedPoolId, setSelectedPoolId] = useState(null)
   const [poolDetail, setPoolDetail] = useState(null)
   const [msg, setMsg] = useState('')
@@ -45,6 +94,11 @@ export default function SoccerAdmin() {
       if (Array.isArray(d)) setPools(d)
     })
 
+  const loadUsers = () =>
+    fetch('/api/soccer_users').then(r => r.json()).then(d => {
+      if (Array.isArray(d)) setUsers(d)
+    })
+
   const loadDetail = useCallback(() => {
     if (!selectedPoolId) { setPoolDetail(null); return }
     fetch(`/api/soccer_pool?pool_id=${selectedPoolId}`)
@@ -59,7 +113,7 @@ export default function SoccerAdmin() {
     })
   }
 
-  useEffect(() => { loadPools(); loadGrants() }, [])
+  useEffect(() => { loadPools(); loadGrants(); loadUsers() }, [])
   useEffect(() => { loadDetail() }, [loadDetail])
 
   const handleCreate = () => {
@@ -345,13 +399,12 @@ export default function SoccerAdmin() {
                   </div>
                   <div className="panel-body">
                     <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                      <input
-                        className="form-control input-sm"
-                        placeholder="Add by username"
+                      <UserAutocomplete
+                        users={users}
                         value={addUsername}
-                        onChange={e => setAddUsername(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleAddUser()}
-                        style={{ flex: 1 }}
+                        onChange={setAddUsername}
+                        onSelect={name => { setAddUsername(name) }}
+                        placeholder="Add by username"
                       />
                       <button className="btn btn-default btn-sm" onClick={handleAddUser}>Add</button>
                     </div>

@@ -243,6 +243,17 @@ def soccer_pool_grants():
                      'pools_used': r[3], 'created_at': str(r[4])} for r in (rows or [])])
 
 
+# ── ADMIN: USER LIST ──────────────────────────────────────────────────────────
+
+@bp.route('/api/soccer_users', methods=['GET'])
+@soccer_admin_required
+def soccer_users():
+    rows = db2("""SELECT userid, username FROM users
+                  WHERE active = 1 AND alias_of_userid IS NULL
+                  ORDER BY username""")
+    return jsonify([{'userid': r[0], 'username': r[1]} for r in (rows or [])])
+
+
 # ── ADMIN: POOL MANAGEMENT ────────────────────────────────────────────────────
 
 @bp.route('/api/soccer_create_pool', methods=['POST'])
