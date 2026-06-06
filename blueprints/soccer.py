@@ -571,7 +571,7 @@ def soccer_pool():
             'match_id': r[0], 'espn_event_id': r[1],
             'home_espn_team_id': r[2], 'home_name': r[3], 'home_abbr': r[4], 'home_logo': r[5],
             'away_espn_team_id': r[6], 'away_name': r[7], 'away_abbr': r[8], 'away_logo': r[9],
-            'match_date': md.isoformat() if md else None,
+            'match_date': (md.isoformat() + 'Z') if md else None,
             'round_type': r[11], 'group_letter': r[12], 'match_order': r[13],
             'status': r[14], 'home_score': r[15], 'away_score': r[16], 'result': r[17],
             'is_locked': md is not None and md <= now_utc,
