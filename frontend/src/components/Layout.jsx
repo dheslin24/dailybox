@@ -49,9 +49,10 @@ export default function Layout({ children }) {
                   {/* <li><a href="/app/payment_status">Payment Status</a></li> */}
                   <li><a href="/app/horse_racing">Triple Crown</a></li>
                   <li><a href="/app/golf_pool">Golf Pool</a></li>
+                  <li><a href="/app/soccer_pools">⚽ World Cup</a></li>
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
-                  {(session.is_admin === 1 || session.has_golf_grant || session.has_golf_deputy) && (
+                  {(session.is_admin === 1 || session.has_golf_grant || session.has_golf_deputy || session.has_soccer_grant || session.has_soccer_deputy) && (
                     <li className={`dropdown${adminOpen ? ' open' : ''}`}>
                       <a href="#" className="dropdown-toggle" onClick={e => { e.preventDefault(); e.stopPropagation(); setAdminOpen(o => !o) }}>
                         Admin <span className="caret"></span>
@@ -60,6 +61,7 @@ export default function Layout({ children }) {
                         {session.is_admin === 1 && <li><a href="/app/admin">Admin</a></li>}
                         {session.is_admin === 1 && <li><a href="/app/horse_racing_admin">Horse Admin</a></li>}
                         <li><a href="/app/golf_admin">Golf Admin</a></li>
+                        {(session.is_admin === 1 || session.has_soccer_grant || session.has_soccer_deputy) && <li><a href="/app/soccer_admin">Soccer Admin</a></li>}
                         {session.is_admin === 1 && <li role="separator" className="divider"></li>}
                         {session.is_admin === 1 && <li><a href="/app/bygzomo">BYGZomo</a></li>}
                       </ul>

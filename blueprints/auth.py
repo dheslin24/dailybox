@@ -142,6 +142,18 @@ def api_me():
         golf_deputy_pool_ids = [r[0] for r in (deputy_rows or [])]
     except Exception:
         golf_deputy_pool_ids = []
+    try:
+        soccer_grant_row = db2("SELECT pools_allowed, pools_used FROM soccer_pool_grants WHERE user_id=%s",
+                               (session['userid'],))
+        soccer_grant = {'pools_allowed': soccer_grant_row[0][0], 'pools_used': soccer_grant_row[0][1]} if soccer_grant_row else None
+    except Exception:
+        soccer_grant_row = None
+        soccer_grant = None
+    try:
+        soccer_deputy_rows = db2("SELECT pool_id FROM soccer_pool_deputies WHERE user_id=%s", (session['userid'],))
+        soccer_deputy_pool_ids = [r[0] for r in (soccer_deputy_rows or [])]
+    except Exception:
+        soccer_deputy_pool_ids = []
     return jsonify({
         'logged_in': True,
         'userid': session['userid'],
@@ -151,6 +163,10 @@ def api_me():
         'golf_grant': golf_grant,
         'has_golf_deputy': bool(golf_deputy_pool_ids),
         'golf_deputy_pool_ids': golf_deputy_pool_ids,
+        'has_soccer_grant': bool(soccer_grant_row),
+        'soccer_grant': soccer_grant,
+        'has_soccer_deputy': bool(soccer_deputy_pool_ids),
+        'soccer_deputy_pool_ids': soccer_deputy_pool_ids,
     })
 
 @bp.route("/api/user_details", methods=["GET"])

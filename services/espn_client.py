@@ -19,6 +19,7 @@ def _cache_set(key, value, ttl):
 
 _BASE = "https://site.api.espn.com/apis/site/v2/sports/football"
 _GOLF_BASE = "https://site.api.espn.com/apis/site/v2/sports/golf/pga"
+_SOCCER_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world"
 
 
 def get_golf_tournaments():
@@ -301,6 +302,118 @@ def get_golf_event_raw(espn_event_id):
         }
     except Exception as e:
         return {'error': str(e)}
+
+
+def get_world_cup_matches():
+    """Fetch all WC 2026 matches from ESPN. Cached 60s if live, 300s otherwise."""
+    cached = _cache_get('wc_matches')
+    if cached is not None:
+        return cached
+    try:
+        url = f"{_SOCCER_BASE}/scoreboard?dates=20260611-20260719&limit=200"
+        r = requests.get(url, timeout=10).json()
+        matches = _parse_wc_scoreboard(r)
+        has_live = any(m['status'] == 'in_progress' for m in matches)
+        _cache_set('wc_matches', matches, 60 if has_live else 300)
+        return matches
+    except Exception as e:
+        logging.error("get_world_cup_matches error: %s", e)
+        return []
+
+
+def _parse_wc_scoreboard(r):
+    matches = []
+    for event in r.get('events', []):
+        for comp in event.get('competitions', []):
+            home_team = away_team = None
+            for competitor in comp.get('competitors', []):
+                t = competitor.get('team', {})
+                logos = t.get('logos') or []
+                logo = t.get('logo', '') or (logos[0].get('href', '') if logos else '')
+                team_data = {
+                    'espn_team_id': str(t.get('id', '')),
+                    'name': t.get('displayName') or t.get('name', ''),
+                    'abbreviation': t.get('abbreviation', ''),
+                    'logo_url': logo,
+                    'score': competitor.get('score'),
+                }
+                if competitor.get('homeAway') == 'home':
+                    home_team = team_data
+                elif competitor.get('homeAway') == 'away':
+                    away_team = team_data
+
+            if not home_team or not away_team:
+                continue
+
+            # Group letter from competition notes
+            group_letter = None
+            for note in comp.get('notes', []):
+                text = note.get('headline', '') or note.get('text', '')
+                if 'Group' in text:
+                    parts = text.replace('Group', '').strip().split()
+                    if parts and len(parts[0]) == 1 and parts[0].isalpha():
+                        group_letter = parts[0].upper()
+                    break
+
+            # Round type from competition type text
+            comp_type_text = (comp.get('type', {}).get('text') or '').lower()
+            comp_type_abbr = (comp.get('type', {}).get('abbreviation') or '').lower()
+            event_name = (event.get('name') or '').lower()
+            combined = f"{comp_type_text} {comp_type_abbr} {event_name}"
+            if 'round of 32' in combined:
+                round_type = 'r32'
+            elif 'round of 16' in combined:
+                round_type = 'r16'
+            elif 'quarterfinal' in combined or 'quarter' in combined:
+                round_type = 'qf'
+            elif 'semifinal' in combined or 'semi-final' in combined:
+                round_type = 'sf'
+            elif 'third' in combined or '3rd' in combined or 'bronze' in combined:
+                round_type = '3rd'
+            elif 'final' in combined and 'semi' not in combined and 'third' not in combined and 'quarter' not in combined:
+                round_type = 'final'
+            else:
+                round_type = 'group'
+
+            # Status
+            status_name = comp.get('status', {}).get('type', {}).get('name', '').upper()
+            if status_name in ('STATUS_FINAL', 'STATUS_FULL_TIME', 'STATUS_FT'):
+                status = 'final'
+            elif status_name in ('STATUS_IN_PROGRESS', 'STATUS_HALFTIME', 'STATUS_END_PERIOD',
+                                 'STATUS_END_OF_EXTRATIME', 'STATUS_SHOOTOUT'):
+                status = 'in_progress'
+            else:
+                status = 'scheduled'
+
+            home_score = away_score = result = None
+            if status == 'final':
+                try:
+                    home_score = int(home_team['score'] or 0)
+                    away_score = int(away_team['score'] or 0)
+                    if round_type == 'group':
+                        result = 'H' if home_score > away_score else ('A' if away_score > home_score else 'D')
+                    else:
+                        result = 'H' if home_score > away_score else 'A'
+                except (ValueError, TypeError):
+                    pass
+
+            matches.append({
+                'espn_event_id': str(comp.get('id') or event.get('id')),
+                'match_date': comp.get('date'),
+                'round_type': round_type,
+                'group_letter': group_letter,
+                'status': status,
+                'home_team': home_team,
+                'away_team': away_team,
+                'home_score': home_score,
+                'away_score': away_score,
+                'result': result,
+            })
+    return matches
+
+
+def invalidate_wc_cache():
+    _cache.pop('wc_matches', None)
 
 
 def _espn_url(league, endpoint, **params):
