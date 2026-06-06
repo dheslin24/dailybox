@@ -146,6 +146,7 @@ export default function SoccerPool() {
   const { poolId } = useParams()
   const [data, setData] = useState(null)
   const [activeTab, setActiveTab] = useState('group')
+  const [groupSort, setGroupSort] = useState('group')
   const [pickMsg, setPickMsg] = useState('')
   const [refreshing, setRefreshing] = useState(false)
 
@@ -254,30 +255,84 @@ export default function SoccerPool() {
         {/* Group Stage Tab */}
         {activeTab === 'group' && (
           <div>
-            {matches.filter(m => m.round_type === 'group').length === 0 ? (
+            {groupMatches.length === 0 ? (
               <div style={{ color: '#6b7280', textAlign: 'center', padding: 40 }}>
                 Group stage matches not yet available. Admin needs to seed matches from ESPN.
               </div>
             ) : (
-              groupLetters.map(letter => (
-                <div key={letter} style={{ marginBottom: 24 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: '#374151' }}>
-                    Group {letter}
-                  </div>
-                  {byGroup[letter].map(m => (
-                    <MatchCard
-                      key={m.match_id}
-                      match={m}
-                      userPick={user_picks[m.match_id]}
-                      allPicks={all_picks}
-                      members={members}
-                      onPick={handlePick}
-                      poolId={poolId}
-                      pickFormat={pool.pick_format}
-                    />
+              <>
+                {/* Sort toggle */}
+                <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+                  {[['group', 'By Group'], ['date', 'By Date']].map(([val, label]) => (
+                    <button
+                      key={val}
+                      onClick={() => setGroupSort(val)}
+                      style={{
+                        padding: '4px 12px', fontSize: 12, border: '1px solid #d1d5db',
+                        borderRadius: 4, cursor: 'pointer',
+                        background: groupSort === val ? '#2563eb' : '#fff',
+                        color: groupSort === val ? '#fff' : '#374151',
+                        fontWeight: groupSort === val ? 600 : 'normal',
+                      }}
+                    >{label}</button>
                   ))}
                 </div>
-              ))
+
+                {groupSort === 'group' ? (
+                  groupLetters.map(letter => (
+                    <div key={letter} style={{ marginBottom: 24 }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: '#374151' }}>
+                        Group {letter}
+                      </div>
+                      {byGroup[letter].map(m => (
+                        <MatchCard
+                          key={m.match_id}
+                          match={m}
+                          userPick={user_picks[m.match_id]}
+                          allPicks={all_picks}
+                          members={members}
+                          onPick={handlePick}
+                          poolId={poolId}
+                          pickFormat={pool.pick_format}
+                        />
+                      ))}
+                    </div>
+                  ))
+                ) : (
+                  (() => {
+                    const sorted = [...groupMatches].sort((a, b) =>
+                      (a.match_date || '').localeCompare(b.match_date || '')
+                    )
+                    const byDay = {}
+                    for (const m of sorted) {
+                      const day = m.match_date
+                        ? new Date(m.match_date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+                        : 'TBD'
+                      if (!byDay[day]) byDay[day] = []
+                      byDay[day].push(m)
+                    }
+                    return Object.entries(byDay).map(([day, dayMatches]) => (
+                      <div key={day} style={{ marginBottom: 24 }}>
+                        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: '#374151' }}>
+                          {day}
+                        </div>
+                        {dayMatches.map(m => (
+                          <MatchCard
+                            key={m.match_id}
+                            match={m}
+                            userPick={user_picks[m.match_id]}
+                            allPicks={all_picks}
+                            members={members}
+                            onPick={handlePick}
+                            poolId={poolId}
+                            pickFormat={pool.pick_format}
+                          />
+                        ))}
+                      </div>
+                    ))
+                  })()
+                )}
+              </>
             )}
           </div>
         )}
