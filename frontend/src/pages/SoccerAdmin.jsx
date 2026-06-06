@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import { useSession } from '../SessionContext'
 
-function UserAutocomplete({ users, value, onChange, onSelect, placeholder }) {
+function UserAutocomplete({ users, value, onChange, onSelect, onCommit, placeholder }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -16,6 +16,14 @@ function UserAutocomplete({ users, value, onChange, onSelect, placeholder }) {
     return () => document.removeEventListener('mousedown', close)
   }, [])
 
+  const handleKeyDown = e => {
+    if (e.key === 'Enter' && matches.length === 1) {
+      onSelect(matches[0].username)
+      setOpen(false)
+      if (onCommit) onCommit(matches[0].username)
+    }
+  }
+
   return (
     <div ref={ref} style={{ position: 'relative', flex: 1 }}>
       <input
@@ -24,6 +32,7 @@ function UserAutocomplete({ users, value, onChange, onSelect, placeholder }) {
         value={value}
         onChange={e => { onChange(e.target.value); setOpen(true) }}
         onFocus={() => setOpen(true)}
+        onKeyDown={handleKeyDown}
         autoComplete="off"
       />
       {open && matches.length > 0 && (
@@ -142,12 +151,13 @@ export default function SoccerAdmin() {
       .catch(() => { setSeedResult({ error: 'Request failed' }); setSeeding(false) })
   }
 
-  const handleAddUser = () => {
-    if (!addUsername.trim()) return
+  const handleAddUser = (overrideName) => {
+    const name = (typeof overrideName === 'string' ? overrideName : addUsername).trim()
+    if (!name) return
     fetch('/api/soccer_add_user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pool_id: selectedPoolId, username: addUsername.trim() }),
+      body: JSON.stringify({ pool_id: selectedPoolId, username: name }),
     })
       .then(r => r.json())
       .then(d => {
@@ -199,10 +209,11 @@ export default function SoccerAdmin() {
 
   const handleGrantAdmin = () => {
     if (!grantForm.username.trim()) return
+    const pools_allowed = Math.max(1, parseInt(grantForm.pools_allowed) || 1)
     fetch('/api/soccer_grant_pool_admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(grantForm),
+      body: JSON.stringify({ ...grantForm, pools_allowed }),
     })
       .then(r => r.json())
       .then(d => {
@@ -338,7 +349,7 @@ export default function SoccerAdmin() {
                       className="form-control input-sm"
                       style={{ width: 52 }}
                       value={grantForm.pools_allowed}
-                      onChange={e => setGrantForm(f => ({ ...f, pools_allowed: parseInt(e.target.value) || 1 }))}
+                      onChange={e => setGrantForm(f => ({ ...f, pools_allowed: e.target.value }))}
                     />
                     <button className="btn btn-default btn-sm" onClick={handleGrantAdmin}>Grant</button>
                   </div>
@@ -403,7 +414,8 @@ export default function SoccerAdmin() {
                         users={users}
                         value={addUsername}
                         onChange={setAddUsername}
-                        onSelect={name => { setAddUsername(name) }}
+                        onSelect={name => setAddUsername(name)}
+                        onCommit={handleAddUser}
                         placeholder="Add by username"
                       />
                       <button className="btn btn-default btn-sm" onClick={handleAddUser}>Add</button>
