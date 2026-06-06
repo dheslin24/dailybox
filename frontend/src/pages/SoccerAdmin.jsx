@@ -23,7 +23,7 @@ export default function SoccerAdmin() {
   const [msg, setMsg] = useState('')
 
   // Create pool form
-  const [createForm, setCreateForm] = useState({ name: '', fee: '', ...DEFAULT_PTS })
+  const [createForm, setCreateForm] = useState({ name: '', fee: '', pick_format: 'standard', pts_group_draw: 0, ...DEFAULT_PTS })
   const [createdCode, setCreatedCode] = useState(null)
 
   // Add user
@@ -73,7 +73,7 @@ export default function SoccerAdmin() {
       .then(d => {
         if (d.error) { flash(d.error); return }
         setCreatedCode(d.invite_code)
-        setCreateForm({ name: '', fee: '', ...DEFAULT_PTS })
+        setCreateForm({ name: '', fee: '', pick_format: 'standard', pts_group_draw: 0, ...DEFAULT_PTS })
         loadPools()
         setSelectedPoolId(d.pool_id)
       })
@@ -191,6 +191,27 @@ export default function SoccerAdmin() {
                   value={createForm.fee}
                   onChange={e => setCreateForm(f => ({ ...f, fee: e.target.value }))}
                 />
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginTop: 4 }}>Pick format</div>
+                <select
+                  className="form-control"
+                  value={createForm.pick_format}
+                  onChange={e => setCreateForm(f => ({ ...f, pick_format: e.target.value }))}
+                >
+                  <option value="standard">Standard (H / Draw / A)</option>
+                  <option value="winner_only">Winner Only (H / A — draw gives consolation pts)</option>
+                </select>
+                {createForm.pick_format === 'winner_only' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, color: '#6b7280', flex: 1 }}>Draw consolation pts</span>
+                    <input
+                      type="number" min={0} max={99}
+                      className="form-control"
+                      style={{ width: 60, padding: '4px 6px' }}
+                      value={createForm.pts_group_draw}
+                      onChange={e => setCreateForm(f => ({ ...f, pts_group_draw: parseInt(e.target.value) || 0 }))}
+                    />
+                  </div>
+                )}
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginTop: 4 }}>Points per round</div>
                 {PTS_LABELS.map(([key, label]) => (
                   <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

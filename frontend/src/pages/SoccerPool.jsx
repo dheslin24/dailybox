@@ -21,12 +21,13 @@ function TeamLogo({ logo, name, size = 28 }) {
     : <span style={{ fontSize: size * 0.6, lineHeight: 1 }}>⚽</span>
 }
 
-function PickButton({ label, active, correct, wrong, disabled, onClick }) {
+function PickButton({ label, active, correct, consolation, wrong, disabled, onClick }) {
   let bg = '#f3f4f6', color = '#374151', border = '1px solid #d1d5db', fw = 'normal'
-  if (active && !correct && !wrong) { bg = '#2563eb'; color = '#fff'; border = '1px solid #2563eb'; fw = '600' }
+  if (active && !correct && !consolation && !wrong) { bg = '#2563eb'; color = '#fff'; border = '1px solid #2563eb'; fw = '600' }
   if (correct) { bg = '#16a34a'; color = '#fff'; border = '1px solid #16a34a'; fw = '600' }
+  if (consolation) { bg = '#d97706'; color = '#fff'; border = '1px solid #d97706'; fw = '600' }
   if (wrong) { bg = '#dc2626'; color = '#fff'; border = '1px solid #dc2626'; fw = '600' }
-  if (disabled && !correct && !wrong) { bg = '#f9fafb'; color = '#9ca3af' }
+  if (disabled && !correct && !consolation && !wrong) { bg = '#f9fafb'; color = '#9ca3af' }
   return (
     <button
       disabled={disabled}
@@ -40,13 +41,17 @@ function PickButton({ label, active, correct, wrong, disabled, onClick }) {
   )
 }
 
-function MatchCard({ match, userPick, allPicks, members, onPick, poolId }) {
+function MatchCard({ match, userPick, allPicks, members, onPick, poolId, pickFormat }) {
   const { match_id, home_name, home_abbr, home_logo, away_name, away_abbr, away_logo,
           match_date, round_type, status, home_score, away_score, result, is_locked } = match
 
-  const pickOpts = round_type === 'group' ? ['H', 'D', 'A'] : ['H', 'A']
+  const pickOpts = round_type === 'group'
+    ? (pickFormat === 'winner_only' ? ['H', 'A'] : ['H', 'D', 'A'])
+    : ['H', 'A']
   const showScore = status === 'final' || status === 'in_progress'
   const matchPicks = allPicks?.[match_id] || {}
+  // In winner_only group stage, a draw gives consolation pts to all picks
+  const isDrawConsolation = pickFormat === 'winner_only' && round_type === 'group' && result === 'D'
 
   return (
     <div style={{
@@ -81,14 +86,16 @@ function MatchCard({ match, userPick, allPicks, members, onPick, poolId }) {
           {pickOpts.map(opt => {
             const label = opt === 'H' ? (home_abbr || 'Home') : opt === 'A' ? (away_abbr || 'Away') : 'Draw'
             const isActive = userPick === opt
-            const isCorrect = result && isActive && result === opt
-            const isWrong = result && isActive && result !== opt
+            const isConsolation = isDrawConsolation && isActive
+            const isCorrect = result && isActive && result === opt && !isConsolation
+            const isWrong = result && isActive && result !== opt && !isConsolation
             return (
               <PickButton
                 key={opt}
                 label={label}
                 active={isActive}
                 correct={isCorrect}
+                consolation={isConsolation}
                 wrong={isWrong}
                 disabled={is_locked}
                 onClick={() => !is_locked && onPick(match_id, opt)}
@@ -116,13 +123,14 @@ function MatchCard({ match, userPick, allPicks, members, onPick, poolId }) {
             const pick = matchPicks[m.user_id]
             if (!pick) return null
             const label = pick === 'H' ? (home_abbr || 'H') : pick === 'A' ? (away_abbr || 'A') : 'D'
-            const isCorrect = result && pick === result
-            const isWrong = result && pick !== result
+            const memberConsolation = isDrawConsolation
+            const isCorrect = result && pick === result && !memberConsolation
+            const isWrong = result && pick !== result && !memberConsolation
             return (
               <span key={m.user_id} style={{
                 fontSize: 11, padding: '1px 6px', borderRadius: 10,
-                background: isCorrect ? '#dcfce7' : isWrong ? '#fee2e2' : '#f3f4f6',
-                color: isCorrect ? '#15803d' : isWrong ? '#dc2626' : '#374151',
+                background: isCorrect ? '#dcfce7' : memberConsolation ? '#fef3c7' : isWrong ? '#fee2e2' : '#f3f4f6',
+                color: isCorrect ? '#15803d' : memberConsolation ? '#92400e' : isWrong ? '#dc2626' : '#374151',
               }}>
                 {m.username}: {label}
               </span>
@@ -265,6 +273,7 @@ export default function SoccerPool() {
                       members={members}
                       onPick={handlePick}
                       poolId={poolId}
+                      pickFormat={pool.pick_format}
                     />
                   ))}
                 </div>
@@ -295,6 +304,7 @@ export default function SoccerPool() {
                       members={members}
                       onPick={handlePick}
                       poolId={poolId}
+                      pickFormat={pool.pick_format}
                     />
                   ))}
                 </div>
@@ -342,6 +352,9 @@ export default function SoccerPool() {
             {/* Points key */}
             <div style={{ marginTop: 16, fontSize: 12, color: '#9ca3af' }}>
               Points per round — Group: {pool.pts_group} | R32: {pool.pts_r32} | R16: {pool.pts_r16} | QF: {pool.pts_qf} | SF: {pool.pts_sf} | Final: {pool.pts_final}
+              {pool.pick_format === 'winner_only' && (
+                <span> | Group draw consolation: {pool.pts_group_draw}</span>
+              )}
             </div>
           </div>
         )}

@@ -50,16 +50,25 @@ def _init_schema():
         invite_code   VARCHAR(8),
         status        VARCHAR(20)  DEFAULT 'open',
         fee           VARCHAR(50)  DEFAULT '',
-        pts_group     INT          DEFAULT 1,
-        pts_r32       INT          DEFAULT 2,
-        pts_r16       INT          DEFAULT 3,
-        pts_qf        INT          DEFAULT 4,
-        pts_sf        INT          DEFAULT 5,
-        pts_3rd       INT          DEFAULT 3,
-        pts_final     INT          DEFAULT 6,
-        created_at    DATETIME     DEFAULT CURRENT_TIMESTAMP,
+        pts_group       INT          DEFAULT 1,
+        pts_r32         INT          DEFAULT 2,
+        pts_r16         INT          DEFAULT 3,
+        pts_qf          INT          DEFAULT 4,
+        pts_sf          INT          DEFAULT 5,
+        pts_3rd         INT          DEFAULT 3,
+        pts_final       INT          DEFAULT 6,
+        pick_format     VARCHAR(20)  DEFAULT 'standard',
+        pts_group_draw  INT          DEFAULT 0,
+        created_at      DATETIME     DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uq_invite (invite_code)
     )""")
+    # Migration for pools table already created without new columns
+    for col, defn in [('pick_format', "VARCHAR(20) DEFAULT 'standard'"),
+                      ('pts_group_draw', 'INT DEFAULT 0')]:
+        try:
+            db2(f"ALTER TABLE soccer_pools ADD COLUMN {col} {defn}")
+        except Exception:
+            pass  # already exists
     db2("""CREATE TABLE IF NOT EXISTS soccer_pool_entries (
         entry_id  INT AUTO_INCREMENT PRIMARY KEY,
         pool_id   INT     NOT NULL,
@@ -143,11 +152,14 @@ ROUND_DISPLAY = {
 
 
 def _compute_standings(pool_id):
-    pool_row = db2("""SELECT pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final
+    pool_row = db2("""SELECT pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final,
+                             pick_format, pts_group_draw
                       FROM soccer_pools WHERE pool_id=%s""", (pool_id,))
     if not pool_row:
         return []
-    pts_map = dict(zip(['group', 'r32', 'r16', 'qf', 'sf', '3rd', 'final'], pool_row[0]))
+    pts_map = dict(zip(['group', 'r32', 'r16', 'qf', 'sf', '3rd', 'final'], pool_row[0][:7]))
+    pick_format = pool_row[0][7] or 'standard'
+    pts_group_draw = pool_row[0][8] or 0
 
     entries = db2("""SELECT e.user_id, u.username
                      FROM soccer_pool_entries e
@@ -169,11 +181,22 @@ def _compute_standings(pool_id):
         if user_id not in user_data:
             continue
         user_data[user_id]['picked'] += 1
-        if pick == result:
-            pts = pts_map.get(round_type, 0)
+        pts = 0
+        if pick_format == 'winner_only' and round_type == 'group':
+            # winner_only: no Draw picks allowed; draws award consolation pts to both sides
+            if result == 'D':
+                pts = pts_group_draw  # consolation for a drawn game
+                user_data[user_id]['correct'] += 1  # count as "got something"
+            elif pick == result:
+                pts = pts_map.get(round_type, 0)
+                user_data[user_id]['correct'] += 1
+        else:
+            if pick == result:
+                pts = pts_map.get(round_type, 0)
+                user_data[user_id]['correct'] += 1
+        if pts:
             user_data[user_id]['total'] += pts
             user_data[user_id]['by_round'][round_type] = user_data[user_id]['by_round'].get(round_type, 0) + pts
-            user_data[user_id]['correct'] += 1
 
     standings = [{'user_id': uid, 'username': d['username'], 'total_points': d['total'],
                   'by_round': d['by_round'], 'correct_picks': d['correct'], 'total_picks': d['picked']}
@@ -243,14 +266,20 @@ def soccer_create_pool():
         ('pts_group', 1), ('pts_r32', 2), ('pts_r16', 3),
         ('pts_qf', 4), ('pts_sf', 5), ('pts_3rd', 3), ('pts_final', 6)
     ]}
+    pick_format = data.get('pick_format', 'standard')
+    if pick_format not in ('standard', 'winner_only'):
+        pick_format = 'standard'
+    pts_group_draw = int(data.get('pts_group_draw', 0))
 
     db2("""INSERT INTO soccer_pools
            (tournament_id, name, created_by, invite_code, status, fee,
-            pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final)
-           VALUES (%s,%s,%s,%s,'open',%s,%s,%s,%s,%s,%s,%s,%s)""",
+            pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final,
+            pick_format, pts_group_draw)
+           VALUES (%s,%s,%s,%s,'open',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
         (t_id, name, uid, invite_code, data.get('fee', ''),
          pts['pts_group'], pts['pts_r32'], pts['pts_r16'],
-         pts['pts_qf'], pts['pts_sf'], pts['pts_3rd'], pts['pts_final']))
+         pts['pts_qf'], pts['pts_sf'], pts['pts_3rd'], pts['pts_final'],
+         pick_format, pts_group_draw))
 
     pool_id = db2("SELECT LAST_INSERT_ID()")[0][0]
     db2("INSERT IGNORE INTO soccer_pool_entries (pool_id, user_id) VALUES (%s,%s)", (pool_id, uid))
@@ -267,11 +296,13 @@ def soccer_admin_pools():
     uid = session['userid']
     if session.get('is_admin') == 1:
         rows = db2("""SELECT pool_id, name, status, invite_code, fee, created_at,
-                             pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final
+                             pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final,
+                             pick_format, pts_group_draw
                       FROM soccer_pools ORDER BY created_at DESC""")
     else:
         rows = db2("""SELECT DISTINCT p.pool_id, p.name, p.status, p.invite_code, p.fee, p.created_at,
-                             p.pts_group, p.pts_r32, p.pts_r16, p.pts_qf, p.pts_sf, p.pts_3rd, p.pts_final
+                             p.pts_group, p.pts_r32, p.pts_r16, p.pts_qf, p.pts_sf, p.pts_3rd, p.pts_final,
+                             p.pick_format, p.pts_group_draw
                       FROM soccer_pools p
                       LEFT JOIN soccer_pool_deputies d ON d.pool_id=p.pool_id AND d.user_id=%s
                       WHERE p.created_by=%s OR d.user_id IS NOT NULL
@@ -281,6 +312,7 @@ def soccer_admin_pools():
         'fee': r[4], 'created_at': str(r[5]),
         'pts_group': r[6], 'pts_r32': r[7], 'pts_r16': r[8],
         'pts_qf': r[9], 'pts_sf': r[10], 'pts_3rd': r[11], 'pts_final': r[12],
+        'pick_format': r[13] or 'standard', 'pts_group_draw': r[14] or 0,
     } for r in (rows or [])])
 
 
@@ -505,7 +537,8 @@ def soccer_pool():
     uid = session['userid']
 
     pool_row = db2("""SELECT pool_id, name, status, invite_code, fee, created_by,
-                             pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final
+                             pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final,
+                             pick_format, pts_group_draw
                       FROM soccer_pools WHERE pool_id=%s""", (pool_id,))
     if not pool_row:
         return jsonify({'error': 'pool not found'}), 404
@@ -515,6 +548,7 @@ def soccer_pool():
         'fee': p[4], 'created_by': p[5],
         'pts_group': p[6], 'pts_r32': p[7], 'pts_r16': p[8],
         'pts_qf': p[9], 'pts_sf': p[10], 'pts_3rd': p[11], 'pts_final': p[12],
+        'pick_format': p[13] or 'standard', 'pts_group_draw': p[14] or 0,
     }
 
     is_member = bool(db2("SELECT 1 FROM soccer_pool_entries WHERE pool_id=%s AND user_id=%s", (pool_id, uid)))
@@ -610,6 +644,11 @@ def soccer_pick():
 
     if round_type != 'group' and pick == 'D':
         return jsonify({'error': 'draw not allowed in knockout rounds'}), 400
+
+    if round_type == 'group' and pick == 'D':
+        pool_row = db2("SELECT pick_format FROM soccer_pools WHERE pool_id=%s", (pool_id,))
+        if pool_row and pool_row[0][0] == 'winner_only':
+            return jsonify({'error': 'draw not allowed in this pool format'}), 400
 
     db2("""INSERT INTO soccer_picks (pool_id, user_id, match_id, pick)
            VALUES (%s,%s,%s,%s)
