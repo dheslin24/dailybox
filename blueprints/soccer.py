@@ -40,6 +40,7 @@ def _init_schema():
         home_score         INT,
         away_score         INT,
         result             CHAR(1),
+        venue              VARCHAR(200),
         UNIQUE KEY uq_espn_event (espn_event_id)
     )""")
     db2("""CREATE TABLE IF NOT EXISTS soccer_pools (
@@ -69,6 +70,10 @@ def _init_schema():
             db2(f"ALTER TABLE soccer_pools ADD COLUMN {col} {defn}")
         except Exception:
             pass  # already exists
+    try:
+        db2("ALTER TABLE soccer_matches ADD COLUMN venue VARCHAR(200)")
+    except Exception:
+        pass  # already exists
     db2("""CREATE TABLE IF NOT EXISTS soccer_pool_entries (
         entry_id  INT AUTO_INCREMENT PRIMARY KEY,
         pool_id   INT     NOT NULL,
@@ -426,7 +431,7 @@ def soccer_seed_matches():
                 ht['espn_team_id'], ht['name'], ht['abbreviation'], ht['logo_url'],
                 at['espn_team_id'], at['name'], at['abbreviation'], at['logo_url'],
                 m['match_date'], m['round_type'], group_letter, i,
-                m['status'], m['home_score'], m['away_score'], m['result'],
+                m['status'], m['home_score'], m['away_score'], m['result'], m.get('venue', ''),
             )
             existing = db2("SELECT match_id FROM soccer_matches WHERE espn_event_id=%s", (m['espn_event_id'],))
             if existing:
@@ -434,7 +439,7 @@ def soccer_seed_matches():
                        home_espn_team_id=%s, home_name=%s, home_abbr=%s, home_logo=%s,
                        away_espn_team_id=%s, away_name=%s, away_abbr=%s, away_logo=%s,
                        match_date=%s, round_type=%s, group_letter=%s, match_order=%s,
-                       status=%s, home_score=%s, away_score=%s, result=%s
+                       status=%s, home_score=%s, away_score=%s, result=%s, venue=%s
                        WHERE espn_event_id=%s""",
                     (*fields, m['espn_event_id']))
                 updated += 1
@@ -444,8 +449,8 @@ def soccer_seed_matches():
                         home_espn_team_id, home_name, home_abbr, home_logo,
                         away_espn_team_id, away_name, away_abbr, away_logo,
                         match_date, round_type, group_letter, match_order,
-                        status, home_score, away_score, result)
-                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                        status, home_score, away_score, result, venue)
+                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                     (t_id, m['espn_event_id'], *fields))
                 inserted += 1
 
@@ -475,12 +480,13 @@ def soccer_refresh_matches():
                 db2("""UPDATE soccer_matches SET
                        status=%s, home_score=%s, away_score=%s, result=%s,
                        home_name=%s, home_abbr=%s, home_logo=%s,
-                       away_name=%s, away_abbr=%s, away_logo=%s
+                       away_name=%s, away_abbr=%s, away_logo=%s,
+                       venue=%s
                        WHERE espn_event_id=%s""",
                     (m['status'], m['home_score'], m['away_score'], m['result'],
                      ht['name'], ht['abbreviation'], ht['logo_url'],
                      at['name'], at['abbreviation'], at['logo_url'],
-                     m['espn_event_id']))
+                     m.get('venue', ''), m['espn_event_id']))
                 updated += 1
 
         return jsonify({'success': True, 'updated': updated})
@@ -559,7 +565,7 @@ def soccer_pool():
                                home_espn_team_id, home_name, home_abbr, home_logo,
                                away_espn_team_id, away_name, away_abbr, away_logo,
                                match_date, round_type, group_letter, match_order,
-                               status, home_score, away_score, result
+                               status, home_score, away_score, result, venue
                         FROM soccer_matches WHERE tournament_id=%s
                         ORDER BY match_date ASC, match_order ASC""", (t_id,))
 
@@ -574,6 +580,7 @@ def soccer_pool():
             'match_date': (md.isoformat() + 'Z') if md else None,
             'round_type': r[11], 'group_letter': r[12], 'match_order': r[13],
             'status': r[14], 'home_score': r[15], 'away_score': r[16], 'result': r[17],
+            'venue': r[18] or '',
             'is_locked': md is not None and md <= now_utc,
         })
 

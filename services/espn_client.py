@@ -416,6 +416,11 @@ def _parse_wc_scoreboard(r):
                 except (ValueError, TypeError):
                     pass
 
+            venue_obj = comp.get('venue', {})
+            venue_name = venue_obj.get('fullName', '')
+            city = venue_obj.get('address', {}).get('city', '')
+            venue = ', '.join(filter(None, [venue_name, city]))
+
             matches.append({
                 'espn_event_id': str(comp.get('id') or event.get('id')),
                 'match_date': _parse_wc_date(comp.get('date')),
@@ -427,6 +432,7 @@ def _parse_wc_scoreboard(r):
                 'home_score': home_score,
                 'away_score': away_score,
                 'result': result,
+                'venue': venue,
             })
     return matches
 
