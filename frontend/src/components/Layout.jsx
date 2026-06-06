@@ -34,7 +34,7 @@ export default function Layout({ children }) {
                 <ul className="nav navbar-nav">
                   <li className={`dropdown${footballOpen ? ' open' : ''}`}>
                     <a href="#" className="dropdown-toggle" onClick={e => { e.preventDefault(); e.stopPropagation(); setFootballOpen(o => !o) }}>
-                      Football Pools <span className="caret"></span>
+                      🏈 Football Pools <span className="caret"></span>
                     </a>
                     <ul className="dropdown-menu">
                       <li><a href="/app/custom_game_list">Super Bowl Boxes</a></li>
@@ -45,10 +45,8 @@ export default function Layout({ children }) {
                       <li><a href="/app/pickem_payment_status">Pickem Payment Status</a></li>
                     </ul>
                   </li>
-                  <li><a href="/app/my_games">My Games</a></li>
-                  {/* <li><a href="/app/payment_status">Payment Status</a></li> */}
-                  <li><a href="/app/horse_racing">Triple Crown</a></li>
-                  <li><a href="/app/golf_pool">Golf Pool</a></li>
+                  <li><a href="/app/horse_racing">🏇 Triple Crown</a></li>
+                  <li><a href="/app/golf_pool">⛳ Golf Pool</a></li>
                   <li><a href="/app/soccer_pools">⚽ World Cup</a></li>
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
