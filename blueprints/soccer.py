@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request, session
 
 from db_accessor.db_accessor import db2
-from services.espn_client import get_world_cup_matches, invalidate_wc_cache
+from services.espn_client import assign_wc_group_letters, get_world_cup_matches, invalidate_wc_cache
 from utils import api_admin_required, login_required, soccer_admin_required
 
 bp = Blueprint('soccer', __name__)
@@ -372,74 +372,89 @@ def soccer_remove_deputy():
 @bp.route('/api/soccer_seed_matches', methods=['POST'])
 @api_admin_required
 def soccer_seed_matches():
-    t_id = _get_tournament_id()
-    if not t_id:
-        return jsonify({'error': 'tournament not found'}), 500
+    try:
+        t_id = _get_tournament_id()
+        if not t_id:
+            return jsonify({'error': 'tournament not found — schema may not have initialized'}), 500
 
-    invalidate_wc_cache()
-    matches = get_world_cup_matches()
-    if not matches:
-        return jsonify({'error': 'no matches returned from ESPN - check logs'}), 500
+        invalidate_wc_cache()
+        matches = get_world_cup_matches()
+        if not matches:
+            return jsonify({'error': 'no matches returned from ESPN — check server log'}), 500
 
-    inserted = updated = 0
-    for i, m in enumerate(matches):
-        ht, at = m['home_team'], m['away_team']
-        fields = (
-            ht['espn_team_id'], ht['name'], ht['abbreviation'], ht['logo_url'],
-            at['espn_team_id'], at['name'], at['abbreviation'], at['logo_url'],
-            m['match_date'], m['round_type'], m['group_letter'], i,
-            m['status'], m['home_score'], m['away_score'], m['result'],
-        )
-        existing = db2("SELECT match_id FROM soccer_matches WHERE espn_event_id=%s", (m['espn_event_id'],))
-        if existing:
-            db2("""UPDATE soccer_matches SET
-                   home_espn_team_id=%s, home_name=%s, home_abbr=%s, home_logo=%s,
-                   away_espn_team_id=%s, away_name=%s, away_abbr=%s, away_logo=%s,
-                   match_date=%s, round_type=%s, group_letter=%s, match_order=%s,
-                   status=%s, home_score=%s, away_score=%s, result=%s
-                   WHERE espn_event_id=%s""",
-                (*fields, m['espn_event_id']))
-            updated += 1
-        else:
-            db2("""INSERT INTO soccer_matches
-                   (tournament_id, espn_event_id,
-                    home_espn_team_id, home_name, home_abbr, home_logo,
-                    away_espn_team_id, away_name, away_abbr, away_logo,
-                    match_date, round_type, group_letter, match_order,
-                    status, home_score, away_score, result)
-                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (t_id, m['espn_event_id'], *fields))
-            inserted += 1
+        # Derive group letters by finding connected components in group-stage matches
+        group_map = assign_wc_group_letters(matches)  # {espn_team_id: 'A'..'L'}
 
-    return jsonify({'success': True, 'inserted': inserted, 'updated': updated, 'total': len(matches)})
+        inserted = updated = 0
+        for i, m in enumerate(matches):
+            ht, at = m['home_team'], m['away_team']
+            group_letter = m['group_letter'] or group_map.get(ht['espn_team_id']) or group_map.get(at['espn_team_id'])
+
+            fields = (
+                ht['espn_team_id'], ht['name'], ht['abbreviation'], ht['logo_url'],
+                at['espn_team_id'], at['name'], at['abbreviation'], at['logo_url'],
+                m['match_date'], m['round_type'], group_letter, i,
+                m['status'], m['home_score'], m['away_score'], m['result'],
+            )
+            existing = db2("SELECT match_id FROM soccer_matches WHERE espn_event_id=%s", (m['espn_event_id'],))
+            if existing:
+                db2("""UPDATE soccer_matches SET
+                       home_espn_team_id=%s, home_name=%s, home_abbr=%s, home_logo=%s,
+                       away_espn_team_id=%s, away_name=%s, away_abbr=%s, away_logo=%s,
+                       match_date=%s, round_type=%s, group_letter=%s, match_order=%s,
+                       status=%s, home_score=%s, away_score=%s, result=%s
+                       WHERE espn_event_id=%s""",
+                    (*fields, m['espn_event_id']))
+                updated += 1
+            else:
+                db2("""INSERT INTO soccer_matches
+                       (tournament_id, espn_event_id,
+                        home_espn_team_id, home_name, home_abbr, home_logo,
+                        away_espn_team_id, away_name, away_abbr, away_logo,
+                        match_date, round_type, group_letter, match_order,
+                        status, home_score, away_score, result)
+                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                    (t_id, m['espn_event_id'], *fields))
+                inserted += 1
+
+        return jsonify({'success': True, 'inserted': inserted, 'updated': updated,
+                        'total': len(matches), 'groups_mapped': len(group_map),
+                        'no_group': sum(1 for m in matches if m['round_type'] == 'group' and not (group_map.get(m['home_team']['espn_team_id']) or group_map.get(m['away_team']['espn_team_id'])))})
+    except Exception as e:
+        logging.exception("soccer_seed_matches error")
+        return jsonify({'error': str(e)}), 500
 
 
 @bp.route('/api/soccer_refresh_matches', methods=['POST'])
 @login_required
 def soccer_refresh_matches():
-    data = request.get_json() or {}
-    pool_id = data.get('pool_id')
-    if pool_id and not _can_manage_pool(pool_id):
-        return jsonify({'error': 'forbidden'}), 403
+    try:
+        data = request.get_json() or {}
+        pool_id = data.get('pool_id')
+        if pool_id and not _can_manage_pool(pool_id):
+            return jsonify({'error': 'forbidden'}), 403
 
-    invalidate_wc_cache()
-    matches = get_world_cup_matches()
-    updated = 0
-    for m in matches:
-        if db2("SELECT 1 FROM soccer_matches WHERE espn_event_id=%s", (m['espn_event_id'],)):
-            ht, at = m['home_team'], m['away_team']
-            db2("""UPDATE soccer_matches SET
-                   status=%s, home_score=%s, away_score=%s, result=%s,
-                   home_name=%s, home_abbr=%s, home_logo=%s,
-                   away_name=%s, away_abbr=%s, away_logo=%s
-                   WHERE espn_event_id=%s""",
-                (m['status'], m['home_score'], m['away_score'], m['result'],
-                 ht['name'], ht['abbreviation'], ht['logo_url'],
-                 at['name'], at['abbreviation'], at['logo_url'],
-                 m['espn_event_id']))
-            updated += 1
+        invalidate_wc_cache()
+        matches = get_world_cup_matches()
+        updated = 0
+        for m in matches:
+            if db2("SELECT 1 FROM soccer_matches WHERE espn_event_id=%s", (m['espn_event_id'],)):
+                ht, at = m['home_team'], m['away_team']
+                db2("""UPDATE soccer_matches SET
+                       status=%s, home_score=%s, away_score=%s, result=%s,
+                       home_name=%s, home_abbr=%s, home_logo=%s,
+                       away_name=%s, away_abbr=%s, away_logo=%s
+                       WHERE espn_event_id=%s""",
+                    (m['status'], m['home_score'], m['away_score'], m['result'],
+                     ht['name'], ht['abbreviation'], ht['logo_url'],
+                     at['name'], at['abbreviation'], at['logo_url'],
+                     m['espn_event_id']))
+                updated += 1
 
-    return jsonify({'success': True, 'updated': updated})
+        return jsonify({'success': True, 'updated': updated})
+    except Exception as e:
+        logging.exception("soccer_refresh_matches error")
+        return jsonify({'error': str(e)}), 500
 
 
 # ── USER: JOIN / LIST ─────────────────────────────────────────────────────────

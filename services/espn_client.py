@@ -321,6 +321,19 @@ def get_world_cup_matches():
         return []
 
 
+def _parse_wc_date(s):
+    """Convert ESPN ISO date string to a naive UTC datetime MySQL can store."""
+    if not s:
+        return None
+    try:
+        # Handles "2026-06-11T19:00Z" and "2026-06-11T19:00:00Z"
+        s = s.rstrip('Z')
+        fmt = '%Y-%m-%dT%H:%M:%S' if s.count(':') >= 2 else '%Y-%m-%dT%H:%M'
+        return datetime.strptime(s, fmt)
+    except (ValueError, TypeError):
+        return None
+
+
 def _parse_wc_scoreboard(r):
     matches = []
     for event in r.get('events', []):
@@ -345,7 +358,7 @@ def _parse_wc_scoreboard(r):
             if not home_team or not away_team:
                 continue
 
-            # Group letter from competition notes
+            # Group letter: try notes first, then event/competition name
             group_letter = None
             for note in comp.get('notes', []):
                 text = note.get('headline', '') or note.get('text', '')
@@ -355,23 +368,29 @@ def _parse_wc_scoreboard(r):
                         group_letter = parts[0].upper()
                     break
 
-            # Round type from competition type text
-            comp_type_text = (comp.get('type', {}).get('text') or '').lower()
-            comp_type_abbr = (comp.get('type', {}).get('abbreviation') or '').lower()
-            event_name = (event.get('name') or '').lower()
-            combined = f"{comp_type_text} {comp_type_abbr} {event_name}"
-            if 'round of 32' in combined:
-                round_type = 'r32'
-            elif 'round of 16' in combined:
-                round_type = 'r16'
-            elif 'quarterfinal' in combined or 'quarter' in combined:
-                round_type = 'qf'
-            elif 'semifinal' in combined or 'semi-final' in combined:
-                round_type = 'sf'
-            elif 'third' in combined or '3rd' in combined or 'bronze' in combined:
+            # Round type detection.
+            # ESPN names each match by what the *teams* are (e.g., "Round of 32 N Winner"),
+            # not by the round itself. Derive round from team placeholder names:
+            #   Real teams            → group
+            #   Group Winner / 2nd / best-3rd → r32
+            #   Round of 32 Winner    → r16  (those winners play next)
+            #   Round of 16 Winner    → qf
+            #   Quarterfinal Winner   → sf
+            #   Semifinal Loser       → 3rd
+            #   Semifinal Winner      → final
+            t_combined = (home_team['name'] + ' ' + away_team['name']).lower()
+            if 'loser' in t_combined:
                 round_type = '3rd'
-            elif 'final' in combined and 'semi' not in combined and 'third' not in combined and 'quarter' not in combined:
+            elif 'semifinal' in t_combined:
                 round_type = 'final'
+            elif 'quarterfinal' in t_combined:
+                round_type = 'sf'
+            elif 'round of 16' in t_combined:
+                round_type = 'qf'
+            elif 'round of 32' in t_combined:
+                round_type = 'r16'
+            elif any(kw in t_combined for kw in ('winner', '2nd place', 'third place', 'runner')):
+                round_type = 'r32'
             else:
                 round_type = 'group'
 
@@ -399,7 +418,7 @@ def _parse_wc_scoreboard(r):
 
             matches.append({
                 'espn_event_id': str(comp.get('id') or event.get('id')),
-                'match_date': comp.get('date'),
+                'match_date': _parse_wc_date(comp.get('date')),
                 'round_type': round_type,
                 'group_letter': group_letter,
                 'status': status,
@@ -410,6 +429,57 @@ def _parse_wc_scoreboard(r):
                 'result': result,
             })
     return matches
+
+
+def assign_wc_group_letters(matches):
+    """Derive group letters A-L by finding connected components in group-stage matches.
+    Teams that all play each other form a group. Groups are sorted by earliest match date.
+    Returns {espn_team_id: letter}"""
+    from collections import defaultdict, deque
+    adj = defaultdict(set)
+    for m in matches:
+        if m['round_type'] != 'group':
+            continue
+        ht = m['home_team']['espn_team_id']
+        at = m['away_team']['espn_team_id']
+        adj[ht].add(at)
+        adj[at].add(ht)
+
+    visited = set()
+    groups = []
+    for tid in sorted(adj.keys()):
+        if tid in visited:
+            continue
+        group = set()
+        q = deque([tid])
+        while q:
+            t = q.popleft()
+            if t in group:
+                continue
+            group.add(t)
+            visited.add(t)
+            for n in adj[t]:
+                if n not in group:
+                    q.append(n)
+        groups.append(frozenset(group))
+
+    def _earliest(group_teams):
+        for m in sorted(matches, key=lambda x: x['match_date'] or datetime.max):
+            if m['round_type'] == 'group' and (
+                m['home_team']['espn_team_id'] in group_teams or
+                m['away_team']['espn_team_id'] in group_teams
+            ):
+                return m['match_date'] or datetime.max
+        return datetime.max
+
+    groups.sort(key=_earliest)
+    mapping = {}
+    for i, group in enumerate(groups[:12]):
+        letter = 'ABCDEFGHIJKL'[i]
+        for tid in group:
+            mapping[tid] = letter
+    logging.info("WC group letters assigned: %d teams across %d groups", len(mapping), len(groups))
+    return mapping
 
 
 def invalidate_wc_cache():
