@@ -107,14 +107,16 @@ function MatchCard({ match, userPick, allPicks, members, onPick, poolId, pickFor
 
       {/* Date / venue / lock indicator */}
       <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>
-        {fmtDate(match_date)}
-        {venue && <span style={{ marginLeft: 8 }}>· {venue}</span>}
-        {is_locked && !result && <span style={{ marginLeft: 8, color: '#f59e0b' }}>🔒 Locked</span>}
-        {result && (
-          <span style={{ marginLeft: 8, color: '#6b7280' }}>
-            Final: {result === 'H' ? `${home_name} won` : result === 'A' ? `${away_name} won` : 'Draw'}
-          </span>
-        )}
+        <div>
+          {fmtDate(match_date)}
+          {is_locked && !result && <span style={{ marginLeft: 8, color: '#f59e0b' }}>🔒 Locked</span>}
+          {result && (
+            <span style={{ marginLeft: 8, color: '#6b7280' }}>
+              Final: {result === 'H' ? `${home_name} won` : result === 'A' ? `${away_name} won` : 'Draw'}
+            </span>
+          )}
+        </div>
+        {venue && <div>{venue}</div>}
       </div>
 
       {/* Other members' picks (shown once game is locked) */}
