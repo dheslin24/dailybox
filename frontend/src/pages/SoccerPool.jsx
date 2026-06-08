@@ -152,6 +152,8 @@ export default function SoccerPool() {
   const [groupSort, setGroupSort] = useState('group')
   const [pickMsg, setPickMsg] = useState('')
   const [refreshing, setRefreshing] = useState(false)
+  const [tbInput, setTbInput] = useState('')
+  const [tbMsg, setTbMsg] = useState('')
 
   const load = useCallback(() => {
     fetch(`/api/soccer_pool?pool_id=${poolId}`)
@@ -160,6 +162,12 @@ export default function SoccerPool() {
   }, [poolId])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (data?.tiebreaker?.user_goals != null) {
+      setTbInput(String(data.tiebreaker.user_goals))
+    }
+  }, [data?.tiebreaker?.user_goals])
 
   const handlePick = (matchId, pick) => {
     fetch('/api/soccer_pick', {
@@ -186,9 +194,26 @@ export default function SoccerPool() {
       .catch(() => setRefreshing(false))
   }
 
+  const handleTiebreaker = () => {
+    const goals = parseInt(tbInput)
+    if (isNaN(goals) || goals < 0) { setTbMsg('Enter a valid number'); return }
+    fetch('/api/soccer_tiebreaker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pool_id: parseInt(poolId), goals }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) { setTbMsg(d.error); return }
+        setTbMsg('Saved!')
+        setTimeout(() => setTbMsg(''), 3000)
+        load()
+      })
+  }
+
   if (!data) return <Layout><div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>Loading...</div></Layout>
 
-  const { pool, matches, user_picks, all_picks, members, standings, can_manage } = data
+  const { pool, matches, user_picks, all_picks, members, standings, can_manage, tiebreaker } = data
 
   // Separate group stage from knockout
   const groupMatches = matches.filter(m => m.round_type === 'group')
@@ -242,6 +267,47 @@ export default function SoccerPool() {
 
         {pickMsg && (
           <div className="alert alert-danger" style={{ marginBottom: 12 }}>{pickMsg}</div>
+        )}
+
+        {/* Tiebreaker panel */}
+        {pool.tiebreaker === 'goals' && (
+          <div style={{
+            background: tiebreaker?.locked ? '#f9fafb' : '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: 8, padding: '10px 14px', marginBottom: 16,
+            display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10,
+          }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>🎯 Tiebreaker: </span>
+              <span style={{ fontSize: 13 }}>Predict total goals scored in the tournament</span>
+              {tiebreaker?.locked && tiebreaker?.actual_goals > 0 && (
+                <span style={{ marginLeft: 8, fontSize: 12, color: '#6b7280' }}>
+                  · Actual so far: <strong>{tiebreaker.actual_goals}</strong>
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <input
+                type="number" min={0}
+                className="form-control input-sm"
+                style={{ width: 72 }}
+                value={tbInput}
+                onChange={e => setTbInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !tiebreaker?.locked && handleTiebreaker()}
+                disabled={tiebreaker?.locked}
+                placeholder="Goals"
+              />
+              {!tiebreaker?.locked && (
+                <button className="btn btn-warning btn-sm" onClick={handleTiebreaker}>Save</button>
+              )}
+              {tiebreaker?.locked && (
+                <span style={{ fontSize: 12, color: '#9ca3af' }}>🔒 Locked</span>
+              )}
+              {tbMsg && (
+                <span style={{ fontSize: 12, color: tbMsg === 'Saved!' ? '#16a34a' : '#dc2626' }}>{tbMsg}</span>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Tabs */}
@@ -387,23 +453,38 @@ export default function SoccerPool() {
                     <th>Points</th>
                     <th>Correct</th>
                     <th>Picked</th>
+                    {pool.tiebreaker === 'goals' && <th title="Tiebreaker: predicted total goals">Goals 🎯</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {standings.map(s => (
-                    <tr key={s.user_id} style={{ fontWeight: s.user_id === data.current_user?.user_id ? 700 : 'normal' }}>
-                      <td>{s.rank}</td>
-                      <td>
-                        {s.username}
-                        {s.user_id === data.current_user?.user_id && (
-                          <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>(you)</span>
+                  {standings.map(s => {
+                    const isMe = s.user_id === data.current_user?.user_id
+                    const tbDiff = tiebreaker?.actual_goals > 0 && s.tiebreaker_goals != null
+                      ? Math.abs(s.tiebreaker_goals - tiebreaker.actual_goals)
+                      : null
+                    return (
+                      <tr key={s.user_id} style={{ fontWeight: isMe ? 700 : 'normal' }}>
+                        <td>{s.rank}</td>
+                        <td>
+                          {s.username}
+                          {isMe && <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>(you)</span>}
+                        </td>
+                        <td>{s.total_points}</td>
+                        <td>{s.correct_picks}</td>
+                        <td style={{ color: '#9ca3af' }}>{s.total_picks}</td>
+                        {pool.tiebreaker === 'goals' && (
+                          <td style={{ color: '#6b7280' }}>
+                            {s.tiebreaker_goals != null ? s.tiebreaker_goals : <span style={{ color: '#d1d5db' }}>—</span>}
+                            {tbDiff != null && (
+                              <span style={{ fontSize: 11, color: tbDiff === 0 ? '#16a34a' : '#9ca3af', marginLeft: 4 }}>
+                                ({tbDiff === 0 ? '✓' : `±${tbDiff}`})
+                              </span>
+                            )}
+                          </td>
                         )}
-                      </td>
-                      <td>{s.total_points}</td>
-                      <td>{s.correct_picks}</td>
-                      <td style={{ color: '#9ca3af' }}>{s.total_picks}</td>
-                    </tr>
-                  ))}
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             )}

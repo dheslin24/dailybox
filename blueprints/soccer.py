@@ -60,12 +60,14 @@ def _init_schema():
         pts_final       INT          DEFAULT 6,
         pick_format     VARCHAR(20)  DEFAULT 'standard',
         pts_group_draw  INT          DEFAULT 0,
+        tiebreaker      VARCHAR(30)  DEFAULT 'goals',
         created_at      DATETIME     DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uq_invite (invite_code)
     )""")
-    # Migration for pools table already created without new columns
+    # Migrations for columns added after initial deploy
     for col, defn in [('pick_format', "VARCHAR(20) DEFAULT 'standard'"),
-                      ('pts_group_draw', 'INT DEFAULT 0')]:
+                      ('pts_group_draw', 'INT DEFAULT 0'),
+                      ('tiebreaker', "VARCHAR(30) DEFAULT 'goals'")]:
         try:
             db2(f"ALTER TABLE soccer_pools ADD COLUMN {col} {defn}")
         except Exception:
@@ -75,13 +77,18 @@ def _init_schema():
     except Exception:
         pass  # already exists
     db2("""CREATE TABLE IF NOT EXISTS soccer_pool_entries (
-        entry_id  INT AUTO_INCREMENT PRIMARY KEY,
-        pool_id   INT     NOT NULL,
-        user_id   INT     NOT NULL,
-        paid      TINYINT DEFAULT 0,
-        joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        entry_id         INT AUTO_INCREMENT PRIMARY KEY,
+        pool_id          INT     NOT NULL,
+        user_id          INT     NOT NULL,
+        paid             TINYINT DEFAULT 0,
+        tiebreaker_goals INT,
+        joined_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uq_pool_user (pool_id, user_id)
     )""")
+    try:
+        db2("ALTER TABLE soccer_pool_entries ADD COLUMN tiebreaker_goals INT")
+    except Exception:
+        pass  # already exists
     db2("""CREATE TABLE IF NOT EXISTS soccer_picks (
         pick_id      INT AUTO_INCREMENT PRIMARY KEY,
         pool_id      INT    NOT NULL,
@@ -158,27 +165,35 @@ ROUND_DISPLAY = {
 
 def _compute_standings(pool_id):
     pool_row = db2("""SELECT pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final,
-                             pick_format, pts_group_draw
+                             pick_format, pts_group_draw, tiebreaker
                       FROM soccer_pools WHERE pool_id=%s""", (pool_id,))
     if not pool_row:
-        return []
+        return [], 0
     pts_map = dict(zip(['group', 'r32', 'r16', 'qf', 'sf', '3rd', 'final'], pool_row[0][:7]))
     pick_format = pool_row[0][7] or 'standard'
     pts_group_draw = pool_row[0][8] or 0
+    tiebreaker = pool_row[0][9] or 'goals'
 
-    entries = db2("""SELECT e.user_id, u.username
+    entries = db2("""SELECT e.user_id, u.username, e.tiebreaker_goals
                      FROM soccer_pool_entries e
                      JOIN users u ON u.userid = e.user_id
                      WHERE e.pool_id=%s""", (pool_id,))
     if not entries:
-        return []
+        return [], 0
+
+    t_id = _get_tournament_id()
+    actual_goals_row = db2("""SELECT COALESCE(SUM(home_score + away_score), 0)
+                               FROM soccer_matches
+                               WHERE tournament_id=%s AND result IS NOT NULL""", (t_id,))
+    actual_goals = int(actual_goals_row[0][0]) if actual_goals_row else 0
 
     picks = db2("""SELECT p.user_id, p.pick, m.result, m.round_type
                    FROM soccer_picks p
                    JOIN soccer_matches m ON m.match_id = p.match_id
                    WHERE p.pool_id=%s AND m.result IS NOT NULL""", (pool_id,))
 
-    user_data = {r[0]: {'username': r[1], 'total': 0, 'by_round': {}, 'correct': 0, 'picked': 0}
+    user_data = {r[0]: {'username': r[1], 'tiebreaker_goals': r[2],
+                        'total': 0, 'by_round': {}, 'correct': 0, 'picked': 0}
                  for r in entries}
 
     for row in (picks or []):
@@ -188,10 +203,9 @@ def _compute_standings(pool_id):
         user_data[user_id]['picked'] += 1
         pts = 0
         if pick_format == 'winner_only' and round_type == 'group':
-            # winner_only: no Draw picks allowed; draws award consolation pts to both sides
             if result == 'D':
-                pts = pts_group_draw  # consolation for a drawn game
-                user_data[user_id]['correct'] += 1  # count as "got something"
+                pts = pts_group_draw
+                user_data[user_id]['correct'] += 1
             elif pick == result:
                 pts = pts_map.get(round_type, 0)
                 user_data[user_id]['correct'] += 1
@@ -203,13 +217,21 @@ def _compute_standings(pool_id):
             user_data[user_id]['total'] += pts
             user_data[user_id]['by_round'][round_type] = user_data[user_id]['by_round'].get(round_type, 0) + pts
 
+    def _tb_sort(d):
+        if tiebreaker == 'goals' and d['tiebreaker_goals'] is not None:
+            return abs(d['tiebreaker_goals'] - actual_goals)
+        return 99999  # no guess → last in tiebreaker
+
     standings = [{'user_id': uid, 'username': d['username'], 'total_points': d['total'],
-                  'by_round': d['by_round'], 'correct_picks': d['correct'], 'total_picks': d['picked']}
+                  'by_round': d['by_round'], 'correct_picks': d['correct'], 'total_picks': d['picked'],
+                  'tiebreaker_goals': d['tiebreaker_goals']}
                  for uid, d in user_data.items()]
-    standings.sort(key=lambda x: -x['total_points'])
+    standings.sort(key=lambda x: (-x['total_points'], _tb_sort(x)))
     for i, s in enumerate(standings):
-        s['rank'] = standings[i - 1]['rank'] if i > 0 and s['total_points'] == standings[i - 1]['total_points'] else i + 1
-    return standings
+        same_pts = i > 0 and s['total_points'] == standings[i - 1]['total_points']
+        same_tb = same_pts and _tb_sort(s) == _tb_sort(standings[i - 1])
+        s['rank'] = standings[i - 1]['rank'] if same_tb else i + 1
+    return standings, actual_goals
 
 
 # ── ADMIN: GRANTS ─────────────────────────────────────────────────────────────
@@ -286,16 +308,19 @@ def soccer_create_pool():
     if pick_format not in ('standard', 'winner_only'):
         pick_format = 'standard'
     pts_group_draw = int(data.get('pts_group_draw', 0))
+    tiebreaker = data.get('tiebreaker', 'goals')
+    if tiebreaker not in ('goals',):
+        tiebreaker = 'goals'
 
     db2("""INSERT INTO soccer_pools
            (tournament_id, name, created_by, invite_code, status, fee,
             pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final,
-            pick_format, pts_group_draw)
-           VALUES (%s,%s,%s,%s,'open',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            pick_format, pts_group_draw, tiebreaker)
+           VALUES (%s,%s,%s,%s,'open',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
         (t_id, name, uid, invite_code, data.get('fee', ''),
          pts['pts_group'], pts['pts_r32'], pts['pts_r16'],
          pts['pts_qf'], pts['pts_sf'], pts['pts_3rd'], pts['pts_final'],
-         pick_format, pts_group_draw))
+         pick_format, pts_group_draw, tiebreaker))
 
     pool_id = db2("SELECT LAST_INSERT_ID()")[0][0]
     db2("INSERT IGNORE INTO soccer_pool_entries (pool_id, user_id) VALUES (%s,%s)", (pool_id, uid))
@@ -313,12 +338,12 @@ def soccer_admin_pools():
     if session.get('is_admin') == 1:
         rows = db2("""SELECT pool_id, name, status, invite_code, fee, created_at,
                              pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final,
-                             pick_format, pts_group_draw
+                             pick_format, pts_group_draw, tiebreaker
                       FROM soccer_pools ORDER BY created_at DESC""")
     else:
         rows = db2("""SELECT DISTINCT p.pool_id, p.name, p.status, p.invite_code, p.fee, p.created_at,
                              p.pts_group, p.pts_r32, p.pts_r16, p.pts_qf, p.pts_sf, p.pts_3rd, p.pts_final,
-                             p.pick_format, p.pts_group_draw
+                             p.pick_format, p.pts_group_draw, p.tiebreaker
                       FROM soccer_pools p
                       LEFT JOIN soccer_pool_deputies d ON d.pool_id=p.pool_id AND d.user_id=%s
                       WHERE p.created_by=%s OR d.user_id IS NOT NULL
@@ -329,6 +354,7 @@ def soccer_admin_pools():
         'pts_group': r[6], 'pts_r32': r[7], 'pts_r16': r[8],
         'pts_qf': r[9], 'pts_sf': r[10], 'pts_3rd': r[11], 'pts_final': r[12],
         'pick_format': r[13] or 'standard', 'pts_group_draw': r[14] or 0,
+        'tiebreaker': r[15] or 'goals',
     } for r in (rows or [])])
 
 
@@ -555,7 +581,7 @@ def soccer_pool():
 
     pool_row = db2("""SELECT pool_id, name, status, invite_code, fee, created_by,
                              pts_group, pts_r32, pts_r16, pts_qf, pts_sf, pts_3rd, pts_final,
-                             pick_format, pts_group_draw
+                             pick_format, pts_group_draw, tiebreaker
                       FROM soccer_pools WHERE pool_id=%s""", (pool_id,))
     if not pool_row:
         return jsonify({'error': 'pool not found'}), 404
@@ -566,6 +592,7 @@ def soccer_pool():
         'pts_group': p[6], 'pts_r32': p[7], 'pts_r16': p[8],
         'pts_qf': p[9], 'pts_sf': p[10], 'pts_3rd': p[11], 'pts_final': p[12],
         'pick_format': p[13] or 'standard', 'pts_group_draw': p[14] or 0,
+        'tiebreaker': p[15] or 'goals',
     }
 
     is_member = bool(db2("SELECT 1 FROM soccer_pool_entries WHERE pool_id=%s AND user_id=%s", (pool_id, uid)))
@@ -606,11 +633,12 @@ def soccer_pool():
         all_picks.setdefault(row[1], {})[row[0]] = row[2]
 
     # Members
-    member_rows = db2("""SELECT e.user_id, u.username, e.paid
+    member_rows = db2("""SELECT e.user_id, u.username, e.paid, e.tiebreaker_goals
                          FROM soccer_pool_entries e
                          JOIN users u ON u.userid=e.user_id
                          WHERE e.pool_id=%s ORDER BY u.username""", (pool_id,))
-    members = [{'user_id': r[0], 'username': r[1], 'paid': r[2]} for r in (member_rows or [])]
+    members = [{'user_id': r[0], 'username': r[1], 'paid': r[2], 'tiebreaker_goals': r[3]}
+               for r in (member_rows or [])]
 
     # Deputies
     deputy_rows = db2("""SELECT d.user_id, u.username
@@ -619,7 +647,17 @@ def soccer_pool():
                          WHERE d.pool_id=%s""", (pool_id,))
     deputies = [{'user_id': r[0], 'username': r[1]} for r in (deputy_rows or [])]
 
-    standings = _compute_standings(pool_id)
+    standings, actual_goals = _compute_standings(pool_id)
+
+    # Current user's tiebreaker guess
+    tb_row = db2("SELECT tiebreaker_goals FROM soccer_pool_entries WHERE pool_id=%s AND user_id=%s",
+                 (pool_id, uid))
+    user_tiebreaker_goals = tb_row[0][0] if tb_row else None
+
+    # Tiebreaker lock: locked once the first match of the tournament has started
+    first_match = db2("""SELECT match_date FROM soccer_matches
+                         WHERE tournament_id=%s ORDER BY match_date ASC LIMIT 1""", (t_id,))
+    tb_locked = bool(first_match and first_match[0][0] and first_match[0][0] <= datetime.utcnow())
 
     return jsonify({
         'pool': pool,
@@ -632,7 +670,45 @@ def soccer_pool():
         'is_member': is_member,
         'can_manage': can_manage,
         'current_user': {'user_id': uid, 'username': session.get('username')},
+        'tiebreaker': {
+            'type': pool['tiebreaker'],
+            'user_goals': user_tiebreaker_goals,
+            'actual_goals': actual_goals,
+            'locked': tb_locked,
+        },
     })
+
+
+# ── USER: TIEBREAKER ─────────────────────────────────────────────────────────
+
+@bp.route('/api/soccer_tiebreaker', methods=['POST'])
+@login_required
+def soccer_tiebreaker():
+    data = request.get_json() or {}
+    pool_id = data.get('pool_id')
+    goals = data.get('goals')
+    if not pool_id or goals is None:
+        return jsonify({'error': 'pool_id and goals required'}), 400
+    try:
+        goals = int(goals)
+        if goals < 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        return jsonify({'error': 'goals must be a non-negative integer'}), 400
+
+    uid = session['userid']
+    if not db2("SELECT 1 FROM soccer_pool_entries WHERE pool_id=%s AND user_id=%s", (pool_id, uid)):
+        return jsonify({'error': 'not a pool member'}), 403
+
+    t_id = _get_tournament_id()
+    first_match = db2("""SELECT match_date FROM soccer_matches
+                         WHERE tournament_id=%s ORDER BY match_date ASC LIMIT 1""", (t_id,))
+    if first_match and first_match[0][0] and first_match[0][0] <= datetime.utcnow():
+        return jsonify({'error': 'Tiebreaker is locked — tournament has already started'}), 400
+
+    db2("UPDATE soccer_pool_entries SET tiebreaker_goals=%s WHERE pool_id=%s AND user_id=%s",
+        (goals, pool_id, uid))
+    return jsonify({'success': True, 'goals': goals})
 
 
 # ── USER: PICKS ───────────────────────────────────────────────────────────────

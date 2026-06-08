@@ -81,7 +81,7 @@ export default function SoccerAdmin() {
   const [msg, setMsg] = useState('')
 
   // Create pool form
-  const [createForm, setCreateForm] = useState({ name: '', fee: '', pick_format: 'standard', pts_group_draw: 0, ...DEFAULT_PTS })
+  const [createForm, setCreateForm] = useState({ name: '', fee: '', pick_format: 'standard', pts_group_draw: 0, tiebreaker: 'goals', ...DEFAULT_PTS })
   const [createdCode, setCreatedCode] = useState(null)
 
   // Add user
@@ -136,7 +136,7 @@ export default function SoccerAdmin() {
       .then(d => {
         if (d.error) { flash(d.error); return }
         setCreatedCode(d.invite_code)
-        setCreateForm({ name: '', fee: '', pick_format: 'standard', pts_group_draw: 0, ...DEFAULT_PTS })
+        setCreateForm({ name: '', fee: '', pick_format: 'standard', pts_group_draw: 0, tiebreaker: 'goals', ...DEFAULT_PTS })
         loadPools()
         setSelectedPoolId(d.pool_id)
       })
@@ -277,6 +277,14 @@ export default function SoccerAdmin() {
                     />
                   </div>
                 )}
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginTop: 4 }}>Tiebreaker</div>
+                <select
+                  className="form-control"
+                  value={createForm.tiebreaker}
+                  onChange={e => setCreateForm(f => ({ ...f, tiebreaker: e.target.value }))}
+                >
+                  <option value="goals">Total tournament goals</option>
+                </select>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginTop: 4 }}>Points per round</div>
                 {PTS_LABELS.map(([key, label]) => (
                   <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
