@@ -145,6 +145,102 @@ function MatchCard({ match, userPick, allPicks, members, onPick, poolId, pickFor
   )
 }
 
+function PlayerPicksModal({ player, matches, allPicks, pool, onClose }) {
+  const playerPickMap = {}
+  Object.entries(allPicks || {}).forEach(([matchId, picks]) => {
+    if (picks[player.user_id] != null) playerPickMap[parseInt(matchId)] = picks[player.user_id]
+  })
+
+  const lockedMatches = matches.filter(m => m.is_locked)
+  const byGroup = {}, byRound = {}
+  for (const m of lockedMatches) {
+    if (m.round_type === 'group') {
+      const g = m.group_letter || '?'
+      if (!byGroup[g]) byGroup[g] = []
+      byGroup[g].push(m)
+    } else {
+      if (!byRound[m.round_type]) byRound[m.round_type] = []
+      byRound[m.round_type].push(m)
+    }
+  }
+  const groupLetters = Object.keys(byGroup).sort()
+
+  const renderRow = (m) => {
+    const pick = playerPickMap[m.match_id]
+    const isDrawConsolation = pool.pick_format === 'winner_only' && m.round_type === 'group' && m.result === 'D'
+    const isCorrect = pick && m.result && pick === m.result && !isDrawConsolation
+    const isConsolation = pick && isDrawConsolation
+    const isWrong = pick && m.result && pick !== m.result && !isDrawConsolation
+    const pickLabel = pick === 'H' ? (m.home_abbr || 'H') : pick === 'A' ? (m.away_abbr || 'A') : pick === 'D' ? 'D' : null
+    let chipBg = '#e5e7eb', chipColor = '#374151'
+    if (isCorrect)    { chipBg = '#16a34a'; chipColor = '#fff' }
+    if (isConsolation){ chipBg = '#d97706'; chipColor = '#fff' }
+    if (isWrong)      { chipBg = '#dc2626'; chipColor = '#fff' }
+    return (
+      <div key={m.match_id} style={{
+        display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0',
+        borderBottom: '1px solid #f3f4f6', fontSize: 13,
+      }}>
+        <span style={{ flex: 1, color: '#374151' }}>
+          {m.home_abbr || m.home_name} vs {m.away_abbr || m.away_name}
+        </span>
+        <span style={{ minWidth: 36, textAlign: 'center' }}>
+          {pickLabel
+            ? <span style={{ background: chipBg, color: chipColor, borderRadius: 4, padding: '2px 7px', fontWeight: 600, fontSize: 12 }}>{pickLabel}</span>
+            : <span style={{ color: '#d1d5db' }}>—</span>
+          }
+        </span>
+        <span style={{ minWidth: 80, textAlign: 'right', fontSize: 11, color: '#9ca3af' }}>
+          {m.result === 'H' ? `${m.home_abbr || m.home_name} won`
+            : m.result === 'A' ? `${m.away_abbr || m.away_name} won`
+            : m.result === 'D' ? 'Draw'
+            : m.status === 'in_progress' ? '🔴 Live'
+            : ''}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px', overflowY: 'auto' }}
+      onClick={onClose}
+    >
+      <div style={{ background: '#fff', borderRadius: 8, width: '100%', maxWidth: 520, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e5e7eb' }}>
+          <strong style={{ fontSize: 15 }}>⚽ {player.username}'s Picks</strong>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#9ca3af', lineHeight: 1, padding: 0 }}>×</button>
+        </div>
+        <div style={{ padding: '12px 16px', maxHeight: '70vh', overflowY: 'auto' }}>
+          {lockedMatches.length === 0 ? (
+            <p style={{ color: '#6b7280', textAlign: 'center', padding: 24 }}>No matches have started yet.</p>
+          ) : (
+            <>
+              {groupLetters.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Group Stage</div>
+                  {groupLetters.map(letter => (
+                    <div key={letter} style={{ marginBottom: 10 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 4 }}>Group {letter}</div>
+                      {byGroup[letter].map(renderRow)}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {ROUND_ORDER.filter(r => r !== 'group' && byRound[r]).map(round => (
+                <div key={round} style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{ROUND_LABEL[round]}</div>
+                  {byRound[round].map(renderRow)}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function SoccerPool() {
   const { poolId } = useParams()
   const [data, setData] = useState(null)
@@ -154,6 +250,7 @@ export default function SoccerPool() {
   const [refreshing, setRefreshing] = useState(false)
   const [tbInput, setTbInput] = useState('')
   const [tbMsg, setTbMsg] = useState('')
+  const [viewingPlayer, setViewingPlayer] = useState(null)
 
   const load = useCallback(() => {
     fetch(`/api/soccer_pool?pool_id=${poolId}`)
@@ -280,6 +377,11 @@ export default function SoccerPool() {
             <div style={{ flex: 1, minWidth: 200 }}>
               <span style={{ fontWeight: 600, fontSize: 13 }}>🎯 Tiebreaker: </span>
               <span style={{ fontSize: 13 }}>Predict total goals scored in the tournament</span>
+              {!tiebreaker?.locked && (
+                <div style={{ fontSize: 11, color: '#92400e', marginTop: 2 }}>
+                  Your pick is private until the first match kicks off, then it locks.
+                </div>
+              )}
               {tiebreaker?.locked && tiebreaker?.actual_goals > 0 && (
                 <span style={{ marginLeft: 8, fontSize: 12, color: '#6b7280' }}>
                   · Actual so far: <strong>{tiebreaker.actual_goals}</strong>
@@ -453,26 +555,29 @@ export default function SoccerPool() {
                     <th>Points</th>
                     <th>Correct</th>
                     <th>Picked</th>
-                    {pool.tiebreaker === 'goals' && <th title="Tiebreaker: predicted total goals">Goals 🎯</th>}
+                    {pool.tiebreaker === 'goals' && tiebreaker?.locked && <th title="Tiebreaker: predicted total goals">Goals 🎯</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {standings.map(s => {
                     const isMe = s.user_id === data.current_user?.user_id
-                    const tbDiff = tiebreaker?.actual_goals > 0 && s.tiebreaker_goals != null
+                    const tbDiff = tiebreaker?.locked && tiebreaker?.actual_goals > 0 && s.tiebreaker_goals != null
                       ? Math.abs(s.tiebreaker_goals - tiebreaker.actual_goals)
                       : null
                     return (
                       <tr key={s.user_id} style={{ fontWeight: isMe ? 700 : 'normal' }}>
                         <td>{s.rank}</td>
                         <td>
-                          {s.username}
+                          <span
+                            onClick={() => setViewingPlayer({ user_id: s.user_id, username: s.username })}
+                            style={{ cursor: 'pointer', color: '#2563eb', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                          >{s.username}</span>
                           {isMe && <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>(you)</span>}
                         </td>
                         <td>{s.total_points}</td>
                         <td>{s.correct_picks}</td>
                         <td style={{ color: '#9ca3af' }}>{s.total_picks}</td>
-                        {pool.tiebreaker === 'goals' && (
+                        {pool.tiebreaker === 'goals' && tiebreaker?.locked && (
                           <td style={{ color: '#6b7280' }}>
                             {s.tiebreaker_goals != null ? s.tiebreaker_goals : <span style={{ color: '#d1d5db' }}>—</span>}
                             {tbDiff != null && (
@@ -498,6 +603,16 @@ export default function SoccerPool() {
           </div>
         )}
       </div>
+
+      {viewingPlayer && (
+        <PlayerPicksModal
+          player={viewingPlayer}
+          matches={matches}
+          allPicks={all_picks}
+          pool={pool}
+          onClose={() => setViewingPlayer(null)}
+        />
+      )}
     </Layout>
   )
 }
