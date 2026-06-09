@@ -554,7 +554,7 @@ export default function SoccerPool() {
                     <th>Player</th>
                     <th>Points</th>
                     <th>Correct</th>
-                    <th>Picked</th>
+                    <th>Accuracy</th>
                     {pool.tiebreaker === 'goals' && tiebreaker?.locked && <th title="Tiebreaker: predicted total goals">Goals 🎯</th>}
                   </tr>
                 </thead>
@@ -576,7 +576,9 @@ export default function SoccerPool() {
                         </td>
                         <td>{s.total_points}</td>
                         <td>{s.correct_picks}</td>
-                        <td style={{ color: '#9ca3af' }}>{s.total_picks}</td>
+                        <td style={{ color: '#9ca3af' }}>
+                          {s.total_picks > 0 ? `${Math.round(s.correct_picks / s.total_picks * 100)}%` : '—'}
+                        </td>
                         {pool.tiebreaker === 'goals' && tiebreaker?.locked && (
                           <td style={{ color: '#6b7280' }}>
                             {s.tiebreaker_goals != null ? s.tiebreaker_goals : <span style={{ color: '#d1d5db' }}>—</span>}
