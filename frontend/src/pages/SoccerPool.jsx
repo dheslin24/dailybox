@@ -17,8 +17,8 @@ function fmtDate(iso) {
 
 function TeamLogo({ logo, name, size = 28 }) {
   return logo
-    ? <img src={logo} alt={name} style={{ width: size, height: size, objectFit: 'contain' }} />
-    : <span style={{ fontSize: size * 0.6, lineHeight: 1 }}>⚽</span>
+    ? <img src={logo} alt={name} title={name} style={{ width: size, height: size, objectFit: 'contain' }} />
+    : <span title={name} style={{ fontSize: size * 0.6, lineHeight: 1 }}>⚽</span>
 }
 
 function PickButton({ label, active, correct, consolation, wrong, disabled, onClick }) {
@@ -64,7 +64,7 @@ function MatchCard({ match, userPick, allPicks, members, onPick, poolId, pickFor
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 200 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <TeamLogo logo={home_logo} name={home_name} />
-            <span style={{ fontWeight: 600, fontSize: 14 }}>{home_abbr || home_name}</span>
+            <span title={home_name} style={{ fontWeight: 600, fontSize: 14 }}>{home_abbr || home_name}</span>
           </div>
           <div style={{ textAlign: 'center', minWidth: 48 }}>
             {showScore
@@ -76,7 +76,7 @@ function MatchCard({ match, userPick, allPicks, members, onPick, poolId, pickFor
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontWeight: 600, fontSize: 14 }}>{away_abbr || away_name}</span>
+            <span title={away_name} style={{ fontWeight: 600, fontSize: 14 }}>{away_abbr || away_name}</span>
             <TeamLogo logo={away_logo} name={away_name} />
           </div>
         </div>
