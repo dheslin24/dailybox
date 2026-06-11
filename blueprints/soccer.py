@@ -470,8 +470,20 @@ def soccer_seed_matches():
                 m['match_date'], m['round_type'], group_letter, i,
                 m['status'], m['home_score'], m['away_score'], m['result'], m.get('venue', ''),
             )
-            existing = db2("SELECT match_id FROM soccer_matches WHERE espn_event_id=%s", (m['espn_event_id'],))
+            existing = db2("SELECT match_id, round_type FROM soccer_matches WHERE espn_event_id=%s", (m['espn_event_id'],))
             if existing:
+                db_round_type = existing[0][1]
+                # ESPN can't determine round type from real team names (falls back to 'group').
+                # Preserve the DB's knockout round type if ESPN couldn't figure it out.
+                effective_round_type = (db_round_type
+                                        if m['round_type'] == 'group' and db_round_type != 'group'
+                                        else m['round_type'])
+                fields = (
+                    ht['espn_team_id'], ht['name'], ht['abbreviation'], ht['logo_url'],
+                    at['espn_team_id'], at['name'], at['abbreviation'], at['logo_url'],
+                    m['match_date'], effective_round_type, group_letter, i,
+                    m['status'], m['home_score'], m['away_score'], m['result'], m.get('venue', ''),
+                )
                 db2("""UPDATE soccer_matches SET
                        home_espn_team_id=%s, home_name=%s, home_abbr=%s, home_logo=%s,
                        away_espn_team_id=%s, away_name=%s, away_abbr=%s, away_logo=%s,
@@ -500,7 +512,7 @@ def soccer_seed_matches():
 
 
 @bp.route('/api/soccer_refresh_matches', methods=['POST'])
-@login_required
+@soccer_admin_required
 def soccer_refresh_matches():
     try:
         data = request.get_json() or {}

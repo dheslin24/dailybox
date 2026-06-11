@@ -95,6 +95,8 @@ export default function SoccerAdmin() {
   // Seed/refresh state
   const [seeding, setSeeding] = useState(false)
   const [seedResult, setSeedResult] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshResult, setRefreshResult] = useState(null)
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 5000) }
 
@@ -149,6 +151,16 @@ export default function SoccerAdmin() {
       .then(r => r.json())
       .then(d => { setSeedResult(d); setSeeding(false); loadDetail() })
       .catch(() => { setSeedResult({ error: 'Request failed' }); setSeeding(false) })
+  }
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    setRefreshResult(null)
+    const body = selectedPoolId ? JSON.stringify({ pool_id: selectedPoolId }) : '{}'
+    fetch('/api/soccer_refresh_matches', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+      .then(r => r.json())
+      .then(d => { setRefreshResult(d); setRefreshing(false); loadDetail() })
+      .catch(() => { setRefreshResult({ error: 'Request failed' }); setRefreshing(false) })
   }
 
   const handleAddUser = (overrideName) => {
@@ -313,31 +325,45 @@ export default function SoccerAdmin() {
               </div>
             </div>
 
-            {/* Seed Matches (super admin only) */}
-            {isSuperAdmin && (
-              <div className="panel panel-default" style={{ marginTop: 16 }}>
-                <div className="panel-heading"><strong>Match Data (ESPN)</strong></div>
-                <div className="panel-body">
-                  <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>
-                    Seed pulls all WC 2026 matches from ESPN and stores them in the DB.
-                    Run once before the tournament, then use Refresh to update scores.
-                  </p>
-                  <button className="btn btn-warning btn-sm" onClick={handleSeed} disabled={seeding}>
-                    {seeding ? 'Seeding...' : '⬇ Seed Matches from ESPN'}
+            {/* Match Data (ESPN) */}
+            <div className="panel panel-default" style={{ marginTop: 16 }}>
+              <div className="panel-heading"><strong>Match Data (ESPN)</strong></div>
+              <div className="panel-body">
+                <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>
+                  <strong>Refresh Scores</strong> updates scores and results for all matches already in the DB.
+                  Use this to pick up a result after a game ends.
+                  {isSuperAdmin && <> <strong>Seed</strong> imports the full schedule from ESPN (run once before the tournament).</>}
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button className="btn btn-primary btn-sm" onClick={handleRefresh} disabled={refreshing}>
+                    {refreshing ? 'Refreshing...' : '↻ Refresh Scores from ESPN'}
                   </button>
-                  {seedResult && (
-                    <div style={{ marginTop: 8, fontSize: 12 }}>
-                      {seedResult.error
-                        ? <span style={{ color: '#dc2626' }}>Error: {seedResult.error}</span>
-                        : <span style={{ color: '#15803d' }}>
-                            ✓ {seedResult.inserted} inserted, {seedResult.updated} updated ({seedResult.total} total)
-                          </span>
-                      }
-                    </div>
+                  {isSuperAdmin && (
+                    <button className="btn btn-warning btn-sm" onClick={handleSeed} disabled={seeding}>
+                      {seeding ? 'Seeding...' : '⬇ Seed Matches from ESPN'}
+                    </button>
                   )}
                 </div>
+                {refreshResult && (
+                  <div style={{ marginTop: 8, fontSize: 12 }}>
+                    {refreshResult.error
+                      ? <span style={{ color: '#dc2626' }}>Error: {refreshResult.error}</span>
+                      : <span style={{ color: '#15803d' }}>✓ {refreshResult.updated} matches updated</span>
+                    }
+                  </div>
+                )}
+                {seedResult && (
+                  <div style={{ marginTop: 8, fontSize: 12 }}>
+                    {seedResult.error
+                      ? <span style={{ color: '#dc2626' }}>Error: {seedResult.error}</span>
+                      : <span style={{ color: '#15803d' }}>
+                          ✓ {seedResult.inserted} inserted, {seedResult.updated} updated ({seedResult.total} total)
+                        </span>
+                    }
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Grants (super admin only) */}
             {isSuperAdmin && (
