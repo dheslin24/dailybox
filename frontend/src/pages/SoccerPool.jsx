@@ -311,6 +311,7 @@ export default function SoccerPool() {
   if (!data) return <Layout><div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>Loading...</div></Layout>
 
   const { pool, matches, user_picks, all_picks, members, standings, can_manage, tiebreaker } = data
+  const paidMap = Object.fromEntries(members.map(m => [m.user_id, m.paid]))
 
   // Separate group stage from knockout
   const groupMatches = matches.filter(m => m.round_type === 'group')
@@ -573,6 +574,10 @@ export default function SoccerPool() {
                             style={{ cursor: 'pointer', color: '#2563eb', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
                           >{s.username}</span>
                           {isMe && <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>(you)</span>}
+                          {paidMap[s.user_id]
+                            ? <span style={{ fontSize: 10, background: '#dcfce7', color: '#15803d', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>paid</span>
+                            : <span style={{ fontSize: 10, background: '#fee2e2', color: '#dc2626', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>unpaid</span>
+                          }
                         </td>
                         <td>{s.total_points}</td>
                         <td>{s.correct_picks}</td>
