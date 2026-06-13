@@ -261,6 +261,13 @@ export default function SoccerPool() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
+    const hasLive = data?.matches?.some(m => m.status === 'in_progress')
+    if (!hasLive) return
+    const id = setInterval(load, 60000)
+    return () => clearInterval(id)
+  }, [data?.matches, load])
+
+  useEffect(() => {
     if (data?.tiebreaker?.user_goals != null) {
       setTbInput(String(data.tiebreaker.user_goals))
     }

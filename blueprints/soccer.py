@@ -386,7 +386,6 @@ def soccer_remove_user():
     if not _can_manage_pool(pool_id):
         return jsonify({'error': 'forbidden'}), 403
     db2("DELETE FROM soccer_pool_entries WHERE pool_id=%s AND user_id=%s", (pool_id, user_id))
-    db2("DELETE FROM soccer_picks WHERE pool_id=%s AND user_id=%s", (pool_id, user_id))
     return jsonify({'success': True})
 
 
