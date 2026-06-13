@@ -395,23 +395,29 @@ def _parse_wc_scoreboard(r):
                 round_type = 'group'
 
             # Status
-            status_name = comp.get('status', {}).get('type', {}).get('name', '').upper()
-            if status_name in ('STATUS_FINAL', 'STATUS_FULL_TIME', 'STATUS_FT'):
+            status_obj = comp.get('status', {}).get('type', {})
+            status_name = status_obj.get('name', '').upper()
+            status_state = status_obj.get('state', '').lower()
+            if status_name in ('STATUS_FINAL', 'STATUS_FULL_TIME', 'STATUS_FT',
+                               'STATUS_AFTER_EXTRA_TIME', 'STATUS_AFTER_PENALTIES'):
                 status = 'final'
-            elif status_name in ('STATUS_IN_PROGRESS', 'STATUS_HALFTIME', 'STATUS_END_PERIOD',
-                                 'STATUS_END_OF_EXTRATIME', 'STATUS_SHOOTOUT'):
+            elif status_state == 'in' or status_name in (
+                    'STATUS_IN_PROGRESS', 'STATUS_FIRST_HALF', 'STATUS_SECOND_HALF',
+                    'STATUS_HALFTIME', 'STATUS_END_PERIOD', 'STATUS_END_OF_EXTRATIME',
+                    'STATUS_EXTRA_TIME_HALF', 'STATUS_SHOOTOUT'):
                 status = 'in_progress'
             else:
                 status = 'scheduled'
 
             home_score = away_score = result = None
-            if status in ('final', 'in_progress'):
-                try:
-                    home_score = int(home_team['score'] or 0)
-                    away_score = int(away_team['score'] or 0)
-                except (ValueError, TypeError):
-                    pass
-            if status == 'final' and home_score is not None:
+            try:
+                if home_team['score'] is not None:
+                    home_score = int(home_team['score'])
+                if away_team['score'] is not None:
+                    away_score = int(away_team['score'])
+            except (ValueError, TypeError):
+                pass
+            if status == 'final' and home_score is not None and away_score is not None:
                 if round_type == 'group':
                     result = 'H' if home_score > away_score else ('A' if away_score > home_score else 'D')
                 else:
