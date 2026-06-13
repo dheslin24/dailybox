@@ -405,16 +405,17 @@ def _parse_wc_scoreboard(r):
                 status = 'scheduled'
 
             home_score = away_score = result = None
-            if status == 'final':
+            if status in ('final', 'in_progress'):
                 try:
                     home_score = int(home_team['score'] or 0)
                     away_score = int(away_team['score'] or 0)
-                    if round_type == 'group':
-                        result = 'H' if home_score > away_score else ('A' if away_score > home_score else 'D')
-                    else:
-                        result = 'H' if home_score > away_score else 'A'
                 except (ValueError, TypeError):
                     pass
+            if status == 'final' and home_score is not None:
+                if round_type == 'group':
+                    result = 'H' if home_score > away_score else ('A' if away_score > home_score else 'D')
+                else:
+                    result = 'H' if home_score > away_score else 'A'
 
             venue_obj = comp.get('venue', {})
             venue_name = venue_obj.get('fullName', '')
