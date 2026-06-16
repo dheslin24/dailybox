@@ -60,7 +60,9 @@ export default function GolfPool() {
       .then(d => {
         const list = d.pools || []
         setPools(list)
-        if (!selectedPoolId && list.length === 1) setSelectedPoolId(list[0].pool_id)
+        const ACTIVE = ['setup', 'open', 'active']
+        if (!selectedPoolId && list.length === 1 && ACTIVE.includes(list[0].status))
+          setSelectedPoolId(list[0].pool_id)
       })
   }, [])
 
@@ -215,7 +217,26 @@ export default function GolfPool() {
                 </div>
               )}
               {visible.length === 0 && (
-                <p className="text-center text-muted">No active pools. <button className="btn btn-link btn-xs" style={{ padding: 0 }} onClick={() => setShowCompleted(true)}>Show completed pools</button></p>
+                <div style={{ maxWidth: 400, margin: '0 auto' }}>
+                  <p className="text-center text-muted">No active pools. <button className="btn btn-link btn-xs" style={{ padding: 0 }} onClick={() => setShowCompleted(true)}>Show completed pools</button></p>
+                  <p>Enter an invite code to join a new pool:</p>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Invite code"
+                      value={joinCode}
+                      onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                      onKeyDown={e => e.key === 'Enter' && handleJoinPool()}
+                      maxLength={8}
+                      style={{ letterSpacing: 2, textTransform: 'uppercase' }}
+                    />
+                    <span className="input-group-btn">
+                      <button className="btn btn-primary" onClick={() => handleJoinPool()}>Join</button>
+                    </span>
+                  </div>
+                  {joinMsg && <p style={{ marginTop: 8 }}>{joinMsg}</p>}
+                </div>
               )}
               {visible.length > 0 && (
                 <div className="list-group" style={{ maxWidth: 600, margin: '0 auto' }}>
