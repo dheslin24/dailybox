@@ -7,6 +7,7 @@ const EMPTY_FORM = {
   pool_name: '', fee: '', pool_format: 'draft', draft_type: 'manual', picks_per_user: 4,
   tiebreaker_type: 'player', scoring_players: '', dnf_handling: 'eliminate', dnf_penalty: 1,
   max_entries_per_user: 1, cut_rule_type: 'top_n', cut_n: '', cut_within_shots: '',
+  auto_activate: false,
 }
 
 const KNOWN_CUT_RULES = {
@@ -689,6 +690,20 @@ export default function GolfAdmin() {
                   </td>
                 </tr>
               )}
+              <tr>
+                <td style={{ width: 180, padding: '6px 12px 6px 0', fontWeight: 600, verticalAlign: 'middle' }}>
+                  Auto-Activate
+                </td>
+                <td style={{ padding: '4px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" checked={form.auto_activate}
+                      onChange={e => setForm(f => ({ ...f, auto_activate: e.target.checked }))} />
+                    <span className="text-muted" style={{ fontSize: 12 }}>
+                      Automatically move pool to Active when the first round begins (based on ESPN status)
+                    </span>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
 
@@ -715,7 +730,12 @@ export default function GolfAdmin() {
                   <td>{p.name}</td>
                   <td>{p.event_name}</td>
                   <td>{p.pool_format}</td>
-                  <td><span className="label label-default">{p.status}</span></td>
+                  <td>
+                    <span className="label label-default">{p.status}</span>
+                    {p.auto_activate && p.status === 'open' && (
+                      <span className="label label-info" style={{ marginLeft: 4 }} title="Will auto-activate when the first round begins">auto</span>
+                    )}
+                  </td>
                   <td>
                     <button className="btn btn-xs btn-primary"
                       onClick={() => setSelectedPoolId(p.pool_id)}>Manage</button>
@@ -733,6 +753,9 @@ export default function GolfAdmin() {
           <div className="panel-heading">
             <strong>Managing: {pool.name}</strong>
             <span className="label label-default" style={{ marginLeft: 10 }}>{pool.status}</span>
+            {pool.auto_activate && pool.status === 'open' && (
+              <span className="label label-info" style={{ marginLeft: 6 }} title="Will auto-activate when the first round begins">auto-activate on</span>
+            )}
             <span style={{ marginLeft: 10, fontSize: 12 }}>
               {pool.pool_format} · {pool.picks_per_user} picks/user{pool.scoring_players ? ` (top ${pool.scoring_players} score)` : ''} · fee: {poolDetail.pool.fee || 'none'} · TB: {pool.tiebreaker_type === 'winning_score' ? 'winning score' : 'player score'}
             </span>

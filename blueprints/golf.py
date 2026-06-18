@@ -7,6 +7,13 @@ import random
 
 bp = Blueprint('golf', __name__)
 
+# ESPN event-level statuses that indicate play has begun (round 1 tee-off has occurred).
+# STATUS_DELAYED is intentionally excluded — that fires before any golfer tees off.
+_TOURNAMENT_STARTED_STATUSES = {
+    'STATUS_IN_PROGRESS', 'STATUS_SUSPENDED',
+    'STATUS_FINAL', 'STATUS_COMPLETE', 'STATUS_END_TOURNAMENT',
+}
+
 
 def _compute_snake_sequence(base_order, picks_per_user):
     """Return a list of user_ids for each overall draft position (snake order).
@@ -363,6 +370,10 @@ def api_golf_init_db():
         db2("ALTER TABLE golf_events ADD COLUMN cut_within_shots INT DEFAULT NULL")
     except Exception:
         pass
+    try:
+        db2("ALTER TABLE golf_pools ADD COLUMN auto_activate TINYINT(1) NOT NULL DEFAULT 0")
+    except Exception:
+        pass
     logging.info("golf_ tables initialised")
     return jsonify({'success': True})
 
@@ -481,6 +492,8 @@ def api_golf_create_pool():
     if pool_format == 'draft':
         max_entries_per_user = 1  # draft format does not support multiple entries
 
+    auto_activate = 1 if data.get('auto_activate') else 0
+
     cut_rule_type = data.get('cut_rule_type', 'top_n')
     if cut_rule_type not in ('top_n', 'top_n_and_within'):
         cut_rule_type = 'top_n'
@@ -509,9 +522,9 @@ def api_golf_create_pool():
         event_id = db2("SELECT event_id FROM golf_events WHERE espn_event_id = %s", (espn_event_id,))[0][0]
 
     invite_code = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6))
-    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type, scoring_players, dnf_handling, dnf_penalty, max_entries_per_user)
-           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type, scoring_players, dnf_handling, dnf_penalty, max_entries_per_user))
+    db2("""INSERT INTO golf_pools (event_id, name, fee, status, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type, scoring_players, dnf_handling, dnf_penalty, max_entries_per_user, auto_activate)
+           VALUES (%s,%s,%s,'setup',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+        (event_id, pool_name, fee, pool_format, picks_per_user, draft_type, created_by, invite_code, tiebreaker_type, scoring_players, dnf_handling, dnf_penalty, max_entries_per_user, auto_activate))
     pool_id = db2("SELECT pool_id FROM golf_pools WHERE event_id=%s AND name=%s ORDER BY pool_id DESC LIMIT 1",
                   (event_id, pool_name))[0][0]
 
@@ -529,7 +542,7 @@ def api_golf_admin_pools():
                      p.picks_per_user, p.draft_type,
                      e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code,
                      p.tiebreaker_type, p.scoring_players, p.dnf_handling, p.dnf_penalty,
-                     COALESCE(p.max_entries_per_user, 1)
+                     COALESCE(p.max_entries_per_user, 1), COALESCE(p.auto_activate, 0)
               FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id"""
     if session.get('is_admin') == 1:
         rows = db2(base + " ORDER BY p.pool_id DESC")
@@ -545,7 +558,7 @@ def api_golf_admin_pools():
          'course': r[10] or '', 'event_date': str(r[11]) if r[11] else '',
          'invite_code': r[12] or '', 'tiebreaker_type': r[13] or 'player',
          'scoring_players': r[14], 'dnf_handling': r[15] or 'eliminate', 'dnf_penalty': r[16] if r[16] is not None else 1,
-         'max_entries_per_user': r[17]}
+         'max_entries_per_user': r[17], 'auto_activate': bool(r[18])}
         for r in rows]})
 
 
@@ -745,7 +758,8 @@ def api_golf_pool():
                              e.event_id, e.name, e.espn_event_id, e.course, e.event_date, p.invite_code,
                              p.tiebreaker_type, p.scoring_players, p.dnf_handling, p.dnf_penalty,
                              p.created_by, COALESCE(p.max_entries_per_user, 1),
-                             COALESCE(e.cut_rule_type, 'top_n'), e.cut_n, e.cut_within_shots
+                             COALESCE(e.cut_rule_type, 'top_n'), e.cut_n, e.cut_within_shots,
+                             COALESCE(p.auto_activate, 0)
                       FROM golf_pools p JOIN golf_events e ON e.event_id = p.event_id
                       WHERE p.pool_id = %s""", (pool_id,))
     if not pool_row:
@@ -757,7 +771,8 @@ def api_golf_pool():
              'invite_code': r[12] or '', 'tiebreaker_type': r[13] or 'player',
              'scoring_players': r[14], 'dnf_handling': r[15] or 'eliminate',
              'dnf_penalty': r[16] if r[16] is not None else 1,
-             'created_by': r[17], 'max_entries_per_user': r[18]}
+             'created_by': r[17], 'max_entries_per_user': r[18],
+             'auto_activate': bool(r[22])}
     event = {'event_id': r[7], 'name': r[8], 'espn_event_id': r[9],
              'course': r[10] or '', 'event_date': str(r[11]) if r[11] else ''}
     cut_rule_type    = r[19]
@@ -843,6 +858,13 @@ def api_golf_pool():
         event['espn_status'] = event_info.get('status_desc', '')
         espn_field        = players
         espn_scores_by_id = {p['espn_id']: p for p in players}
+        # Auto-activate: if admin opted in and ESPN reports play has started, flip to active
+        if (pool['status'] == 'open'
+                and pool.get('auto_activate')
+                and event_info.get('status_name') in _TOURNAMENT_STARTED_STATUSES):
+            db2("UPDATE golf_pools SET status='active' WHERE pool_id=%s", (pool_id,))
+            pool['status'] = 'active'
+            logging.info("Auto-activated golf pool %s (espn_status=%s)", pool_id, event_info.get('status_name'))
         # ESPN drops completed events after ~24-48h — fall back to our snapshot
         if not espn_field and pool['status'] == 'complete':
             espn_field, espn_scores_by_id = _load_pool_score_snapshot(pool_id)
