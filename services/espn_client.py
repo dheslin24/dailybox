@@ -158,23 +158,32 @@ def get_golf_event_detail(espn_event_id):
         for competitor in comps[0].get('competitors', []):
             athlete = competitor.get('athlete', {}) or {}
 
-            # Status — present during/after event, absent pre-tournament
+            # Status — present during/after event, absent pre-tournament.
+            # ESPN sometimes returns null status (observed US Open 2026), so we
+            # also fall back to detecting cut players via the '-' linescore marker.
             c_status = competitor.get('status', {}) or {}
             c_status_type = c_status.get('type', {}) or {}
             status_name = c_status_type.get('name', 'STATUS_ACTIVE')
-            is_eliminated = status_name in (
+            status_elim = status_name in (
                 'STATUS_CUT', 'STATUS_WITHDRAWN', 'STATUS_WD', 'STATUS_DQ', 'STATUS_MC'
             )
             pos_obj = c_status.get('position', {}) or {}
             display_pos = pos_obj.get('displayName') or str(competitor.get('order', '-'))
 
-            # Round scores — pre-tournament linescores have no displayValue
+            # Round scores — pre-tournament linescores have no displayValue.
+            # ESPN uses displayValue='-' (value=0) as a cut/WD marker; exclude
+            # those from the rounds dict and use their presence to flag elimination.
             rounds = {}
+            has_cut_marker = False
             for ls in competitor.get('linescores', []):
                 period = str(ls.get('period', ''))
                 val = ls.get('displayValue', '')
-                if period and val:
+                if val == '-':
+                    has_cut_marker = True
+                elif period and val:
                     rounds[period] = val
+
+            is_eliminated = status_elim or has_cut_marker
 
             # Score: 'E' pre-tournament, signed int string or int during event
             raw = competitor.get('score', 'E')
