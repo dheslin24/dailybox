@@ -247,6 +247,7 @@ export default function SoccerPool() {
   const [activeTab, setActiveTab] = useState('group')
   const [groupSort, setGroupSort] = useState('group')
   const [groupStatusFilter, setGroupStatusFilter] = useState('all')
+  const [knockoutStatusFilter, setKnockoutStatusFilter] = useState('all')
   const [pickMsg, setPickMsg] = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [tbInput, setTbInput] = useState('')
@@ -552,25 +553,50 @@ export default function SoccerPool() {
                 Knockout round matches will appear here as the tournament progresses.
               </div>
             ) : (
-              ROUND_ORDER.filter(r => r !== 'group' && byRound[r]).map(round => (
-                <div key={round} style={{ marginBottom: 24 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: '#374151' }}>
-                    {ROUND_LABEL[round] || round}
-                  </div>
-                  {byRound[round].map(m => (
-                    <MatchCard
-                      key={m.match_id}
-                      match={m}
-                      userPick={user_picks[m.match_id]}
-                      allPicks={all_picks}
-                      members={members}
-                      onPick={handlePick}
-                      poolId={poolId}
-                      pickFormat={pool.pick_format}
-                    />
+              <>
+                <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+                  {[['all', 'All'], ['final', 'Completed'], ['upcoming', 'Remaining']].map(([val, label]) => (
+                    <button
+                      key={val}
+                      onClick={() => setKnockoutStatusFilter(val)}
+                      style={{
+                        padding: '4px 12px', fontSize: 12, border: '1px solid #d1d5db',
+                        borderRadius: 4, cursor: 'pointer',
+                        background: knockoutStatusFilter === val ? '#059669' : '#fff',
+                        color: knockoutStatusFilter === val ? '#fff' : '#374151',
+                        fontWeight: knockoutStatusFilter === val ? 600 : 'normal',
+                      }}
+                    >{label}</button>
                   ))}
                 </div>
-              ))
+                {ROUND_ORDER.filter(r => r !== 'group' && byRound[r]).map(round => {
+                  const filtered = byRound[round].filter(m => {
+                    if (knockoutStatusFilter === 'final') return m.status === 'final'
+                    if (knockoutStatusFilter === 'upcoming') return m.status !== 'final'
+                    return true
+                  })
+                  if (!filtered.length) return null
+                  return (
+                    <div key={round} style={{ marginBottom: 24 }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: '#374151' }}>
+                        {ROUND_LABEL[round] || round}
+                      </div>
+                      {filtered.map(m => (
+                        <MatchCard
+                          key={m.match_id}
+                          match={m}
+                          userPick={user_picks[m.match_id]}
+                          allPicks={all_picks}
+                          members={members}
+                          onPick={handlePick}
+                          poolId={poolId}
+                          pickFormat={pool.pick_format}
+                        />
+                      ))}
+                    </div>
+                  )
+                })}
+              </>
             )}
           </div>
         )}
