@@ -358,6 +358,7 @@ def _parse_wc_scoreboard(r):
                     'abbreviation': t.get('abbreviation', ''),
                     'logo_url': logo,
                     'score': competitor.get('score'),
+                    'winner': bool(competitor.get('winner')),
                 }
                 if competitor.get('homeAway') == 'home':
                     home_team = team_data
@@ -415,6 +416,9 @@ def _parse_wc_scoreboard(r):
                     'STATUS_HALFTIME', 'STATUS_END_PERIOD', 'STATUS_END_OF_EXTRATIME',
                     'STATUS_EXTRA_TIME_HALF', 'STATUS_SHOOTOUT'):
                 status = 'in_progress'
+            elif status_state == 'post':
+                # Catch any ESPN terminal status names we haven't enumerated yet
+                status = 'final'
             else:
                 status = 'scheduled'
 
@@ -430,7 +434,14 @@ def _parse_wc_scoreboard(r):
                 if round_type == 'group':
                     result = 'H' if home_score > away_score else ('A' if away_score > home_score else 'D')
                 else:
-                    result = 'H' if home_score > away_score else 'A'
+                    if home_score > away_score:
+                        result = 'H'
+                    elif away_score > home_score:
+                        result = 'A'
+                    elif home_team.get('winner'):
+                        result = 'H'
+                    elif away_team.get('winner'):
+                        result = 'A'
 
             venue_obj = comp.get('venue', {})
             venue_name = venue_obj.get('fullName', '')
