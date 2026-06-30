@@ -422,6 +422,9 @@ def _parse_wc_scoreboard(r):
             else:
                 status = 'scheduled'
 
+            # Penalty finals can't occur in the group stage — always treat as knockout
+            is_penalty_final = 'PEN' in status_name
+
             home_score = away_score = result = None
             try:
                 if home_team['score'] is not None:
@@ -431,7 +434,7 @@ def _parse_wc_scoreboard(r):
             except (ValueError, TypeError):
                 pass
             if status == 'final' and home_score is not None and away_score is not None:
-                if round_type == 'group':
+                if round_type == 'group' and not is_penalty_final:
                     result = 'H' if home_score > away_score else ('A' if away_score > home_score else 'D')
                 else:
                     if home_score > away_score:
